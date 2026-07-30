@@ -2,6 +2,18 @@
 
 ## Estado Actual
 
+### Correcao Expo Go (2026-07-30)
+
+- Dependencias alinhadas ao Expo SDK 54: React 19.1, React Native 0.81.5, Expo Router 6 e modulos Expo SDK 54.
+- Adicionado `expo-linking`, peer dependency obrigatoria do Expo Router.
+- Fixados `react-dom@19.1.0` e `react-native-web@0.21.x` para impedir conflito de peer na reinstalacao.
+- Regenerado `package-lock.json` depois de remover a arvore mista de dependencias.
+- Corrigido `global.css`: NativeWind 4/Tailwind 3 agora usa `@tailwind base`, `components` e `utilities`.
+- Validado Node 22.16 com Metro 0.83.3: bundle Android de 1.404 modulos gerado em 165.311 ms.
+- Validacao final com workers padrao e cache: bundle Android gerado em 26.081 ms, artefacto Hermes de 4,36 MB.
+- `.nvmrc` actualizado para Node 22.16 e `engines.node` definido como `>=20.19`.
+- `npx expo-doctor`: 18/18 verificacoes aprovadas.
+
 **Fase Actual**: ✅ Análise e Configuração Expo Go Completa
 **Última Actualização**: 2026-07-21
 **Branch Activa**: `feature/freemium-model`
