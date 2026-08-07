@@ -17,6 +17,13 @@ export default function AgentStackLayout() {
           headerLeft: () => <HeaderBackButton fallback="/(tabs)/agent" />,
         }}
       />
+      <Stack.Screen
+        name="onboarding"
+        options={{
+          title: 'Bem-vindo, Agente',
+          headerShown: false,
+        }}
+      />
     </Stack>
   )
 }

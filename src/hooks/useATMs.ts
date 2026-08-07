@@ -37,7 +37,6 @@ export function getATMStatusLabel(status: ATMStatus): string {
 
 interface UseATMsOptions {
   search?: string
-  bank?: string
   status?: ATMStatus | 'all'
   city?: string
   sortMode?: SortMode
@@ -93,11 +92,6 @@ export function useATMs(options: UseATMsOptions = {}) {
     fetchATMs()
   }, [fetchATMs])
 
-  const banks = useMemo(
-    () => Array.from(new Set(atms.map((a) => a.bank_name).filter(Boolean))).sort(),
-    [atms]
-  )
-
   const cities = useMemo(
     () => Array.from(new Set(atms.map((a) => a.cidade).filter(Boolean) as string[])).sort(),
     [atms]
@@ -113,9 +107,6 @@ export function useATMs(options: UseATMsOptions = {}) {
           (atm.cidade && atm.cidade.toLowerCase().includes(q)) ||
           (atm.provincia && atm.provincia.toLowerCase().includes(q))
         if (!match) return false
-      }
-      if (options.bank && options.bank !== 'all') {
-        if (atm.bank_name !== options.bank) return false
       }
       if (options.city && options.city !== 'all') {
         if (atm.cidade !== options.city) return false
@@ -137,12 +128,11 @@ export function useATMs(options: UseATMsOptions = {}) {
     }
 
     return result
-  }, [atms, options.search, options.bank, options.city, options.status, options.sortMode, userLocation])
+  }, [atms, options.search, options.city, options.status, options.sortMode, userLocation])
 
   return {
     atms: filtered,
     allAtms: atms,
-    banks,
     cities,
     loading,
     error,

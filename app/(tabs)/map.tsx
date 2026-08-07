@@ -21,7 +21,6 @@ export default function MapScreen() {
   const { balance, consumeView } = useViews()
   const [viewMode, setViewMode] = useState<ViewMode>('map')
   const [search, setSearch] = useState('')
-  const [bank, setBank] = useState('all')
   const [status, setStatus] = useState<ATMStatus | 'all'>('all')
   const [city, setCity] = useState('all')
   const [sortMode, setSortMode] = useState<SortMode>('proximity')
@@ -34,9 +33,8 @@ export default function MapScreen() {
   const [agentRating, setAgentRating] = useState<{ likes: number; dislikes: number } | null>(null)
   const [userVote, setUserVote] = useState<'like' | 'dislike' | null>(null)
 
-  const { atms, banks, cities, loading: atmsLoading, error, refetch } = useATMs({
+  const { atms, cities, loading: atmsLoading, error, refetch } = useATMs({
     search,
-    bank,
     status,
     city,
     sortMode,
@@ -181,9 +179,6 @@ export default function MapScreen() {
         <MapFilters
           search={search}
           onSearchChange={setSearch}
-          bank={bank}
-          banks={banks}
-          onBankChange={setBank}
           status={status}
           onStatusChange={setStatus}
           city={city}

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { View, Text, ScrollView, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useAgent } from '../../src/hooks/useAgent'
+import { useAgentOnboarding } from '../../src/hooks/useAgentOnboarding'
 import { useAuth } from '../../src/hooks/useAuth'
 import { AgentATMCard } from '../../src/components/agent/AgentATMCard'
 import { WithdrawalModal } from '../../src/components/agent/WithdrawalModal'
@@ -37,6 +38,8 @@ export default function AgentScreen() {
   const { user } = useAuth()
   const {
     atms,
+    pendingCount,
+    hasApprovedAtm,
     stats,
     agentRating,
     commissionPct,
@@ -52,6 +55,13 @@ export default function AgentScreen() {
     isAgent,
   } = useAgent()
   const [showWithdrawal, setShowWithdrawal] = useState(false)
+  const { progress: onboarding, loading: onboardingLoading } = useAgentOnboarding()
+
+  useEffect(() => {
+    if (!onboardingLoading && onboarding && !onboarding.onboarding_seen) {
+      router.replace('/agent/onboarding')
+    }
+  }, [onboarding, onboardingLoading, router])
 
   if (!isAgent) {
     return (
@@ -66,12 +76,75 @@ export default function AgentScreen() {
     )
   }
 
-  if (loading) {
+  if (loading || onboardingLoading) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F9FAFB' }}>
         <ActivityIndicator size="large" color="#2094F3" />
         <Text style={{ color: '#6B7280', marginTop: 12 }}>A carregar painel...</Text>
       </View>
+    )
+  }
+
+  if (!hasApprovedAtm) {
+    const pending = pendingCount > 0
+    return (
+      <ScrollView
+        style={{ flex: 1, backgroundColor: '#F9FAFB' }}
+        contentContainerStyle={{ padding: 24 }}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} tintColor="#2094F3" />}
+      >
+        <View style={{ alignItems: 'center', marginTop: 32, marginBottom: 20 }}>
+          <Text style={{ fontSize: 40, marginBottom: 12 }}>{pending ? '⏳' : '📍'}</Text>
+          <Text style={{ fontSize: 20, fontWeight: '700', color: '#111827', textAlign: 'center', marginBottom: 8 }}>
+            {pending ? 'ATM em análise' : 'Regista o teu primeiro ATM'}
+          </Text>
+          <Text style={{ fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 20 }}>
+            {pending
+              ? `Submeteste ${pendingCount} ATM${pendingCount > 1 ? 's' : ''}. A equipa ATM Connect está a verificar as fotos. Assim que for aprovado, o teu painel é desbloqueado e podes começar a ganhar.`
+              : 'O teu painel de agente desbloqueia assim que submeteres um ATM e ele for aprovado pela equipa. Só precisas de uma foto do local.'}
+          </Text>
+        </View>
+
+        {pending && (
+          <View
+            style={{
+              backgroundColor: '#EEF6FE',
+              borderRadius: 12,
+              padding: 16,
+              marginBottom: 16,
+              borderWidth: 1,
+              borderColor: '#BFDBFE',
+            }}
+          >
+            <Text style={{ fontSize: 13, fontWeight: '600', color: '#2094F3', marginBottom: 6 }}>Próximos passos</Text>
+            <Text style={{ fontSize: 13, color: '#374151', lineHeight: 20 }}>
+              1. Aguarda a aprovação (normalmente demora pouco tempo).{'\n'}2. Depois de aprovado, ganhas 50 Kz por cada visualização do teu ATM.{'\n'}3. Podes submeter mais ATMs para ganhar ainda mais.
+            </Text>
+          </View>
+        )}
+
+        <TouchableOpacity
+          onPress={() => router.push('/agent/submit-atm')}
+          style={{
+            backgroundColor: '#2094F3',
+            borderRadius: 12,
+            paddingVertical: 14,
+            alignItems: 'center',
+            marginBottom: 12,
+          }}
+        >
+          <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>
+            {pending ? '+ Registrar mais um ATM' : '+ Submeter o primeiro ATM'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => router.push('/agent/onboarding')}
+          style={{ alignItems: 'center', paddingVertical: 8 }}
+        >
+          <Text style={{ fontSize: 13, fontWeight: '600', color: '#2094F3' }}>Rever como ganhar dinheiro</Text>
+        </TouchableOpacity>
+      </ScrollView>
     )
   }
 

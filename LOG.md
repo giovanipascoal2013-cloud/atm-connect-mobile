@@ -2,6 +2,42 @@
 
 ## Estado Actual
 
+### Correções 3ª ronda errr.txt — Fórum admin-only + Onboarding gate + Foto ArrayBuffer (2026-08-07) 🚧
+
+Fixes aos 3 problemas reportados na 3ª leitura de `errr.txt` (o PGRST202 e a foto partida persistiam após a 2ª ronda):
+
+- **Fórum admin-only** — `app/(tabs)/forum.tsx`: botão "✏️ Criar post" (e modal) apenas para `isAdmin` (o web só mostra a RPC para admins). `src/hooks/useForum.ts`: erro devolvido em PT amigável ("Apenas administradores podem publicar mensagens") + `console.error` do original. Causa-raiz do PGRST202: a RPC `create_forum_post` não existe no **staging** e exigia role admin.
+- **Onboarding de agente com gate pós-login** — `src/hooks/useAuth.ts`: exposto `isOnlyAgent` (= `isAgent && !isSupervisor`). Novo `src/hooks/useAgentOnboarding.ts` (espelha o hook do web): busca `agent_onboarding_progress` e cria a row com defaults se faltar. `app/(tabs)/agent.tsx`: se `isOnlyAgent && !onboarding_seen` → `router.replace('/agent/onboarding')` (com loading). `app/agent/onboarding.tsx`: marca `onboarding_seen: true` no mount. `app/(auth)/register.tsx`: agente sem sessão (confirmação de email) → aviso "Confirme o email... verá o onboarding" em vez de silêncio.
+- **Foto corrompida no dashboard web** — `app/agent/submit-atm.tsx`: upload passou de `new File(photoUri)` (Blob) para `file.arrayBuffer()` enviado como `ArrayBuffer`. O supabase-js documenta que `Blob`/`File`/`FormData` **não funcionam correctamente em React Native** (objecto fica corrompido/vazio) — causa da foto partida em iOS e Android.
+- **Pendente (utilizador)**: `npx tsc --noEmit` + `npx expo lint` + correr o SQL de `create_forum_post` no staging + teste em dispositivo.
+- **Verificação**: edições aplicadas; aguarda tsc/lint (regra do projecto).
+
+**Fase Actual**: Correções 3ª ronda errr.txt — aguarda tsc/lint + SQL staging + teste em dispositivo
+**Última Actualização**: 2026-08-07
+**Branch Activa**: `feature/freemium-model`
+**Deploy**: N/A (desenvolvimento local / Expo Go)
+
+### Correções 2ª ronda errr.txt — Onboarding + Filtros + Foto + Fórum (2026-08-07) ✅ (tsc OK)
+
+Novos pedidos do utilizador (2ª ronda de `errr.txt`), implementados e validados com `npx tsc --noEmit` (0 erros):
+
+- **Onboarding de agente pós-registo** — `app/agent/onboarding.tsx` (novo): página única com 4 secções (💼 O que é Agente, 💰 Como ganha dinheiro, 📷 Como registar um ATM, 🏦 Como levantar) + aviso de desbloqueio. Botão "Continuar para registar um ATM 📷" → `replace('/agent/submit-atm')` e "Explorar o app primeiro" → mapa. `app/agent/_layout.tsx` regista a rota (headerShown: false); `app/(auth)/register.tsx` redirecciona agentes recém-registados; `.expo/types/router.d.ts` actualizado manualmente (gitignored).
+- **Dashboard do agente com gate de desbloqueio** — `src/hooks/useAgent.ts`: fetch inclui ATMs `approved` + `pending`, expõe `pendingCount` e `hasApprovedAtm`; `status_approval` removido da interface `AgentATM` (tipado localmente como `AgentATMRow` no fetch) para não contaminar o `updateATM`. `app/(tabs)/agent.tsx`: sem ATMs aprovados mostra "⏳ ATM em análise" (se pendentes) ou "📍 Regista o teu primeiro ATM" (se nenhum), com CTA "+ Submeter" e link "Rever como ganhar dinheiro"; o painel completo só aparece com ≥1 ATM aprovado.
+- **Instruções no Perfil** — `app/(tabs)/profile.tsx`: secção colapsável "📘 Como usar o app" com guia de utilizador + bloco "Para agentes — como lucrar" (50 Kz/view, 20% referral, levantamento a partir de 500 Kz).
+- **Foto corrompida no dashboard web** — `app/agent/submit-atm.tsx`: `takePictureAsync({ quality: 0.8 })` força JPEG (evita HEIC/iOS); upload passou de `fetch().blob()` para `File` de `expo-file-system` (SDK 54). `expo-file-system` instalado pelo utilizador (`npx expo install expo-file-system`).
+- **Filtro de bancos removido** — `MapFilters.tsx` (chips de bancos eliminados), `map.tsx` (state `bank` removido), `useATMs.ts` (option/filtro/`banks` removidos).
+- **Filtro de cidade em dropdown** — `src/components/map/CityDropdown.tsx` (novo): bottom-sheet com "Todas as cidades" por defeito, substitui os chips horizontais ao lado do toggle Proximidade/A-Z.
+- **Teclado do fórum corrigido** — `app/(tabs)/forum.tsx`: `KeyboardAvoidingView` no ecrã (padding iOS) e dentro do modal de criar post (padding iOS / height Android — o `Modal` do RN não herda `adjustResize`); dismiss ao tocar fora (`TouchableWithoutFeedback` + `keyboardDismissMode="on-drag"`); `automaticallyAdjustKeyboardInsets`. `src/components/forum/PostCard.tsx`: novo prop `onCommentFocus` + `onFocus` mede o input e faz scroll da lista até 120 px do topo (via `measureInWindow` + scroll offset rastreado no `onScroll`).
+- **⚠️ AdMob (filtro dinheiro → anúncio)**: adiado por decisão do utilizador.
+- **⚠️ Subscrição**: mantida como está por decisão do utilizador.
+- **Pendente**: `npx expo lint` + verificação em dispositivo (lista + proximidade, teclado do fórum, aprovação de fotos no web dashboard).
+- **Verificação**: `npx tsc --noEmit` OK (0 erros).
+
+**Fase Actual**: Correções 2ª ronda errr.txt — aguarda `npx expo lint` + teste em dispositivo
+**Última Actualização**: 2026-08-07
+**Branch Activa**: `feature/freemium-model`
+**Deploy**: N/A (desenvolvimento local / Expo Go)
+
 ### Correções errr.txt (2026-08-07) ✅ (tsc OK)
 
 Fixes aplicados aos problemas reportados em `errr.txt` (também cobrem "Missing/not working" do `.tmp-create-agent.mjs`):

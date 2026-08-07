@@ -1,13 +1,11 @@
 import React from 'react'
 import { View, TextInput, ScrollView, TouchableOpacity, Text } from 'react-native'
 import type { ATMStatus, SortMode } from '../../hooks/useATMs'
+import { CityDropdown } from './CityDropdown'
 
 interface MapFiltersProps {
   search: string
   onSearchChange: (text: string) => void
-  bank: string
-  banks: string[]
-  onBankChange: (bank: string) => void
   status: ATMStatus | 'all'
   onStatusChange: (status: ATMStatus | 'all') => void
   city: string
@@ -63,9 +61,6 @@ function chip(
 export function MapFilters({
   search,
   onSearchChange,
-  bank,
-  banks,
-  onBankChange,
   status,
   onStatusChange,
   city,
@@ -103,16 +98,6 @@ export function MapFilters({
           </TouchableOpacity>
         )}
       </View>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 6 }}
-      >
-        {['all', ...banks].map((b) =>
-          chip(b, b === 'all' ? 'Todos' : b, bank === b, () => onBankChange(b))
-        )}
-      </ScrollView>
 
       <ScrollView
         horizontal
@@ -161,15 +146,7 @@ export function MapFilters({
           </TouchableOpacity>
         </View>
         {cities.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 6 }}
-          >
-            {['all', ...cities].map((c) =>
-              chip(c, c === 'all' ? 'Todas cidades' : c, city === c, () => onCityChange(c))
-            )}
-          </ScrollView>
+          <CityDropdown city={city} cities={cities} onCityChange={onCityChange} />
         )}
       </View>
     </View>

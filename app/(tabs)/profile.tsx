@@ -232,6 +232,8 @@ export default function ProfileScreen() {
         <SectionLink icon="👑" label={isPremium ? 'Premium activo' : 'Upgrade Premium'} onPress={() => setPremiumVisible(true)} />
         <SectionLink icon="🏆" label="Ranking de Agentes" onPress={() => router.push('/ranking')} />
         <SectionLink icon="🔗" label="Referências" onPress={() => router.push('/referrals')} />
+
+        <HelpSection isAgent={isAgent} />
       </View>
 
       <View style={{ padding: 16 }}>
@@ -306,6 +308,78 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       <Text style={{ fontSize: 12, color: '#9CA3AF' }}>{label}</Text>
       <Text style={{ fontSize: 14, fontWeight: '500', color: '#111827', marginTop: 2 }} selectable>{value}</Text>
     </View>
+  )
+}
+
+const USER_STEPS = [
+  'Encontra ATMs no mapa ou na lista ao lado.',
+  'Os ATMs bloqueados 🔒 precisam de 1 view para mostrar o estado real.',
+  'Compra views em "As minhas views" — cada view desbloqueia 1 ATM por 24h.',
+  'Vê o estado: 💵 dinheiro, 🧾 papel, fila e status do ATM.',
+  'Depois de desbloquear, avalia o agente com 👍 ou 👎.',
+]
+
+const AGENT_STEPS = [
+  'Regista ATMs submetendo foto tirada no local (galeria não é aceite).',
+  'O teu painel desbloqueia quando tiveres pelo menos 1 ATM aprovado.',
+  'Ganhas 50 Kz por cada view consumida num ATM teu.',
+  'Ganhas 20% da primeira subscrição de quem usar o teu código de convite.',
+  'Quando o saldo atingir 500 Kz, pede o levantamento no painel.',
+  'Mantém os dados do ATM actualizados para receber boas avaliações.',
+]
+
+function HelpSection({ isAgent }: { isAgent: boolean }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={() => setOpen((v) => !v)}
+      style={{
+        backgroundColor: '#F9FAFB',
+        borderRadius: 10,
+        padding: 14,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#F3F4F6',
+      }}
+    >
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={{ fontSize: 18 }}>📘</Text>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>Como usar o app</Text>
+        </View>
+        <Text style={{ fontSize: 14, color: '#9CA3AF' }}>{open ? '▴' : '▾'}</Text>
+      </View>
+
+      {open && (
+        <View style={{ marginTop: 12 }}>
+          <Text style={{ fontSize: 12, fontWeight: '700', color: '#6B7280', marginBottom: 8, textTransform: 'uppercase' }}>
+            Para utilizadores
+          </Text>
+          {USER_STEPS.map((s) => (
+            <View key={s} style={{ flexDirection: 'row', gap: 8, marginBottom: 6 }}>
+              <Text style={{ fontSize: 13, color: '#2094F3', marginTop: 1 }}>•</Text>
+              <Text style={{ fontSize: 13, color: '#374151', lineHeight: 19, flex: 1 }}>{s}</Text>
+            </View>
+          ))}
+
+          {isAgent && (
+            <>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#6B7280', marginTop: 12, marginBottom: 8, textTransform: 'uppercase' }}>
+                Para agentes — como lucrar
+              </Text>
+              {AGENT_STEPS.map((s) => (
+                <View key={s} style={{ flexDirection: 'row', gap: 8, marginBottom: 6 }}>
+                  <Text style={{ fontSize: 13, color: '#10B981', marginTop: 1 }}>•</Text>
+                  <Text style={{ fontSize: 13, color: '#374151', lineHeight: 19, flex: 1 }}>{s}</Text>
+                </View>
+              ))}
+            </>
+          )}
+        </View>
+      )}
+    </TouchableOpacity>
   )
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useRef } from 'react'
 import { View, Text, TouchableOpacity, TextInput } from 'react-native'
 import { useRouter } from 'expo-router'
 import type { ForumPost, ForumComment } from '../../hooks/useForum'
@@ -8,9 +8,10 @@ import { timeSince } from '../../lib/time'
 
 interface PostCardProps {
   post: ForumPost
+  onCommentFocus?: (inputWindowY: number) => void
 }
 
-export function PostCard({ post }: PostCardProps) {
+export function PostCard({ post, onCommentFocus }: PostCardProps) {
   const { user } = useAuth()
   const router = useRouter()
   const { fetchComments, addComment } = useForum(post.provincia)
@@ -18,6 +19,16 @@ export function PostCard({ post }: PostCardProps) {
   const [comments, setComments] = useState<ForumComment[]>([])
   const [commentText, setCommentText] = useState('')
   const [loadingComments, setLoadingComments] = useState(false)
+  const commentInputRef = useRef<TextInput>(null)
+
+  const handleCommentFocus = useCallback(() => {
+    if (!onCommentFocus) return
+    requestAnimationFrame(() => {
+      commentInputRef.current?.measureInWindow((_x, y, _w, _h) => {
+        onCommentFocus(y)
+      })
+    })
+  }, [onCommentFocus])
 
   const handleExpand = useCallback(async () => {
     if (!expanded) {
@@ -107,6 +118,7 @@ export function PostCard({ post }: PostCardProps) {
           {user && (
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
               <TextInput
+                ref={commentInputRef}
                 style={{
                   flex: 1,
                   backgroundColor: '#F9FAFB',
@@ -122,6 +134,7 @@ export function PostCard({ post }: PostCardProps) {
                 placeholder="Comentar..."
                 placeholderTextColor="#9CA3AF"
                 onSubmitEditing={handleAddComment}
+                onFocus={handleCommentFocus}
               />
               <TouchableOpacity
                 style={{

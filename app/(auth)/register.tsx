@@ -77,7 +77,7 @@ export default function RegisterScreen() {
     }
 
     setLoading(true)
-    const { error } = await signUp(phoneToEmail(telefone), password, {
+    const { error, session } = await signUp(phoneToEmail(telefone), password, {
       nome: nome.trim(),
       telefone: `+244${telefone.replace(/\D/g, '')}`,
       provincia: provincia || null,
@@ -98,6 +98,16 @@ export default function RegisterScreen() {
         )
       } else {
         Alert.alert('Erro no registo', friendlyAuthError(error.message))
+      }
+    } else if (accountType === 'agent') {
+      if (session) {
+        router.replace('/agent/onboarding')
+      } else {
+        Alert.alert(
+          'Conta criada!',
+          'Confirme o email na sua caixa de entrada e entre. Depois do login verá o onboarding de agente.'
+        )
+        router.replace('/(auth)/login')
       }
     } else {
       Alert.alert('Sucesso', 'Conta criada! Agora pode entrar.')

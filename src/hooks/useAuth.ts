@@ -25,6 +25,11 @@ export interface Profile {
   updated_at: string
 }
 
+interface PostgrestErrorLike {
+  code?: string
+  message?: string
+}
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -32,6 +37,25 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
   const [isPremium, setIsPremium] = useState(false)
   const [roles, setRoles] = useState<string[]>([])
+
+  const isJwtFutureError = useCallback((err: PostgrestErrorLike | null) => {
+    return !!err && (err.code === 'PGRST303' || (err.message || '').includes('JWT issued at future'))
+  }, [])
+
+  const runWithSessionRefresh = useCallback(async <T,>(
+    fn: () => PromiseLike<{ data: T | null; error: PostgrestErrorLike | null }>
+  ): Promise<{ data: T | null; error: PostgrestErrorLike | null }> => {
+    let result = await fn()
+    if (isJwtFutureError(result.error)) {
+      const { data: refreshed, error } = await supabase.auth.refreshSession()
+      if (!error && refreshed.session) {
+        result = await fn()
+      } else {
+        await supabase.auth.signOut()
+      }
+    }
+    return result
+  }, [isJwtFutureError])
 
   const checkPremium = useCallback(async (userId: string) => {
     const { data } = await supabase
@@ -48,10 +72,12 @@ export function useAuth() {
 
   const fetchRoles = useCallback(async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
+      const { data, error } = await runWithSessionRefresh(() =>
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+      )
 
       if (error) {
         console.error('Error fetching roles:', error)
@@ -61,27 +87,29 @@ export function useAuth() {
     } catch (err) {
       console.error('Error fetching roles:', err)
     }
-  }, [])
+  }, [runWithSessionRefresh])
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single()
+      const { data, error } = await runWithSessionRefresh(() =>
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .single()
+      )
 
       if (error) {
         console.error('Error fetching profile:', error)
-      } else {
-        setProfile(data as Profile)
+      } else if (data) {
+        setProfile(data)
         await checkPremium(userId)
       }
       await fetchRoles(userId)
     } finally {
       setLoading(false)
     }
-  }, [checkPremium, fetchRoles])
+  }, [checkPremium, fetchRoles, runWithSessionRefresh])
 
   const refreshProfile = useCallback(async () => {
     if (user) {
@@ -122,12 +150,12 @@ export function useAuth() {
   }, [])
 
   const signUp = useCallback(async (email: string, password: string, metadata?: Record<string, unknown>) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: metadata },
     })
-    return { error }
+    return { error, session: data?.session ?? null }
   }, [])
 
   const signOut = useCallback(async () => {
@@ -143,6 +171,7 @@ export function useAuth() {
   const isAdmin = roles.includes('admin')
   const isSupervisor = roles.includes('supervisor') || isAdmin
   const isAgent = roles.includes('agent') || isSupervisor
+  const isOnlyAgent = isAgent && !isSupervisor
   const role = isAdmin ? 'admin' : roles.includes('supervisor') ? 'supervisor' : isAgent ? 'agent' : 'user'
 
   return {
@@ -159,6 +188,7 @@ export function useAuth() {
     role,
     isAdmin,
     isAgent,
+    isOnlyAgent,
     isSupervisor,
     isPremium,
   }

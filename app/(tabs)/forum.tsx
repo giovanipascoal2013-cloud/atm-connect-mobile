@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react'
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, Keyboard, TouchableWithoutFeedback } from 'react-native'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useForum } from '../../src/hooks/useForum'
 import { PostCard } from '../../src/components/forum/PostCard'
@@ -7,7 +7,7 @@ import { ProvinceSelector } from '../../src/components/forum/ProvinceSelector'
 import { useAuth } from '../../src/hooks/useAuth'
 
 export default function ForumScreen() {
-  const { user, profile } = useAuth()
+  const { user, profile, isAdmin } = useAuth()
   const router = useRouter()
   const [provincia, setProvincia] = useState(profile?.provincia || 'Luanda')
   const [provinciaTouched, setProvinciaTouched] = useState(false)
@@ -17,6 +17,24 @@ export default function ForumScreen() {
   const [title, setTitle] = useState('')
   const [message, setMessage] = useState('')
   const [creating, setCreating] = useState(false)
+
+  const listRef = useRef<ScrollView>(null)
+  const scrollOffsetRef = useRef(0)
+
+  const handleCommentFocus = useCallback((inputY: number) => {
+    const scroller = listRef.current
+    if (!scroller) return
+    const measureInWindow = (scroller as unknown as {
+      measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => void
+    }).measureInWindow
+    requestAnimationFrame(() => {
+      measureInWindow.call(scroller, (_x, sy, _w, _h) => {
+        const contentY = scrollOffsetRef.current + (inputY - sy)
+        const target = Math.max(0, contentY - 120)
+        scroller.scrollTo({ y: target, animated: true })
+      })
+    })
+  }, [])
 
   useEffect(() => {
     if (profile?.provincia && !provinciaTouched) {
@@ -44,37 +62,49 @@ export default function ForumScreen() {
   }, [title, message, createPost])
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
       <ProvinceSelector selected={provincia} onSelect={handleSelectProvince} />
 
-      <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-        {!user ? (
-          <View style={{ backgroundColor: '#EEF6FE', borderRadius: 10, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text style={{ fontSize: 13, color: '#1A7ED6', flex: 1 }}>
-              Inicia sessão para comentar e criar posts
-            </Text>
+      {!user || isAdmin ? (
+        <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
+          {!user ? (
+            <View style={{ backgroundColor: '#EEF6FE', borderRadius: 10, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 13, color: '#1A7ED6', flex: 1 }}>
+                Inicia sessão para comentar e criar posts
+              </Text>
+              <TouchableOpacity
+                onPress={() => router.push('/(auth)/login')}
+                style={{ backgroundColor: '#2094F3', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8, marginLeft: 12 }}
+              >
+                <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>Entrar</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
             <TouchableOpacity
-              onPress={() => router.push('/(auth)/login')}
-              style={{ backgroundColor: '#2094F3', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8, marginLeft: 12 }}
+              onPress={() => setShowCreate(true)}
+              style={{ backgroundColor: '#2094F3', borderRadius: 10, paddingVertical: 12, alignItems: 'center' }}
             >
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>Entrar</Text>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>✏️ Criar post</Text>
             </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity
-            onPress={() => setShowCreate(true)}
-            style={{ backgroundColor: '#2094F3', borderRadius: 10, paddingVertical: 12, alignItems: 'center' }}
-          >
-            <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>✏️ Criar post</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+          )}
+        </View>
+      ) : null}
 
       <ScrollView
+        ref={listRef}
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: 16, paddingTop: 0 }}
         contentInsetAdjustmentBehavior="automatic"
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
+        onScroll={(e) => { scrollOffsetRef.current = e.nativeEvent.contentOffset.y }}
+        scrollEventThrottle={16}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} tintColor="#2094F3" />}
       >
         {posts.length === 0 && !loading ? (
@@ -86,12 +116,13 @@ export default function ForumScreen() {
           </View>
         ) : (
           posts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <PostCard key={post.id} post={post} onCommentFocus={handleCommentFocus} />
           ))
         )}
       </ScrollView>
 
       <Modal visible={showCreate} transparent animationType="slide" onRequestClose={() => setShowCreate(false)}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 16, paddingBottom: 32 }}>
@@ -139,8 +170,11 @@ export default function ForumScreen() {
             </View>
           </TouchableWithoutFeedback>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
+    </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   )
 }
 

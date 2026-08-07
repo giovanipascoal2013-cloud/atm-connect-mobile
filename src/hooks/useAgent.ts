@@ -15,6 +15,8 @@ interface AgentATM {
   agent_id: string | null
 }
 
+type AgentATMRow = AgentATM & { status_approval: string | null }
+
 interface AgentStats {
   totalATMs: number
   totalEarnings: number
@@ -41,6 +43,8 @@ export function useAgent() {
   })
   const [agentRating, setAgentRating] = useState<AgentRating | null>(null)
   const [commissionPct, setCommissionPct] = useState(20)
+  const [pendingCount, setPendingCount] = useState(0)
+  const [hasApprovedAtm, setHasApprovedAtm] = useState(false)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
 
@@ -53,7 +57,7 @@ export function useAgent() {
           .from('atms')
           .select('id, bank_name, address, has_cash, has_paper, fila, status, obs, last_updated, agent_id')
           .eq('agent_id', user.id)
-          .eq('status_approval', 'approved'),
+          .in('status_approval', ['approved', 'pending']),
         supabase
           .from('agent_earnings')
           .select('amount_kz')
@@ -70,16 +74,20 @@ export function useAgent() {
           .maybeSingle(),
       ])
 
-      const agentAtms = (atmsRes.data ?? []) as AgentATM[]
+      const agentAtms = (atmsRes.data ?? []) as AgentATMRow[]
+      const approvedAtms = agentAtms.filter((a) => a.status_approval === 'approved')
+      const pendingAtms = agentAtms.filter((a) => a.status_approval === 'pending')
       const totalEarnings = (earningsRes.data ?? []).reduce((s, e) => s + Number(e.amount_kz), 0)
       const totalViews = earningsRes.data?.length ?? 0
       const totalWithdrawn = (withdrawalsRes.data ?? [])
         .filter((w) => w.status === 'completed')
         .reduce((s, w) => s + Number(w.amount_kz), 0)
 
-      setAtms(agentAtms)
+      setAtms(approvedAtms)
+      setPendingCount(pendingAtms.length)
+      setHasApprovedAtm(approvedAtms.length > 0)
       setStats({
-        totalATMs: agentAtms.length,
+        totalATMs: approvedAtms.length,
         totalEarnings,
         totalViews,
         totalWithdrawn,
@@ -165,6 +173,8 @@ export function useAgent() {
 
   return {
     atms,
+    pendingCount,
+    hasApprovedAtm,
     stats,
     agentRating,
     commissionPct,

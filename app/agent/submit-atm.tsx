@@ -4,6 +4,7 @@ import {
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { CameraView, useCameraPermissions } from 'expo-camera'
+import { File } from 'expo-file-system'
 import { supabase } from '../../src/lib/supabase'
 import { useAuth } from '../../src/hooks/useAuth'
 import { useLocation } from '../../src/hooks/useLocation'
@@ -80,7 +81,7 @@ export default function SubmitATMScreen() {
     }
     if (!cameraRef.current) return
     try {
-      const pic = await cameraRef.current.takePictureAsync()
+      const pic = await cameraRef.current.takePictureAsync({ quality: 0.8 })
       if (pic?.uri) {
         setPhotoUri(pic.uri)
         setStep('gps')
@@ -120,12 +121,12 @@ export default function SubmitATMScreen() {
     }
     setSubmitting(true)
     try {
-      const res = await fetch(photoUri)
-      const blob = await res.blob()
+      const file = new File(photoUri)
+      const arrayBuffer = await file.arrayBuffer()
       const path = `${user.id}/${Date.now()}.jpg`
       const { error: upErr } = await supabase.storage
         .from('atm-photos')
-        .upload(path, blob, { contentType: 'image/jpeg', upsert: false })
+        .upload(path, arrayBuffer, { contentType: 'image/jpeg', upsert: false })
       if (upErr) throw upErr
 
       const { data: atm, error: insErr } = await supabase

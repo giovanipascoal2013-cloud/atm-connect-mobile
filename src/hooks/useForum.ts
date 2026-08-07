@@ -119,7 +119,7 @@ export function useForum(provincia: string) {
     })
     if (error) {
       console.error('Error creating post:', error)
-      return error.message
+      return 'Não foi possível criar o post. Apenas administradores podem publicar mensagens.'
     }
     await fetchPosts()
     return null
