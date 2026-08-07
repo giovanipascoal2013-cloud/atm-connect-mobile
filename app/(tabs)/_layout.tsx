@@ -1,32 +1,40 @@
 import { Tabs, useRouter } from 'expo-router'
 import { Text, TouchableOpacity } from 'react-native'
 import { useAuth } from '../../src/hooks/useAuth'
+import { AppIcon, type AppIconName } from '../../src/components/ui/AppIcon'
+import { colors } from '../../src/theme/tokens'
 
 export default function TabLayout() {
   const { user, isAgent, isSupervisor } = useAuth()
   const router = useRouter()
 
+  const tabIcon = (focused: boolean, outline: AppIconName, filled: AppIconName) => (
+    <AppIcon name={focused ? filled : outline} size={22} color={focused ? colors.brand[500] : '#9CA3AF'} />
+  )
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#2094F3',
+        tabBarActiveTintColor: colors.brand[500],
         tabBarInactiveTintColor: '#9CA3AF',
         tabBarStyle: {
           backgroundColor: '#fff',
-          borderTopColor: '#E5E7EB',
+          borderTopColor: colors.border,
           paddingBottom: 4,
           height: 60,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: '600',
         },
         headerStyle: {
-          backgroundColor: '#2094F3',
+          backgroundColor: '#fff',
         },
-        headerTintColor: '#fff',
+        headerShadowVisible: false,
+        headerTintColor: colors.text.primary,
         headerTitleStyle: {
           fontWeight: '700',
+          fontSize: 17,
         },
       }}
     >
@@ -35,11 +43,11 @@ export default function TabLayout() {
         options={{
           title: 'Mapa',
           headerTitle: 'ATM Connect',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 22 }}>📍</Text>,
+          tabBarIcon: ({ focused }) => tabIcon(focused, 'map-outline', 'map'),
           headerRight: () =>
             !user ? (
               <TouchableOpacity onPress={() => router.push('/(auth)/login')} style={{ paddingHorizontal: 16 }}>
-                <Text style={{ color: '#fff', fontWeight: '700' }}>Entrar</Text>
+                <Text style={{ color: colors.brand[500], fontWeight: '700' }}>Entrar</Text>
               </TouchableOpacity>
             ) : undefined,
         }}
@@ -48,14 +56,14 @@ export default function TabLayout() {
         name="forum"
         options={{
           title: 'Fórum',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 22 }}>💬</Text>,
+          tabBarIcon: ({ focused }) => tabIcon(focused, 'chatbubbles-outline', 'chatbubbles'),
         }}
       />
       <Tabs.Screen
         name="agent"
         options={{
           title: 'Agente',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 22 }}>🏦</Text>,
+          tabBarIcon: ({ focused }) => tabIcon(focused, 'business-outline', 'business'),
           href: isAgent ? undefined : null,
         }}
       />
@@ -63,7 +71,7 @@ export default function TabLayout() {
         name="supervisor"
         options={{
           title: 'Supervisor',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 22 }}>👁️</Text>,
+          tabBarIcon: ({ focused }) => tabIcon(focused, 'eye-outline', 'eye'),
           href: isSupervisor ? undefined : null,
         }}
       />
@@ -71,7 +79,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 22 }}>👤</Text>,
+          tabBarIcon: ({ focused }) => tabIcon(focused, 'person-outline', 'person'),
         }}
       />
     </Tabs>

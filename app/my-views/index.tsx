@@ -1,10 +1,15 @@
 import { useEffect, useState, useCallback } from 'react'
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { View, Text, ScrollView, RefreshControl, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useAuth } from '../../src/hooks/useAuth'
 import { useViews } from '../../src/hooks/useViews'
 import { supabase } from '../../src/lib/supabase'
 import { timeSince, timeUntil } from '../../src/lib/time'
+import { AppButton } from '../../src/components/ui/AppButton'
+import { AppCard } from '../../src/components/ui/AppCard'
+import { EmptyState } from '../../src/components/ui/EmptyState'
+import { AppIcon } from '../../src/components/ui/AppIcon'
+import { colors } from '../../src/theme/tokens'
 
 interface ActiveView {
   id: string
@@ -68,98 +73,97 @@ export default function MyViewsScreen() {
 
   if (!user) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F9FAFB', paddingHorizontal: 32 }}>
-        <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 8 }}>Inicia sessão</Text>
-        <Text style={{ color: '#6B7280', textAlign: 'center', marginBottom: 16 }}>
-          Inicia sessão para ver as tuas views activas.
-        </Text>
-        <TouchableOpacity
-          onPress={() => router.push('/(auth)/login')}
-          style={{ backgroundColor: '#2094F3', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32 }}
-        >
-          <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Entrar</Text>
-        </TouchableOpacity>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, paddingHorizontal: 32 }}>
+        <EmptyState
+          icon="eye-outline"
+          title="Inicia sessão"
+          description="Inicia sessão para ver as tuas views activas."
+        />
+        <AppButton label="Entrar" onPress={() => router.push('/(auth)/login')} icon="log-in-outline" size="lg" />
       </View>
     )
   }
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: '#F9FAFB' }}
+      style={{ flex: 1, backgroundColor: colors.surface }}
       contentContainerStyle={{ padding: 16 }}
       contentInsetAdjustmentBehavior="automatic"
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchViews} tintColor="#2094F3" />}
+      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchViews} tintColor={colors.brand[500]} />}
     >
-      <Text style={{ fontSize: 13, color: '#6B7280', marginBottom: 12 }}>
+      <Text style={{ fontSize: 13, color: colors.text.secondary, marginBottom: 12 }}>
         Acessos a ATMs activos por 24h
       </Text>
 
-      <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: '#F3F4F6', flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#EEF6FE', alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: 18 }}>👁️</Text>
+      <AppCard style={{ marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.brand[50], alignItems: 'center', justifyContent: 'center' }}>
+          <AppIcon name="eye" size={22} color={colors.brand[500]} />
         </View>
         <View>
-          <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Views hoje</Text>
-          <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>
+          <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Views hoje</Text>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text.primary }}>
             {viewsLoading || balance.isPremium
               ? balance.isPremium ? 'Ilimitado' : '—'
               : `${balance.remaining}/${balance.dailyLimit} restantes`}
           </Text>
         </View>
-      </View>
+      </AppCard>
 
       {loading ? (
         <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-          <ActivityIndicator size="large" color="#2094F3" />
+          <ActivityIndicator size="large" color={colors.brand[500]} />
         </View>
       ) : views.length === 0 ? (
-        <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 32, alignItems: 'center', borderWidth: 1, borderColor: '#F3F4F6' }}>
-          <Text style={{ fontSize: 28, marginBottom: 8 }}>👁️</Text>
-          <Text style={{ color: '#6B7280', textAlign: 'center', marginBottom: 16 }}>
-            Ainda não desbloqueaste nenhum ATM.
-          </Text>
-          <TouchableOpacity
-            onPress={() => router.replace('/(tabs)/map')}
-            style={{ backgroundColor: '#2094F3', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 20 }}
-          >
-            <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>Explorar mapa</Text>
-          </TouchableOpacity>
-        </View>
+        <AppCard>
+          <EmptyState
+            icon="eye-outline"
+            title="Sem views activas"
+            description="Ainda não desbloqueaste nenhum ATM."
+            actionLabel="Explorar mapa"
+            onAction={() => router.replace('/(tabs)/map')}
+          />
+        </AppCard>
       ) : (
         views.map((v) => (
-          <View key={v.id} style={{ backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: '#F3F4F6' }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+          <AppCard key={v.id} style={{ marginBottom: 10 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>{v.atm?.bank_name ?? 'ATM'}</Text>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.primary }}>{v.atm?.bank_name ?? 'ATM'}</Text>
                 {v.atm?.address && (
-                  <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{v.atm.address}</Text>
+                  <Text style={{ fontSize: 12, color: colors.text.tertiary, marginTop: 2 }}>{v.atm.address}</Text>
                 )}
               </View>
-              <View style={{ backgroundColor: '#EEF6FE', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 3, marginLeft: 8 }}>
-                <Text style={{ fontSize: 10, color: '#1A7ED6', fontWeight: '600' }}>expira {timeUntil(v.expires_at)}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.brand[50], borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, marginLeft: 8 }}>
+                <AppIcon name="time-outline" size={10} color={colors.brand[600]} />
+                <Text style={{ fontSize: 10, color: colors.brand[600], fontWeight: '600' }}>expira {timeUntil(v.expires_at)}</Text>
               </View>
             </View>
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-              <Info label="Dinheiro" value={v.atm?.has_cash ? 'Com dinheiro' : 'Sem dinheiro'} />
-              <Info label="Papel" value={v.atm?.has_paper ? 'Sim' : 'Não'} />
+              <Info label="Dinheiro" value={v.atm?.has_cash ? 'Com dinheiro' : 'Sem dinheiro'} ok={!!v.atm?.has_cash} />
+              <Info label="Papel" value={v.atm?.has_paper ? 'Sim' : 'Não'} ok={!!v.atm?.has_paper} />
               <Info label="Fila" value={v.atm?.fila ?? '—'} />
               <Info label="Operação" value={v.atm?.status ?? 'Operacional'} />
             </View>
-            <Text style={{ fontSize: 10, color: '#9CA3AF', marginTop: 8 }}>
-              Última actualização: {v.atm?.last_updated ? timeSince(v.atm.last_updated) : '—'}
-            </Text>
-          </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 }}>
+              <AppIcon name="refresh-outline" size={11} color={colors.text.tertiary} />
+              <Text style={{ fontSize: 10, color: colors.text.tertiary }}>
+                Última actualização: {v.atm?.last_updated ? timeSince(v.atm.last_updated) : '—'}
+              </Text>
+            </View>
+          </AppCard>
         ))
       )}
     </ScrollView>
   )
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function Info({ label, value, ok }: { label: string; value: string; ok?: boolean }) {
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 6 }}>
-      <Text style={{ fontSize: 9, color: '#9CA3AF' }}>{label}</Text>
-      <Text style={{ fontSize: 11, fontWeight: '600', color: '#111827', marginTop: 1 }}>{value}</Text>
+    <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 6 }}>
+      <Text style={{ fontSize: 9, color: colors.text.tertiary }}>{label}</Text>
+      <Text style={{ fontSize: 11, fontWeight: '600', color: ok === false ? colors.danger : colors.text.primary, marginTop: 1 }}>
+        {value}
+      </Text>
     </View>
   )
 }

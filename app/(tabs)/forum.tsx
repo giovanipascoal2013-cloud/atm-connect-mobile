@@ -1,10 +1,14 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Modal, TextInput, Alert, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useForum } from '../../src/hooks/useForum'
 import { PostCard } from '../../src/components/forum/PostCard'
 import { ProvinceSelector } from '../../src/components/forum/ProvinceSelector'
 import { useAuth } from '../../src/hooks/useAuth'
+import { AppButton } from '../../src/components/ui/AppButton'
+import { EmptyState } from '../../src/components/ui/EmptyState'
+import { AppIcon } from '../../src/components/ui/AppIcon'
+import { colors } from '../../src/theme/tokens'
 
 export default function ForumScreen() {
   const { user, profile, isAdmin } = useAuth()
@@ -67,30 +71,31 @@ export default function ForumScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
       <ProvinceSelector selected={provincia} onSelect={handleSelectProvince} />
 
       {!user || isAdmin ? (
         <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
           {!user ? (
-            <View style={{ backgroundColor: '#EEF6FE', borderRadius: 10, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={{ fontSize: 13, color: '#1A7ED6', flex: 1 }}>
+            <View style={{ backgroundColor: colors.brand[50], borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 13, color: colors.brand[600], flex: 1 }}>
                 Inicia sessão para comentar e criar posts
               </Text>
               <TouchableOpacity
                 onPress={() => router.push('/(auth)/login')}
-                style={{ backgroundColor: '#2094F3', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8, marginLeft: 12 }}
+                style={{ backgroundColor: colors.brand[500], borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8, marginLeft: 12 }}
               >
                 <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>Entrar</Text>
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity
+            <AppButton
+              label="Criar post"
               onPress={() => setShowCreate(true)}
-              style={{ backgroundColor: '#2094F3', borderRadius: 10, paddingVertical: 12, alignItems: 'center' }}
-            >
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>✏️ Criar post</Text>
-            </TouchableOpacity>
+              fullWidth
+              icon="create-outline"
+              haptic
+            />
           )}
         </View>
       ) : null}
@@ -105,15 +110,14 @@ export default function ForumScreen() {
         automaticallyAdjustKeyboardInsets
         onScroll={(e) => { scrollOffsetRef.current = e.nativeEvent.contentOffset.y }}
         scrollEventThrottle={16}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} tintColor="#2094F3" />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} tintColor={colors.brand[500]} />}
       >
         {posts.length === 0 && !loading ? (
-          <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 32, alignItems: 'center', borderWidth: 1, borderColor: '#F3F4F6' }}>
-            <Text style={{ fontSize: 28, marginBottom: 8 }}>💬</Text>
-            <Text style={{ color: '#6B7280', textAlign: 'center' }}>
-              Nenhum post em {provincia} nas últimas 48h
-            </Text>
-          </View>
+          <EmptyState
+            icon="chatbubbles-outline"
+            title="Nenhum post"
+            description={`Nenhum post em ${provincia} nas últimas 48h`}
+          />
         ) : (
           posts.map((post) => (
             <PostCard key={post.id} post={post} onCommentFocus={handleCommentFocus} />
@@ -126,7 +130,10 @@ export default function ForumScreen() {
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 16, paddingBottom: 32 }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 4 }}>Criar post em {provincia}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <AppIcon name="create-outline" size={18} color={colors.brand[500]} />
+                <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827' }}>Criar post em {provincia}</Text>
+              </View>
               <Text style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 12 }}>As mensagens expiram após 2 dias</Text>
 
               <TextInput
@@ -148,24 +155,16 @@ export default function ForumScreen() {
               />
 
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TouchableOpacity
-                  style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB' }}
-                  onPress={() => setShowCreate(false)}
-                  disabled={creating}
-                >
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#6B7280' }}>Cancelar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{ flex: 1.4, backgroundColor: '#2094F3', borderRadius: 10, paddingVertical: 12, alignItems: 'center' }}
+                <AppButton label="Cancelar" variant="outline" onPress={() => setShowCreate(false)} disabled={creating} style={{ flex: 1 }} />
+                <AppButton
+                  label="Publicar"
                   onPress={handleCreate}
+                  loading={creating}
                   disabled={creating || !title.trim() || !message.trim()}
-                >
-                  {creating ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>Publicar</Text>
-                  )}
-                </TouchableOpacity>
+                  style={{ flex: 1.4 }}
+                  icon="send"
+                  haptic
+                />
               </View>
             </View>
           </TouchableWithoutFeedback>
@@ -179,13 +178,13 @@ export default function ForumScreen() {
 }
 
 const inputStyle = {
-  backgroundColor: '#F9FAFB',
+  backgroundColor: colors.surface,
   borderWidth: 1,
-  borderColor: '#E5E7EB',
-  borderRadius: 10,
+  borderColor: colors.border,
+  borderRadius: 12,
   paddingHorizontal: 12,
   paddingVertical: 10,
   fontSize: 14,
-  color: '#111827',
+  color: colors.text.primary,
   marginBottom: 12,
 }

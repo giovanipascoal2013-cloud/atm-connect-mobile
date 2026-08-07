@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView, Linking } from 'react-native'
 import { useRouter, Link, useLocalSearchParams } from 'expo-router'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useAuth } from '../../src/hooks/useAuth'
 import { formatPhone, isValidPhone, phoneToEmail } from '../../src/lib/phone'
 import { friendlyAuthError } from '../../src/lib/errors'
+import { HeaderBackButton } from '../../src/components/navigation/HeaderBackButton'
+import { SegmentedControl } from '../../src/components/ui/SegmentedControl'
+import { AppButton } from '../../src/components/ui/AppButton'
+import { AppIcon } from '../../src/components/ui/AppIcon'
+import { colors, brandGradient } from '../../src/theme/tokens'
 
 type LoginMethod = 'phone' | 'email'
 
@@ -27,11 +33,6 @@ export default function LoginScreen() {
       setMethod('phone')
     }
   }, [params.telefone])
-
-  const goBack = () => {
-    if (router.canGoBack()) router.back()
-    else router.replace('/(tabs)/map')
-  }
 
   const handleLogin = async () => {
     if (method === 'phone') {
@@ -60,51 +61,90 @@ export default function LoginScreen() {
     }
   }
 
-  const methodButton = (m: LoginMethod, label: string) => (
-    <TouchableOpacity
-      onPress={() => setMethod(m)}
-      className={`flex-1 py-2.5 rounded-lg ${method === m ? 'bg-brand-500' : 'bg-gray-100'}`}
-    >
-      <Text className={`text-sm font-medium text-center ${method === m ? 'text-white' : 'text-gray-500'}`}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  )
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-white"
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-        <TouchableOpacity
-          onPress={goBack}
-          className="absolute top-12 left-4 z-10 p-2"
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        <LinearGradient
+          colors={brandGradient as unknown as [string, string]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ paddingTop: Platform.OS === 'ios' ? 60 : 44, paddingHorizontal: 24, paddingBottom: 44 }}
         >
-          <Text className="text-2xl text-brand-600">←</Text>
-        </TouchableOpacity>
-        <View className="flex-1 justify-center px-8">
-          <View className="items-center mb-12">
-            <Text className="text-4xl font-bold text-brand-600">ATM Connect</Text>
-            <Text className="text-base text-gray-500 mt-2">Localizador de ATMs</Text>
-          </View>
-
-          <View className="space-y-4">
-            <View className="flex-row rounded-lg overflow-hidden mb-1">
-              {methodButton('phone', 'Telefone')}
-              {methodButton('email', 'Email')}
+          <HeaderBackButton fallback="/(tabs)/map" color="#fff" />
+          <View style={{ alignItems: 'center', marginTop: 20 }}>
+            <View
+              style={{
+                width: 68,
+                height: 68,
+                borderRadius: 34,
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 14,
+              }}
+            >
+              <AppIcon name="cash-outline" size={34} color="#fff" />
             </View>
+            <Text style={{ fontSize: 28, fontWeight: '800', color: '#fff', letterSpacing: -0.4 }}>
+              ATM Connect
+            </Text>
+            <Text style={{ fontSize: 15, color: 'rgba(255,255,255,0.85)', marginTop: 6 }}>
+              Localizador de ATMs em tempo real
+            </Text>
+          </View>
+        </LinearGradient>
+
+        <View style={{ marginTop: -22, paddingHorizontal: 24 }}>
+          <View
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: 20,
+              borderCurve: 'continuous',
+              padding: 20,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.08,
+              shadowRadius: 20,
+              elevation: 4,
+            }}
+          >
+            <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text.primary, marginBottom: 16 }}>
+              Bem-vindo de volta
+            </Text>
+
+            <SegmentedControl
+              options={[
+                { key: 'phone', label: 'Telefone' },
+                { key: 'email', label: 'Email' },
+              ]}
+              value={method}
+              onChange={setMethod}
+              style={{ marginBottom: 16 }}
+            />
 
             {method === 'phone' ? (
-              <View>
+              <View className="mb-4">
                 <Text className="text-sm font-medium text-gray-700 mb-1">Número de telefone</Text>
-                <View className="flex-row items-center border border-gray-300 rounded-lg px-4">
-                  <Text className="text-gray-500 font-medium">+244</Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: colors.surface,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: 12,
+                    paddingHorizontal: 14,
+                  }}
+                >
+                  <AppIcon name="call-outline" size={17} color={colors.text.tertiary} />
+                  <Text style={{ color: colors.text.secondary, fontWeight: '600', marginLeft: 8 }}>+244</Text>
                   <TextInput
-                    className="flex-1 px-2 py-3 text-base"
+                    style={{ flex: 1, paddingVertical: 13, paddingHorizontal: 8, fontSize: 15 }}
                     placeholder="9XX XXX XXX"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.text.tertiary}
                     value={telefone}
                     onChangeText={(v) => setTelefone(formatPhone(v))}
                     keyboardType="phone-pad"
@@ -113,52 +153,79 @@ export default function LoginScreen() {
                 </View>
               </View>
             ) : (
-              <View>
+              <View className="mb-4">
                 <Text className="text-sm font-medium text-gray-700 mb-1">Email</Text>
-                <TextInput
-                  className="border border-gray-300 rounded-lg px-4 py-3 text-base"
-                  placeholder="seu@email.com"
-                  placeholderTextColor="#9CA3AF"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                />
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: colors.surface,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: 12,
+                    paddingHorizontal: 14,
+                  }}
+                >
+                  <AppIcon name="mail-outline" size={17} color={colors.text.tertiary} />
+                  <TextInput
+                    style={{ flex: 1, paddingVertical: 13, paddingHorizontal: 10, fontSize: 15 }}
+                    placeholder="seu@email.com"
+                    placeholderTextColor={colors.text.tertiary}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                  />
+                </View>
               </View>
             )}
 
-            <View>
+            <View className="mb-2">
               <Text className="text-sm font-medium text-gray-700 mb-1">Senha</Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg px-4 py-3 text-base"
-                placeholder="Sua senha"
-                placeholderTextColor="#9CA3AF"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: colors.surface,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 12,
+                  paddingHorizontal: 14,
+                }}
+              >
+                <AppIcon name="lock-closed-outline" size={17} color={colors.text.tertiary} />
+                <TextInput
+                  style={{ flex: 1, paddingVertical: 13, paddingHorizontal: 10, fontSize: 15 }}
+                  placeholder="Sua senha"
+                  placeholderTextColor={colors.text.tertiary}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                />
+              </View>
             </View>
 
             <TouchableOpacity
               onPress={() => Linking.openURL(SUPPORT_WHATSAPP)}
-              className="items-center mt-1"
+              className="items-center mt-1 mb-4"
             >
-              <Text className="text-brand-600 text-sm">Esqueceu a senha?</Text>
+              <Text style={{ color: colors.brand[500], fontSize: 14 }}>Esqueceu a senha?</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
+            <AppButton
+              label={loading ? 'Entrando...' : 'Entrar'}
               onPress={handleLogin}
               disabled={loading}
-              className="bg-brand-500 rounded-lg py-4 items-center mt-2"
-            >
-              <Text className="text-white font-semibold text-base">
-                {loading ? 'Entrando...' : 'Entrar'}
-              </Text>
-            </TouchableOpacity>
+              loading={loading}
+              fullWidth
+              size="lg"
+              icon="log-in-outline"
+              haptic
+            />
           </View>
 
-          <View className="flex-row justify-center mt-8">
+          <View className="flex-row justify-center mt-6 mb-10">
             <Text className="text-gray-500 text-sm">Não tem conta? </Text>
             <Link href="/(auth)/register" asChild>
               <TouchableOpacity>

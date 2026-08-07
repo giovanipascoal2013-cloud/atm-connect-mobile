@@ -1,11 +1,16 @@
 import { useEffect, useRef } from 'react'
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { useAgentOnboarding } from '../../src/hooks/useAgentOnboarding'
+import { AppCard } from '../../src/components/ui/AppCard'
+import { AppButton } from '../../src/components/ui/AppButton'
+import { AppIcon, type AppIconName } from '../../src/components/ui/AppIcon'
+import { colors, radius, brandGradient } from '../../src/theme/tokens'
 
-const SECTIONS = [
+const SECTIONS: { icon: AppIconName; title: string; points: string[] }[] = [
   {
-    icon: '💼',
+    icon: 'briefcase',
     title: 'O que é um Agente',
     points: [
       'É a pessoa de referência para registar e manter ATMs.',
@@ -14,7 +19,7 @@ const SECTIONS = [
     ],
   },
   {
-    icon: '💰',
+    icon: 'cash',
     title: 'Como ganha dinheiro',
     points: [
       'Recebe 50 KZ por cada view consumida num ATM submetido por si.',
@@ -23,7 +28,7 @@ const SECTIONS = [
     ],
   },
   {
-    icon: '📷',
+    icon: 'camera',
     title: 'Como registar um ATM',
     points: [
       'Vai precisar de estar fisicamente em frente ao equipamento.',
@@ -34,7 +39,7 @@ const SECTIONS = [
     ],
   },
   {
-    icon: '🏦',
+    icon: 'card',
     title: 'Como levantar dinheiro',
     points: [
       'Os seus ganhos acumulam no painel do agente.',
@@ -65,72 +70,63 @@ export default function AgentOnboardingScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <View
-        style={{
-          backgroundColor: '#2094F3',
-          paddingHorizontal: 20,
-          paddingTop: 24,
-          paddingBottom: 28,
-          alignItems: 'center',
-        }}
+    <View style={{ flex: 1, backgroundColor: colors.card }}>
+      <LinearGradient
+        colors={brandGradient as unknown as [string, string]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 28, alignItems: 'center' }}
       >
-        <Text style={{ fontSize: 40, marginBottom: 8 }}>🤝</Text>
+        <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
+          <AppIcon name="rocket" size={28} color="#fff" />
+        </View>
         <Text style={{ fontSize: 22, fontWeight: '700', color: '#fff' }}>Bem-vindo, Agente</Text>
-        <Text style={{ fontSize: 14, color: '#DBEAFE', marginTop: 6, textAlign: 'center' }}>
+        <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', marginTop: 6, textAlign: 'center', lineHeight: 20 }}>
           Leia com atenção como começar a ganhar com o ATM Connect.
         </Text>
-      </View>
+      </LinearGradient>
 
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
       >
         {SECTIONS.map((section, i) => (
-          <View
-            key={section.title}
-            style={{
-              backgroundColor: '#F9FAFB',
-              borderRadius: 12,
-              padding: 16,
-              marginBottom: 12,
-              borderWidth: 1,
-              borderColor: '#F3F4F6',
-            }}
-          >
+          <AppCard key={section.title} style={{ marginBottom: 12 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#EEF6FE', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 17 }}>{section.icon}</Text>
+              <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: colors.brand[50], alignItems: 'center', justifyContent: 'center' }}>
+                <AppIcon name={section.icon} size={17} color={colors.brand[600]} />
               </View>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827', flex: 1 }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text.primary, flex: 1 }}>
                 {i + 1}. {section.title}
               </Text>
             </View>
             {section.points.map((point) => (
               <View key={point} style={{ flexDirection: 'row', gap: 8, marginBottom: 4 }}>
-                <Text style={{ fontSize: 14, color: '#2094F3', marginTop: 1 }}>•</Text>
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 20, flex: 1 }}>{point}</Text>
+                <View style={{ marginTop: 8, width: 4, height: 4, borderRadius: 2, backgroundColor: colors.brand[400] }} />
+                <Text style={{ fontSize: 14, color: colors.text.primary, lineHeight: 20, flex: 1 }}>{point}</Text>
               </View>
             ))}
-          </View>
+          </AppCard>
         ))}
 
-        <View style={{ backgroundColor: '#EEF6FE', borderRadius: 12, padding: 14, marginTop: 4 }}>
-          <Text style={{ fontSize: 13, color: '#1A7ED6', lineHeight: 19 }}>
+        <View style={{ backgroundColor: colors.brand[50], borderRadius: radius.md, padding: 14, marginTop: 4 }}>
+          <Text style={{ fontSize: 13, color: colors.brand[700], lineHeight: 19 }}>
             O painel do agente só desbloqueia depois de ter pelo menos um ATM aprovado. Enquanto aguarda a aprovação, pode submeter mais ATMs.
           </Text>
         </View>
       </ScrollView>
 
-      <View style={{ padding: 16, paddingBottom: 28, borderTopWidth: 1, borderTopColor: '#F3F4F6' }}>
-        <TouchableOpacity
+      <View style={{ padding: 16, paddingBottom: 28, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.card }}>
+        <AppButton
+          label="Continuar para registar um ATM"
+          icon="camera"
+          iconRight="arrow-forward"
+          fullWidth
+          haptic
           onPress={handleContinue}
-          style={{ backgroundColor: '#2094F3', borderRadius: 12, paddingVertical: 14, alignItems: 'center' }}
-        >
-          <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>Continuar para registar um ATM 📷</Text>
-        </TouchableOpacity>
+        />
         <TouchableOpacity onPress={handleExplore} style={{ paddingVertical: 12, alignItems: 'center' }}>
-          <Text style={{ fontSize: 14, color: '#9CA3AF' }}>Explorar o app primeiro</Text>
+          <Text style={{ fontSize: 14, color: colors.text.tertiary }}>Explorar o app primeiro</Text>
         </TouchableOpacity>
       </View>
     </View>

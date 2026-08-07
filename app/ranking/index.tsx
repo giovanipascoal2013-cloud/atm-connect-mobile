@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { View, Text, ScrollView, ActivityIndicator, RefreshControl } from 'react-native'
 import { supabase } from '../../src/lib/supabase'
+import { AppCard } from '../../src/components/ui/AppCard'
+import { EmptyState } from '../../src/components/ui/EmptyState'
+import { AppIcon } from '../../src/components/ui/AppIcon'
+import { colors } from '../../src/theme/tokens'
 
 interface RankingEntry {
   agent_id: string
@@ -48,80 +52,102 @@ export default function RankingScreen() {
     fetchRanking()
   }, [])
 
-  const medal = (pos: number) => {
-    if (pos === 1) return '🥇'
-    if (pos === 2) return '🥈'
-    if (pos === 3) return '🥉'
-    return `#${pos}`
+  const medalColor = (pos: number) => {
+    if (pos === 1) return '#D97706'
+    if (pos === 2) return '#9CA3AF'
+    if (pos === 3) return '#B45309'
+    return undefined
   }
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F9FAFB' }}>
-        <ActivityIndicator size="large" color="#2094F3" />
-        <Text style={{ color: '#6B7280', marginTop: 12 }}>A carregar ranking...</Text>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface }}>
+        <ActivityIndicator size="large" color={colors.brand[500]} />
+        <Text style={{ color: colors.text.secondary, marginTop: 12 }}>A carregar ranking...</Text>
       </View>
     )
   }
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: '#F9FAFB' }}
+      style={{ flex: 1, backgroundColor: colors.surface }}
       contentContainerStyle={{ padding: 16 }}
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchRanking} tintColor="#2094F3" />}
+      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchRanking} tintColor={colors.brand[500]} />}
     >
       <View style={{ alignItems: 'center', marginBottom: 20 }}>
-        <Text style={{ fontSize: 28, marginBottom: 4 }}>🏆</Text>
-        <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>Ranking de Agentes</Text>
-        <Text style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4 }}>Top agentes por fiabilidade</Text>
+        <View
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 32,
+            backgroundColor: colors.brand[50],
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 10,
+          }}
+        >
+          <AppIcon name="trophy" size={32} color={colors.brand[500]} />
+        </View>
+        <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text.primary }}>Ranking de Agentes</Text>
+        <Text style={{ fontSize: 13, color: colors.text.tertiary, marginTop: 4 }}>Top agentes por fiabilidade</Text>
       </View>
 
       {ranking.length === 0 ? (
-        <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 32, alignItems: 'center', borderWidth: 1, borderColor: '#F3F4F6' }}>
-          <Text style={{ color: '#6B7280', textAlign: 'center' }}>
-            Ainda não há avaliações suficientes para o ranking.
-          </Text>
-        </View>
+        <AppCard>
+          <EmptyState
+            icon="podium-outline"
+            title="Sem avaliações ainda"
+            description="Ainda não há avaliações suficientes para o ranking."
+          />
+        </AppCard>
       ) : (
-        ranking.map((entry) => (
-          <View
-            key={entry.agent_id}
-            style={{
-              backgroundColor: '#fff',
-              borderRadius: 12,
-              padding: 14,
-              marginBottom: 10,
-              borderWidth: 1,
-              borderColor: '#F3F4F6',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.05,
-              shadowRadius: 4,
-              elevation: 2,
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <Text style={{ fontSize: 22, width: 36, textAlign: 'center' }}>
-                {entry.rank_position <= 3 ? medal(entry.rank_position) : `#${entry.rank_position}`}
-              </Text>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 15, fontWeight: '600', color: '#111827' }}>{entry.agent_name}</Text>
-                <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>
-                  {entry.total_atms} ATM{entry.total_atms !== 1 ? 's' : ''} · {entry.total_ratings} avaliação{entry.total_ratings !== 1 ? 'ões' : ''}
-                </Text>
-              </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={{ fontSize: 18, fontWeight: '700', color: entry.approval_pct >= 80 ? '#10B981' : entry.approval_pct >= 50 ? '#F59E0B' : '#EF4444' }}>
-                  {entry.approval_pct}%
-                </Text>
-                <View style={{ flexDirection: 'row', gap: 8, marginTop: 2 }}>
-                  <Text style={{ fontSize: 12, color: '#34A853' }}>👍 {entry.likes}</Text>
-                  <Text style={{ fontSize: 12, color: '#EA4335' }}>👎 {entry.dislikes}</Text>
+        ranking.map((entry) => {
+          const rankColor = medalColor(entry.rank_position)
+          const isPodium = entry.rank_position <= 3
+          return (
+            <AppCard key={entry.agent_id} style={{ marginBottom: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: isPodium ? colors.brand[50] : colors.surface,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {isPodium ? (
+                    <AppIcon name="trophy" size={17} color={rankColor} />
+                  ) : (
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text.secondary }}>#{entry.rank_position}</Text>
+                  )}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.primary }}>{entry.agent_name}</Text>
+                  <Text style={{ fontSize: 12, color: colors.text.tertiary, marginTop: 2 }}>
+                    {entry.total_atms} ATM{entry.total_atms !== 1 ? 's' : ''} · {entry.total_ratings} avaliação{entry.total_ratings !== 1 ? 'ões' : ''}
+                  </Text>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={{ fontSize: 18, fontWeight: '700', color: entry.approval_pct >= 80 ? colors.money : entry.approval_pct >= 50 ? '#D97706' : colors.danger, fontVariant: ['tabular-nums'] }}>
+                    {entry.approval_pct}%
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 2 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <AppIcon name="thumbs-up" size={12} color="#34A853" />
+                      <Text style={{ fontSize: 12, color: '#34A853' }}>{entry.likes}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <AppIcon name="thumbs-down" size={12} color="#EA4335" />
+                      <Text style={{ fontSize: 12, color: '#EA4335' }}>{entry.dislikes}</Text>
+                    </View>
+                  </View>
                 </View>
               </View>
-            </View>
-          </View>
-        ))
+            </AppCard>
+          )
+        })
       )}
     </ScrollView>
   )

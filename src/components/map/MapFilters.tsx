@@ -2,6 +2,9 @@ import React from 'react'
 import { View, TextInput, ScrollView, TouchableOpacity, Text } from 'react-native'
 import type { ATMStatus, SortMode } from '../../hooks/useATMs'
 import { CityDropdown } from './CityDropdown'
+import { SegmentedControl } from '../ui/SegmentedControl'
+import { AppIcon } from '../ui/AppIcon'
+import { colors, shadows } from '@/theme/tokens'
 
 interface MapFiltersProps {
   search: string
@@ -37,15 +40,14 @@ function chip(
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
-        backgroundColor: selected ? '#2094F3' : '#fff',
-        gap: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        paddingVertical: 7,
+        borderRadius: 999,
+        borderCurve: 'continuous',
+        backgroundColor: selected ? colors.brand[500] : '#fff',
+        gap: 6,
+        borderWidth: 1,
+        borderColor: selected ? colors.brand[500] : colors.border,
+        ...(selected ? shadows.card : {}),
       }}
     >
       {color && (
@@ -75,26 +77,26 @@ export function MapFilters({
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: '#fff',
-          borderRadius: 12,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 4,
+          backgroundColor: colors.surface,
+          borderRadius: 999,
+          borderCurve: 'continuous',
+          borderWidth: 1,
+          borderColor: colors.border,
+          paddingHorizontal: 14,
         }}
       >
+        <AppIcon name="search" size={17} color={colors.text.tertiary} />
         <TextInput
-          style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16 }}
-          placeholder="Buscar ATM..."
-          placeholderTextColor="#9CA3AF"
+          style={{ flex: 1, paddingVertical: 11, paddingHorizontal: 10, fontSize: 15 }}
+          placeholder="Buscar ATM, banco ou cidade..."
+          placeholderTextColor={colors.text.tertiary}
           value={search}
           onChangeText={onSearchChange}
           returnKeyType="search"
         />
         {search.length > 0 && (
-          <TouchableOpacity onPress={() => onSearchChange('')} style={{ paddingHorizontal: 14 }}>
-            <Text style={{ fontSize: 16, color: '#9CA3AF', fontWeight: '700' }}>✕</Text>
+          <TouchableOpacity onPress={() => onSearchChange('')} style={{ padding: 2 }} hitSlop={10}>
+            <AppIcon name="close-circle" size={18} color={colors.text.tertiary} />
           </TouchableOpacity>
         )}
       </View>
@@ -102,7 +104,7 @@ export function MapFilters({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 6 }}
+        contentContainerStyle={{ gap: 8 }}
       >
         {STATUS_OPTIONS.map((s) =>
           chip(s.key, s.label, status === s.key, () => onStatusChange(s.key), s.color)
@@ -110,41 +112,15 @@ export function MapFilters({
       </ScrollView>
 
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <View
-          style={{
-            flexDirection: 'row',
-            backgroundColor: '#F3F4F6',
-            borderRadius: 10,
-            padding: 2,
-          }}
-        >
-          <TouchableOpacity
-            onPress={() => onSortModeChange('proximity')}
-            style={{
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 8,
-              backgroundColor: sortMode === 'proximity' ? '#fff' : 'transparent',
-            }}
-          >
-            <Text style={{ fontSize: 12, fontWeight: '600', color: sortMode === 'proximity' ? '#2094F3' : '#6B7280' }}>
-              Proximidade
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => onSortModeChange('alphabetic')}
-            style={{
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 8,
-              backgroundColor: sortMode === 'alphabetic' ? '#fff' : 'transparent',
-            }}
-          >
-            <Text style={{ fontSize: 12, fontWeight: '600', color: sortMode === 'alphabetic' ? '#2094F3' : '#6B7280' }}>
-              A-Z
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <SegmentedControl
+          options={[
+            { key: 'proximity', label: 'Proximidade' },
+            { key: 'alphabetic', label: 'A-Z' },
+          ]}
+          value={sortMode}
+          onChange={onSortModeChange}
+          style={{ flex: 1 }}
+        />
         {cities.length > 0 && (
           <CityDropdown city={city} cities={cities} onCityChange={onCityChange} />
         )}

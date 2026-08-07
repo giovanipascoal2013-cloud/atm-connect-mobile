@@ -5,6 +5,8 @@ import type { ForumPost, ForumComment } from '../../hooks/useForum'
 import { useForum } from '../../hooks/useForum'
 import { useAuth } from '../../hooks/useAuth'
 import { timeSince } from '../../lib/time'
+import { AppIcon, type AppIconName } from '../ui/AppIcon'
+import { colors } from '@/theme/tokens'
 
 interface PostCardProps {
   post: ForumPost
@@ -48,17 +50,20 @@ export function PostCard({ post, onCommentFocus }: PostCardProps) {
     setComments(cmts)
   }, [commentText, addComment, fetchComments, post.id])
 
-  const icon = post.type === 'admin' ? '📢' : post.type === 'system' ? '🔄' : '💬'
+  const iconName: AppIconName = post.type === 'admin' ? 'megaphone' : post.type === 'system' ? 'sync' : 'chatbubble'
+  const iconBg = post.type === 'admin' ? colors.brand[50] : post.type === 'system' ? colors.accent[50] : '#F1F3F5'
+  const iconColor = post.type === 'admin' ? colors.brand[500] : post.type === 'system' ? colors.accent[500] : colors.text.secondary
 
   return (
     <View
       style={{
         backgroundColor: '#fff',
-        borderRadius: 12,
+        borderRadius: 16,
+        borderCurve: 'continuous',
         padding: 14,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: '#F3F4F6',
+        borderColor: colors.border,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
@@ -68,7 +73,18 @@ export function PostCard({ post, onCommentFocus }: PostCardProps) {
     >
       <TouchableOpacity onPress={handleExpand} activeOpacity={0.7}>
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
-          <Text style={{ fontSize: 20 }}>{icon}</Text>
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: iconBg,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <AppIcon name={iconName} size={18} color={iconColor} />
+          </View>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 15, fontWeight: '600', color: '#111827' }} numberOfLines={expanded ? undefined : 2}>
               {post.title}
@@ -121,13 +137,13 @@ export function PostCard({ post, onCommentFocus }: PostCardProps) {
                 ref={commentInputRef}
                 style={{
                   flex: 1,
-                  backgroundColor: '#F9FAFB',
-                  borderRadius: 8,
+                  backgroundColor: colors.surface,
+                  borderRadius: 10,
                   paddingHorizontal: 12,
                   paddingVertical: 8,
                   fontSize: 13,
                   borderWidth: 1,
-                  borderColor: '#E5E7EB',
+                  borderColor: colors.border,
                 }}
                 value={commentText}
                 onChangeText={setCommentText}
@@ -138,15 +154,19 @@ export function PostCard({ post, onCommentFocus }: PostCardProps) {
               />
               <TouchableOpacity
                 style={{
-                  backgroundColor: commentText.trim() ? '#2094F3' : '#E5E7EB',
-                  borderRadius: 8,
-                  paddingHorizontal: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  backgroundColor: commentText.trim() ? colors.brand[500] : '#E5E7EB',
+                  borderRadius: 10,
+                  paddingHorizontal: 14,
                   paddingVertical: 8,
                   justifyContent: 'center',
                 }}
                 onPress={handleAddComment}
                 disabled={!commentText.trim()}
               >
+                <AppIcon name="send" size={14} color={commentText.trim() ? '#fff' : '#9CA3AF'} />
                 <Text style={{ fontSize: 13, fontWeight: '600', color: commentText.trim() ? '#fff' : '#9CA3AF' }}>
                   Enviar
                 </Text>
@@ -157,9 +177,9 @@ export function PostCard({ post, onCommentFocus }: PostCardProps) {
           {!user && (
             <TouchableOpacity
               onPress={() => router.push('/(auth)/login')}
-              style={{ backgroundColor: '#EEF6FE', borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginTop: 4 }}
+              style={{ backgroundColor: colors.brand[50], borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginTop: 4 }}
             >
-              <Text style={{ fontSize: 13, color: '#1A7ED6', fontWeight: '600' }}>
+              <Text style={{ fontSize: 13, color: colors.brand[600], fontWeight: '600' }}>
                 Inicia sessão para comentar
               </Text>
             </TouchableOpacity>

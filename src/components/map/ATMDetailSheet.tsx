@@ -1,8 +1,12 @@
 import React from 'react'
-import { View, Text, TouchableOpacity, ScrollView, Pressable, ActivityIndicator } from 'react-native'
+import { View, Text, TouchableOpacity, ScrollView, Pressable } from 'react-native'
 import type { ATMWithDistance } from '../../hooks/useATMs'
 import { getATMStatus, getATMColor } from '../../hooks/useATMs'
 import { timeSince } from '../../lib/time'
+import { AppIcon } from '../ui/AppIcon'
+import { AppButton } from '../ui/AppButton'
+import { Badge } from '../ui/Badge'
+import { colors } from '@/theme/tokens'
 
 interface ATMDetailSheetProps {
   atm: ATMWithDistance | null
@@ -46,6 +50,26 @@ export function ATMDetailSheet({
     status === 'no_cash' ? 'Sem Dinheiro' :
     'Fora de Serviço'
 
+  const infoTile = (label: string, value: string, ok: boolean) => (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: colors.surface,
+        borderRadius: 12,
+        borderCurve: 'continuous',
+        padding: 12,
+      }}
+    >
+      <Text style={{ fontSize: 12, color: colors.text.tertiary }}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 }}>
+        <AppIcon name={ok ? 'checkmark-circle' : 'close-circle'} size={14} color={ok ? '#34A853' : '#EA4335'} />
+        <Text style={{ fontSize: 15, fontWeight: '700', color: ok ? '#34A853' : '#EA4335' }}>
+          {value}
+        </Text>
+      </View>
+    </View>
+  )
+
   return (
     <View
       style={{
@@ -54,13 +78,14 @@ export function ATMDetailSheet({
         left: 0,
         right: 0,
         backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        borderCurve: 'continuous',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-        elevation: 8,
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+        elevation: 10,
         maxHeight: unlocked ? '50%' : '30%',
       }}
     >
@@ -69,51 +94,55 @@ export function ATMDetailSheet({
       </Pressable>
 
       {unlocked ? (
-        <ScrollView style={{ paddingHorizontal: 20, paddingBottom: 24 }}>
+        <ScrollView style={{ paddingHorizontal: 20, paddingBottom: 24 }} contentContainerStyle={{ paddingTop: 4 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>{atm.bank_name}</Text>
-              <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 2 }}>{atm.address}</Text>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text.primary }}>{atm.bank_name}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
+                <AppIcon name="location-outline" size={14} color={colors.text.secondary} />
+                <Text style={{ fontSize: 14, color: colors.text.secondary, flex: 1 }}>{atm.address}</Text>
+              </View>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: color }} />
-              <Text style={{ fontSize: 13, fontWeight: '600', color }}>{statusLabel}</Text>
-            </View>
+            <Badge
+              variant={status === 'cash' ? 'success' : status === 'no_cash' ? 'danger' : 'neutral'}
+              label={statusLabel}
+            />
           </View>
 
           {(atm.cidade || atm.provincia) && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 6 }}>
-              <Text style={{ fontSize: 13, color: '#9CA3AF' }}>
-                {[atm.cidade, atm.provincia].filter(Boolean).join(', ')}
-              </Text>
-            </View>
+            <Text style={{ fontSize: 13, color: colors.text.tertiary, marginBottom: 12 }}>
+              {[atm.cidade, atm.provincia].filter(Boolean).join(', ')}
+            </Text>
           )}
 
-          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
-            <View style={{ flex: 1, backgroundColor: '#F9FAFB', borderRadius: 10, padding: 12 }}>
-              <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Dinheiro</Text>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: atm.has_cash ? '#34A853' : '#EA4335', marginTop: 2 }}>
-                {atm.has_cash ? 'Disponível' : 'Indisponível'}
-              </Text>
-            </View>
-            <View style={{ flex: 1, backgroundColor: '#F9FAFB', borderRadius: 10, padding: 12 }}>
-              <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Papel</Text>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: atm.has_paper ? '#34A853' : '#EA4335', marginTop: 2 }}>
-                {atm.has_paper ? 'Disponível' : 'Indisponível'}
-              </Text>
-            </View>
+          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
+            {infoTile('Dinheiro', atm.has_cash ? 'Disponível' : 'Indisponível', !!atm.has_cash)}
+            {infoTile('Papel', atm.has_paper ? 'Disponível' : 'Indisponível', !!atm.has_paper)}
           </View>
 
           {atm.fila && (
-            <View style={{ backgroundColor: '#F9FAFB', borderRadius: 10, padding: 12, marginBottom: 12 }}>
-              <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Fila</Text>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827', marginTop: 2 }}>{atm.fila}</Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                backgroundColor: colors.surface,
+                borderRadius: 12,
+                padding: 12,
+                marginBottom: 12,
+              }}
+            >
+              <AppIcon name="people-outline" size={16} color={colors.text.secondary} />
+              <View>
+                <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Fila</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text.primary }}>{atm.fila}</Text>
+              </View>
             </View>
           )}
 
           {atm.agent_id && agentRating && (
-            <View style={{ backgroundColor: '#F0F9FF', borderRadius: 10, padding: 12, marginBottom: 12 }}>
-              <Text style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 8 }}>
+            <View style={{ backgroundColor: colors.brand[50], borderRadius: 12, padding: 12, marginBottom: 12 }}>
+              <Text style={{ fontSize: 12, color: colors.text.secondary, marginBottom: 8 }}>
                 Avalie a fiabilidade deste ATM — ajude a comunidade!
               </Text>
               <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -128,10 +157,10 @@ export function ATMDetailSheet({
                     paddingVertical: 8,
                     paddingHorizontal: 14,
                     borderWidth: 1,
-                    borderColor: userVote === 'like' ? '#10B981' : '#E5E7EB',
+                    borderColor: userVote === 'like' ? '#10B981' : colors.border,
                   }}
                 >
-                  <Text style={{ fontSize: 15 }}>👍</Text>
+                  <AppIcon name="thumbs-up" size={15} color={userVote === 'like' ? '#fff' : '#10B981'} />
                   <Text style={{ fontSize: 14, fontWeight: '700', color: userVote === 'like' ? '#fff' : '#10B981' }}>
                     {agentRating.likes}
                   </Text>
@@ -147,10 +176,10 @@ export function ATMDetailSheet({
                     paddingVertical: 8,
                     paddingHorizontal: 14,
                     borderWidth: 1,
-                    borderColor: userVote === 'dislike' ? '#EF4444' : '#E5E7EB',
+                    borderColor: userVote === 'dislike' ? '#EF4444' : colors.border,
                   }}
                 >
-                  <Text style={{ fontSize: 15 }}>👎</Text>
+                  <AppIcon name="thumbs-down" size={15} color={userVote === 'dislike' ? '#fff' : '#EF4444'} />
                   <Text style={{ fontSize: 14, fontWeight: '700', color: userVote === 'dislike' ? '#fff' : '#EF4444' }}>
                     {agentRating.dislikes}
                   </Text>
@@ -160,104 +189,73 @@ export function ATMDetailSheet({
           )}
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-            <Text style={{ fontSize: 12, color: '#9CA3AF' }}>
-              Actualizado {timeSince(atm.last_updated)}
-            </Text>
-            {atm.distance !== undefined && (
-              <Text style={{ fontSize: 12, color: '#9CA3AF' }}>
-                {atm.distance < 1 ? `${Math.round(atm.distance * 1000)}m` : `${atm.distance.toFixed(1)}km`}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <AppIcon name="time-outline" size={13} color={colors.text.tertiary} />
+              <Text style={{ fontSize: 12, color: colors.text.tertiary }}>
+                Actualizado {timeSince(atm.last_updated)}
               </Text>
+            </View>
+            {atm.distance !== undefined && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <AppIcon name="navigate-outline" size={13} color={colors.text.tertiary} />
+                <Text style={{ fontSize: 12, color: colors.text.tertiary }}>
+                  {atm.distance < 1 ? `${Math.round(atm.distance * 1000)}m` : `${atm.distance.toFixed(1)}km`}
+                </Text>
+              </View>
             )}
           </View>
         </ScrollView>
       ) : (
-        <View style={{ paddingHorizontal: 20, paddingBottom: 24 }}>
+        <View style={{ paddingHorizontal: 20, paddingBottom: 24, paddingTop: 4 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: color }} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827' }}>{atm.bank_name}</Text>
-              <Text style={{ fontSize: 13, color: '#9CA3AF' }}>{atm.address}</Text>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text.primary }}>{atm.bank_name}</Text>
+              <Text style={{ fontSize: 13, color: colors.text.tertiary }}>{atm.address}</Text>
             </View>
           </View>
 
           {!isLoggedIn ? (
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#2094F3',
-                borderRadius: 12,
-                paddingVertical: 12,
-                alignItems: 'center',
-              }}
+            <AppButton
+              label="Entrar para ver detalhes"
               onPress={onLogin}
-            >
-              <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>
-                Entrar para ver detalhes
-              </Text>
-            </TouchableOpacity>
+              fullWidth
+              icon="log-in-outline"
+              haptic
+            />
           ) : isPremium ? (
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#2094F3',
-                borderRadius: 12,
-                paddingVertical: 12,
-                alignItems: 'center',
-              }}
+            <AppButton
+              label="Ver Detalhes"
               onPress={onUnlock}
-              disabled={unlocking}
-            >
-              {unlocking ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Ver Detalhes</Text>
-              )}
-            </TouchableOpacity>
+              fullWidth
+              loading={unlocking}
+              icon="eye-outline"
+              haptic
+            />
           ) : remainingViews > 0 ? (
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#2094F3',
-                borderRadius: 12,
-                paddingVertical: 12,
-                alignItems: 'center',
-              }}
+            <AppButton
+              label={`Desbloquear (${remainingViews} restantes hoje)`}
               onPress={onUnlock}
-              disabled={unlocking}
-            >
-              {unlocking ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>
-                  Desbloquear ({remainingViews} restantes hoje)
-                </Text>
-              )}
-            </TouchableOpacity>
+              fullWidth
+              loading={unlocking}
+              icon="lock-open-outline"
+              haptic
+            />
           ) : (
-            <View>
-              <View
-                style={{
-                  backgroundColor: '#FEF3C7',
-                  borderRadius: 12,
-                  paddingVertical: 12,
-                  paddingHorizontal: 16,
-                  marginBottom: 10,
-                }}
-              >
+            <View style={{ gap: 10 }}>
+              <View style={{ backgroundColor: '#FEF3C7', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16 }}>
                 <Text style={{ fontSize: 13, color: '#92400E', textAlign: 'center' }}>
                   Limite diário de views atingido
                 </Text>
               </View>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: '#F59E0B',
-                  borderRadius: 12,
-                  paddingVertical: 12,
-                  alignItems: 'center',
-                }}
+              <AppButton
+                label="Upgrade Premium"
                 onPress={onOpenPremium}
-              >
-                <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>
-                  👑 Upgrade Premium
-                </Text>
-              </TouchableOpacity>
+                fullWidth
+                variant="success"
+                icon="diamond"
+                haptic
+              />
             </View>
           )}
         </View>

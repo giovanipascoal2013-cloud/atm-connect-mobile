@@ -1,8 +1,13 @@
 import React, { useCallback, useMemo } from 'react'
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native'
+import { View, Text, FlatList, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native'
 import type { ATMWithDistance } from '../../hooks/useATMs'
 import { getATMStatus, getATMColor, getATMStatusLabel } from '../../hooks/useATMs'
 import { timeSince } from '../../lib/time'
+import { AppCard } from '../ui/AppCard'
+import { AppIcon } from '../ui/AppIcon'
+import { EmptyState } from '../ui/EmptyState'
+import { AppButton } from '../ui/AppButton'
+import { colors } from '@/theme/tokens'
 
 interface ATMListProps {
   atms: ATMWithDistance[]
@@ -35,51 +40,56 @@ const ATMListRow = React.memo(function ATMListRow({
   }
 
   return (
-    <TouchableOpacity
-      onPress={() => onPress(item)}
-      activeOpacity={0.7}
-      style={{
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 14,
-        borderWidth: 1,
-        borderColor: '#F3F4F6',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
-      }}
-    >
+    <AppCard onPress={() => onPress(item)} style={styles.card}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
-        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: color, marginTop: 4 }} />
+        <View style={[styles.statusDot, { backgroundColor: color }]} />
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827' }}>{item.bank_name}</Text>
-          <Text style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>{item.address}</Text>
-          {(item.cidade || item.provincia) && (
-            <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>
-              {[item.cidade, item.provincia].filter(Boolean).join(', ')}
-            </Text>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text.primary }}>
+            {locked ? 'ATM bloqueado' : item.bank_name}
+          </Text>
+          {!locked && <Text style={{ fontSize: 13, color: colors.text.secondary, marginTop: 2 }}>{item.address}</Text>}
+          {!locked && (item.cidade || item.provincia) && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+              <AppIcon name="location-outline" size={12} color={colors.text.tertiary} />
+              <Text style={{ fontSize: 12, color: colors.text.tertiary }}>
+                {[item.cidade, item.provincia].filter(Boolean).join(', ')}
+              </Text>
+            </View>
           )}
         </View>
       </View>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#F3F4F6' }}>
-        <Text style={{ fontSize: 13, fontWeight: '600', color }}>
-          {locked ? '🔒 Bloqueado' : getATMStatusLabel(status)}
-        </Text>
+      <View style={styles.cardFooter}>
+        {locked ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <AppIcon name="lock-closed" size={14} color={color} />
+            <Text style={{ fontSize: 13, fontWeight: '600', color }}>
+              Bloqueado
+            </Text>
+          </View>
+        ) : (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <View style={[styles.miniDot, { backgroundColor: color }]} />
+            <Text style={{ fontSize: 13, fontWeight: '600', color }}>
+              {getATMStatusLabel(status)}
+            </Text>
+          </View>
+        )}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           {item.distance !== undefined && (
             <Text style={{ fontSize: 12, color: '#374151', fontWeight: '600' }}>
               {formatDistance(item.distance)}
             </Text>
           )}
-          <Text style={{ fontSize: 12, color: '#9CA3AF' }}>
-            {timeSince(item.last_updated)}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+            <AppIcon name="time-outline" size={12} color={colors.text.tertiary} />
+            <Text style={{ fontSize: 12, color: colors.text.tertiary }}>
+              {timeSince(item.last_updated)}
+            </Text>
+          </View>
         </View>
       </View>
-    </TouchableOpacity>
+    </AppCard>
   )
 })
 
@@ -114,39 +124,33 @@ export function ATMList({
 
   const emptyComponent = useMemo(
     () => (
-      <View style={{ alignItems: 'center', paddingVertical: 48 }}>
-        <Text style={{ fontSize: 28, marginBottom: 8 }}>🏧</Text>
-        <Text style={{ fontSize: 15, fontWeight: '600', color: '#374151' }}>Nenhum ATM encontrado</Text>
-        <Text style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4, textAlign: 'center' }}>
-          Tente ajustar a busca ou os filtros
-        </Text>
-      </View>
+      <EmptyState
+        icon="search"
+        title="Nenhum ATM encontrado"
+        description="Tente ajustar a busca ou os filtros"
+      />
     ),
     []
   )
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F9FAFB' }}>
-        <ActivityIndicator size="large" color="#2094F3" />
-        <Text style={{ color: '#6B7280', marginTop: 12 }}>A carregar ATMs...</Text>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface }}>
+        <ActivityIndicator size="large" color={colors.brand[500]} />
+        <Text style={{ color: colors.text.secondary, marginTop: 12 }}>A carregar ATMs...</Text>
       </View>
     )
   }
 
   if (error) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F9FAFB', paddingHorizontal: 32 }}>
-        <Text style={{ fontSize: 15, fontWeight: '600', color: '#B91C1C', marginBottom: 8 }}>Erro ao carregar ATMs</Text>
-        <Text style={{ color: '#6B7280', textAlign: 'center', marginBottom: 16 }}>{error}</Text>
-        {onRetry && (
-          <TouchableOpacity
-            onPress={onRetry}
-            style={{ backgroundColor: '#2094F3', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 24 }}
-          >
-            <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Tentar novamente</Text>
-          </TouchableOpacity>
-        )}
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, paddingHorizontal: 32 }}>
+        <EmptyState
+          icon="cloud-offline-outline"
+          title="Erro ao carregar ATMs"
+          description={error}
+        />
+        {onRetry && <AppButton label="Tentar novamente" onPress={onRetry} icon="refresh" />}
       </View>
     )
   }
@@ -160,7 +164,7 @@ export function ATMList({
       ListEmptyComponent={emptyComponent}
       refreshControl={
         onRefresh ? (
-          <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor="#2094F3" />
+          <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={colors.brand[500]} />
         ) : undefined
       }
       keyboardShouldPersistTaps="handled"
@@ -169,3 +173,29 @@ export function ATMList({
     />
   )
 }
+
+const styles = StyleSheet.create({
+  card: {
+    marginBottom: 2,
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginTop: 4,
+  },
+  miniDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+})

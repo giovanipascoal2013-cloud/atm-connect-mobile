@@ -2,6 +2,36 @@
 
 ## Estado Actual
 
+### Redesign UI — Design System + sweep completo (2026-08-07) ✅ (tsc + lint OK)
+
+Reforma visual completa do app (palete alinhada ao logo: azul `#1573D6` dominante + teal `#10B981` subtil). Corre em **Expo Go / web**, sem novos módulos nativos. Validado com `npx tsc --noEmit` (0 erros) e `npx eslint .` (0 warnings).
+
+**Fase 1 — Design System:**
+- `src/theme/tokens.ts` (novo): `colors` brand/accent/money/surface/card/border/text, `brandGradient`, `radius`, `shadows`, `typography` (`money` tabular-nums).
+- `src/components/ui/` (novo): `AppIcon` (Ionicons), `AppButton` (5 variantes + haptic + loading), `AppCard`, `Badge`, `EmptyState`, `SegmentedControl`, `Screen`.
+- `tailwind.config.js`: palete `brand` actualizada para `#1573D6` (auth continua NativeWind).
+
+**Fase 2 — Alto impacto:**
+- `app/(tabs)/map.tsx` + `src/components/map/{MapFilters,ATMList,ATMDetailSheet,CityDropdown}.tsx`: SegmentedControl Mapa/Lista, badges, pills flutuantes (loading/empty/erro), cards com tokens.
+- Auth (`login`, `register`, `reset-password`, `(auth)/_layout`): hero `LinearGradient` brand→teal, inputs com ícones, SegmentedControl Telefone/Email, províncias em chips, fundo surface.
+
+**Fase 3 — Ecrãs secundários:**
+- `profile`, `agent`, `forum`, `supervisor` (tabs) + `my-views`, `ranking`, `referrals`, `supervisor/pending` (stack): AppCard/AppButton/EmptyState/Badge, ícones em vez de emojis, headers brancos com tint brand (`headerShadowVisible: false`).
+- `AgentATMCard`, `WithdrawalModal`, `ReferralCard`, `PremiumModal`, `AccountTypeSelector`, `ProvinceSelector`, `PostCard`: tokens + UI kit; `WithdrawalModal` usa `SegmentedControl` para IBAN/MCX.
+- `agent/onboarding` e `agent/submit-atm`: gradiente de marca no hero do onboarding; submit com AppButton e tokens.
+
+**Fase 4 — Polish:**
+- Haptics nos botões de acção, empty states consistentes (`EmptyState`), `tabular-nums` em valores monetários (agent, ranking, my-views, referrals, supervisor, withdrawal).
+- E-mails decorativos (👤💼📷📍🔗🏆⏳✅ etc.) substituídos por `AppIcon`; restantes emojis só em conteúdo funcional (steps do perfil).
+
+**Verificação:** `npx tsc --noEmit` OK (0 erros) e `npx eslint .` OK (0 problemas) após limpeza de 9 warnings de imports não usados.
+**Pendente (utilizador):** teste visual em Expo Go e web.
+
+**Fase Actual**: ✅ Redesign UI (Fases 1-4) — aguarda teste visual em dispositivo
+**Última Actualização**: 2026-08-07
+**Branch Activa**: `main`
+**Deploy**: N/A (desenvolvimento local / Expo Go)
+
 ### Anúncios AdMob adiados (integração removida 2026-08-07)
 
 A integração de anúncios Google AdMob foi **removida por completo** e adiada para outra altura, por causar erros de build/web bundling (`react-native-google-mobile-ads` é nativo-only). O app voltou ao estado pré-AdMob (commit `4319769`). Mantém-se o `package-lock.json` sincronizado. Design de remoção: `docs/superpowers/specs/2026-08-07-remove-admob-integration-design.md`.

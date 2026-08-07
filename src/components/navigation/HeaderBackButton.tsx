@@ -1,6 +1,7 @@
 import React from 'react'
-import { Text, TouchableOpacity } from 'react-native'
+import { TouchableOpacity } from 'react-native'
 import { useRouter } from 'expo-router'
+import { AppIcon } from '../ui/AppIcon'
 
 interface HeaderBackButtonProps {
   fallback?: string
@@ -21,7 +22,7 @@ export function HeaderBackButton({ fallback = '/(tabs)/profile', color = '#fff' 
       hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       style={{ marginLeft: 4 }}
     >
-      <Text style={{ color, fontSize: 24, fontWeight: '700', lineHeight: 28 }}>←</Text>
+      <AppIcon name="chevron-back" size={26} color={color} />
     </TouchableOpacity>
   )
 }

@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { View, Text, TouchableOpacity, Share, Alert } from 'react-native'
 import { supabase } from '../../lib/supabase'
+import { AppIcon } from '../ui/AppIcon'
+import { AppCard } from '../ui/AppCard'
+import { colors } from '@/theme/tokens'
 
 interface ReferralStats {
   total_referred: number
@@ -45,27 +48,16 @@ export function ReferralCard({ referralCode, userId, commissionPct = 20 }: Refer
 
   return (
     <>
-      <View
-        style={{
-          backgroundColor: '#fff',
-          borderRadius: 12,
-          padding: 14,
-          borderWidth: 1,
-          borderColor: '#F3F4F6',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.05,
-          shadowRadius: 4,
-          elevation: 2,
-          marginBottom: 16,
-        }}
-      >
-        <Text style={{ fontSize: 15, fontWeight: '600', color: '#111827', marginBottom: 10 }}>🎁 O Meu Código de Convite</Text>
+      <AppCard style={{ marginBottom: 16 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <AppIcon name="gift" size={18} color={colors.brand[500]} />
+          <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.primary }}>O Meu Código de Convite</Text>
+        </View>
         <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-            backgroundColor: '#F9FAFB',
+            backgroundColor: colors.surface,
             borderRadius: 10,
             paddingHorizontal: 12,
             paddingVertical: 10,
@@ -73,57 +65,48 @@ export function ReferralCard({ referralCode, userId, commissionPct = 20 }: Refer
             gap: 8,
           }}
         >
-          <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', letterSpacing: 1.5, flex: 1 }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text.primary, letterSpacing: 1.5, flex: 1 }}>
             {referralCode}
           </Text>
           <TouchableOpacity
             onPress={handleShare}
-            style={{ backgroundColor: '#EEF6FE', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 }}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.brand[50], borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 }}
           >
-            <Text style={{ fontSize: 12, fontWeight: '600', color: '#2094F3' }}>Partilhar</Text>
+            <AppIcon name="share-social-outline" size={13} color={colors.brand[500]} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: colors.brand[500] }}>Partilhar</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleCopy}
-            style={{ backgroundColor: '#F3F4F6', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 }}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F3F5', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 }}
           >
+            <AppIcon name="copy-outline" size={13} color="#374151" />
             <Text style={{ fontSize: 12, fontWeight: '600', color: '#374151' }}>Copiar</Text>
           </TouchableOpacity>
         </View>
-        <Text style={{ fontSize: 12, color: '#6B7280' }}>
-          Partilhe este código com clientes. Ganhe <Text style={{ fontWeight: '700', color: '#10B981' }}>{commissionPct}%</Text> do valor da primeira subscrição deles!
+        <Text style={{ fontSize: 12, color: colors.text.secondary }}>
+          Partilhe este código com clientes. Ganhe <Text style={{ fontWeight: '700', color: colors.money }}>{commissionPct}%</Text> do valor da primeira subscrição deles!
         </Text>
-      </View>
+      </AppCard>
 
       {referralStats && Number(referralStats.total_referred) > 0 && (
-        <View
-          style={{
-            backgroundColor: '#fff',
-            borderRadius: 12,
-            padding: 14,
-            borderWidth: 1,
-            borderColor: '#F3F4F6',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.05,
-            shadowRadius: 4,
-            elevation: 2,
-            marginBottom: 16,
-          }}
-        >
-          <Text style={{ fontSize: 15, fontWeight: '600', color: '#111827', marginBottom: 10 }}>👥 Pessoas que Convidaste</Text>
+        <AppCard style={{ marginBottom: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <AppIcon name="people" size={18} color={colors.brand[500]} />
+            <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.primary }}>Pessoas que Convidaste</Text>
+          </View>
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <View style={{ flex: 1, backgroundColor: '#EEF6FE', borderRadius: 10, padding: 12, alignItems: 'center' }}>
-              <Text style={{ fontSize: 20, fontWeight: '700', color: '#2094F3' }}>{referralStats.total_referred}</Text>
-              <Text style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>Pessoas convidadas</Text>
+            <View style={{ flex: 1, backgroundColor: colors.brand[50], borderRadius: 10, padding: 12, alignItems: 'center' }}>
+              <Text style={{ fontSize: 20, fontWeight: '700', color: colors.brand[500], fontVariant: ['tabular-nums'] }}>{referralStats.total_referred}</Text>
+              <Text style={{ fontSize: 11, color: colors.text.secondary, marginTop: 2 }}>Pessoas convidadas</Text>
             </View>
-            <View style={{ flex: 1, backgroundColor: '#ECFDF5', borderRadius: 10, padding: 12, alignItems: 'center' }}>
-              <Text style={{ fontSize: 20, fontWeight: '700', color: '#10B981' }}>
+            <View style={{ flex: 1, backgroundColor: colors.accent[50], borderRadius: 10, padding: 12, alignItems: 'center' }}>
+              <Text style={{ fontSize: 20, fontWeight: '700', color: colors.money, fontVariant: ['tabular-nums'] }}>
                 {Math.round(referralStats.total_earnings).toLocaleString()} Kz
               </Text>
-              <Text style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>Ganhos com referrals</Text>
+              <Text style={{ fontSize: 11, color: colors.text.secondary, marginTop: 2 }}>Ganhos com referrals</Text>
             </View>
           </View>
-        </View>
+        </AppCard>
       )}
     </>
   )

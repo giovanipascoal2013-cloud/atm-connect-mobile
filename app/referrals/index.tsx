@@ -1,8 +1,14 @@
 import { useEffect, useState, useCallback } from 'react'
-import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity, Share, Alert } from 'react-native'
+import { View, Text, ScrollView, RefreshControl, ActivityIndicator, Alert, Share } from 'react-native'
 import { supabase } from '../../src/lib/supabase'
 import { useAuth } from '../../src/hooks/useAuth'
 import { timeSince } from '../../src/lib/time'
+import { AppCard } from '../../src/components/ui/AppCard'
+import { AppButton } from '../../src/components/ui/AppButton'
+import { AppIcon } from '../../src/components/ui/AppIcon'
+import { EmptyState } from '../../src/components/ui/EmptyState'
+import { Badge } from '../../src/components/ui/Badge'
+import { colors, typography } from '../../src/theme/tokens'
 
 interface ReferralEntry {
   id: string
@@ -77,87 +83,94 @@ export default function ReferralsScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F9FAFB' }}>
-        <ActivityIndicator size="large" color="#2094F3" />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface }}>
+        <ActivityIndicator size="large" color={colors.brand[500]} />
       </View>
     )
   }
 
+  const handleShare = async () => {
+    if (!profile?.referral_code) return
+    try {
+      await Share.share({
+        message: `Usa o meu código de convite ${profile.referral_code} para te registares no ATM Connect!`,
+        title: 'ATM Connect',
+      })
+    } catch {
+      Alert.alert('Erro', 'Não foi possível partilhar o código.')
+    }
+  }
+
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: '#F9FAFB' }}
+      style={{ flex: 1, backgroundColor: colors.surface }}
       contentContainerStyle={{ padding: 16 }}
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchData} tintColor="#2094F3" />}
+      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchData} tintColor={colors.brand[500]} />}
     >
       {profile?.referral_code && (
-        <View style={{ backgroundColor: '#ECFDF5', borderRadius: 12, padding: 16, marginBottom: 16, alignItems: 'center' }}>
-          <Text style={{ fontSize: 12, color: '#065F46', marginBottom: 4 }}>O teu código de referral</Text>
-          <Text style={{ fontSize: 22, fontWeight: '700', color: '#10B981', letterSpacing: 2 }}>{profile.referral_code}</Text>
-          <Text style={{ fontSize: 12, color: '#047857', marginTop: 6, textAlign: 'center' }}>
+        <AppCard style={{ marginBottom: 16, alignItems: 'center', backgroundColor: colors.accent[50], borderColor: colors.accent[200] }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <AppIcon name="gift" size={18} color={colors.accent[600]} />
+            <Text style={[typography.label, { color: colors.accent[700] }]}>O teu código de referral</Text>
+          </View>
+          <Text style={{ fontSize: 26, fontWeight: '700', color: colors.money, letterSpacing: 3, fontVariant: ['tabular-nums'] }}>
+            {profile.referral_code}
+          </Text>
+          <Text style={{ fontSize: 13, color: colors.accent[800], marginTop: 6, textAlign: 'center', lineHeight: 19 }}>
             Ganha {commissionPct}% do valor da primeira subscrição dos teus convidados!
           </Text>
-          <TouchableOpacity
-            onPress={async () => {
-              try {
-                await Share.share({
-                  message: `Usa o meu código de convite ${profile.referral_code} para te registares no ATM Connect!`,
-                  title: 'ATM Connect',
-                })
-              } catch {
-                Alert.alert('Erro', 'Não foi possível partilhar o código.')
-              }
-            }}
-            style={{
-              backgroundColor: '#10B981',
-              borderRadius: 10,
-              paddingHorizontal: 20,
-              paddingVertical: 10,
-              marginTop: 12,
-            }}
-          >
-            <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>Partilhar código</Text>
-          </TouchableOpacity>
-        </View>
+          <AppButton
+            label="Partilhar código"
+            variant="success"
+            icon="share-social"
+            haptic
+            onPress={handleShare}
+            style={{ marginTop: 14 }}
+          />
+        </AppCard>
       )}
 
       <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-        <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#F3F4F6' }}>
-          <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Referidos</Text>
-          <Text style={{ fontSize: 18, fontWeight: '700', color: '#3B82F6', marginTop: 4 }}>{stats.total_referred}</Text>
-        </View>
-        <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#F3F4F6' }}>
-          <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Ganhos totais</Text>
-          <Text style={{ fontSize: 18, fontWeight: '700', color: '#10B981', marginTop: 4 }}>{Math.round(stats.total_earnings).toLocaleString()} Kz</Text>
-        </View>
+        <AppCard style={{ flex: 1, padding: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <AppIcon name="people" size={16} color={colors.text.tertiary} />
+            <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Referidos</Text>
+          </View>
+          <Text style={[typography.title, { color: colors.brand[600] }]}>{stats.total_referred}</Text>
+        </AppCard>
+        <AppCard style={{ flex: 1, padding: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <AppIcon name="cash" size={16} color={colors.text.tertiary} />
+            <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Ganhos totais</Text>
+          </View>
+          <Text style={[typography.title, { color: colors.money, fontVariant: ['tabular-nums'] }]}>
+            {Math.round(stats.total_earnings).toLocaleString()} Kz
+          </Text>
+        </AppCard>
       </View>
 
-      <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 12 }}>Referidos recentes</Text>
+      <Text style={[typography.heading, { marginBottom: 12 }]}>Referidos recentes</Text>
 
       {referrals.length === 0 ? (
-        <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 32, alignItems: 'center', borderWidth: 1, borderColor: '#F3F4F6' }}>
-          <Text style={{ fontSize: 28, marginBottom: 8 }}>🔗</Text>
-          <Text style={{ color: '#6B7280', textAlign: 'center' }}>Ainda não tens referidos.</Text>
-          <Text style={{ color: '#9CA3AF', textAlign: 'center', marginTop: 4, fontSize: 13 }}>
-            Partilha o teu código para começar a ganhar!
-          </Text>
-        </View>
+        <AppCard>
+          <EmptyState
+            icon="link"
+            title="Ainda não tens referidos."
+            description="Partilha o teu código para começar a ganhar!"
+          />
+        </AppCard>
       ) : (
         referrals.map((r) => (
-          <View
-            key={r.id}
-            style={{ backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: '#F3F4F6' }}
-          >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>{r.referred_name}</Text>
-                {r.referred_phone && <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{r.referred_phone}</Text>}
-              </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={{ fontSize: 14, fontWeight: '700', color: '#10B981' }}>+{Math.round(r.amount_kz).toLocaleString()} Kz</Text>
-                <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{timeSince(r.created_at)}</Text>
-              </View>
+          <AppCard key={r.id} style={{ marginBottom: 10, padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.primary }}>{r.referred_name}</Text>
+              {r.referred_phone && <Text style={{ fontSize: 12, color: colors.text.tertiary, marginTop: 2 }}>{r.referred_phone}</Text>}
             </View>
-          </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Badge variant="success" label={`+${Math.round(r.amount_kz).toLocaleString()} Kz`} />
+              <Text style={{ fontSize: 11, color: colors.text.tertiary, marginTop: 4 }}>{timeSince(r.created_at)}</Text>
+            </View>
+          </AppCard>
         ))
       )}
     </ScrollView>

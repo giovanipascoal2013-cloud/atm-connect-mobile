@@ -1,12 +1,18 @@
 import { useState, useCallback, useEffect } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Modal, Alert, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useAuth } from '../../src/hooks/useAuth'
 import { useViews } from '../../src/hooks/useViews'
 import { supabase } from '../../src/lib/supabase'
 import { formatPhone } from '../../src/lib/phone'
 import { PROVINCIAS_ANGOLA } from '../../src/constants/provinces'
 import { PremiumModal } from '../../src/components/premium/PremiumModal'
+import { AppButton } from '../../src/components/ui/AppButton'
+import { AppCard } from '../../src/components/ui/AppCard'
+import { Badge } from '../../src/components/ui/Badge'
+import { AppIcon, type AppIconName } from '../../src/components/ui/AppIcon'
+import { colors, brandGradient } from '../../src/theme/tokens'
 
 export default function ProfileScreen() {
   const { user, profile, role, isPremium, isAgent, signOut, refreshProfile } = useAuth()
@@ -75,210 +81,240 @@ export default function ProfileScreen() {
     role === 'admin' ? 'Administrador' :
     'Utilizador'
 
+  const roleVariant =
+    role === 'agent' ? 'success' :
+    role === 'supervisor' ? 'brand' :
+    role === 'admin' ? 'premium' :
+    'neutral'
+
   if (!user) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', paddingHorizontal: 32 }}>
-        <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 8 }}>Inicia sessão</Text>
-        <Text style={{ color: '#6B7280', textAlign: 'center', marginBottom: 16 }}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, paddingHorizontal: 32 }}>
+        <View
+          style={{
+            width: 72,
+            height: 72,
+            borderRadius: 36,
+            backgroundColor: colors.brand[50],
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 14,
+          }}
+        >
+          <AppIcon name="person" size={34} color={colors.brand[500]} />
+        </View>
+        <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text.primary, marginBottom: 8 }}>Inicia sessão</Text>
+        <Text style={{ color: colors.text.secondary, textAlign: 'center', marginBottom: 18, lineHeight: 20 }}>
           Inicia sessão para ver o teu perfil, as tuas views e muito mais.
         </Text>
-        <TouchableOpacity
-          onPress={() => router.push('/(auth)/login')}
-          style={{ backgroundColor: '#2094F3', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32 }}
-        >
-          <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Entrar</Text>
-        </TouchableOpacity>
+        <AppButton label="Entrar" onPress={() => router.push('/(auth)/login')} icon="log-in-outline" size="lg" />
       </View>
     )
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#fff' }} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
-      <View style={{ alignItems: 'center', paddingTop: 32, paddingBottom: 24, borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingHorizontal: 16 }}>
-        <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-          <Text style={{ fontSize: 28, fontWeight: '700', color: '#2094F3' }}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.surface }} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
+      <LinearGradient
+        colors={brandGradient as unknown as [string, string]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ paddingTop: 24, paddingBottom: 44, alignItems: 'center', paddingHorizontal: 16 }}
+      >
+        <View
+          style={{
+            width: 76,
+            height: 76,
+            borderRadius: 38,
+            backgroundColor: 'rgba(255,255,255,0.22)',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 12,
+            borderWidth: 2,
+            borderColor: 'rgba(255,255,255,0.5)',
+          }}
+        >
+          <Text style={{ fontSize: 30, fontWeight: '800', color: '#fff' }}>
             {profile?.nome?.charAt(0)?.toUpperCase() || '?'}
           </Text>
         </View>
-        <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>{profile?.nome || 'Sem nome'}</Text>
-        <Text style={{ fontSize: 13, color: '#2094F3', marginTop: 2, fontWeight: '600' }}>{roleLabel}</Text>
+        <Text style={{ fontSize: 19, fontWeight: '700', color: '#fff' }}>{profile?.nome || 'Sem nome'}</Text>
+        <View style={{ marginTop: 6 }}>
+          <Badge variant={roleVariant} label={roleLabel} icon="shield-checkmark-outline" />
+        </View>
         {profile?.provincia && (
-          <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4 }}>
-            {profile.provincia}{profile.cidade ? ` · ${profile.cidade}` : ''}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 }}>
+            <AppIcon name="location-outline" size={13} color="rgba(255,255,255,0.85)" />
+            <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
+              {profile.provincia}{profile.cidade ? ` · ${profile.cidade}` : ''}
+            </Text>
+          </View>
         )}
-      </View>
+      </LinearGradient>
 
-      <View style={{ padding: 16 }}>
+      <View style={{ marginTop: -28, paddingHorizontal: 16, paddingBottom: 16 }}>
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
-          <View style={{ flex: 1, backgroundColor: '#F9FAFB', borderRadius: 10, padding: 14 }}>
-            <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Estado</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 6 }}>
-              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isPremium ? '#F59E0B' : '#D1D5DB' }} />
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>
-                {isPremium ? 'Premium 👑' : 'Free'}
+          <AppCard style={{ flex: 1 }} raised>
+            <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Estado</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 6 }}>
+              <AppIcon name={isPremium ? 'diamond' : 'person'} size={15} color={isPremium ? colors.warning : '#9CA3AF'} />
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text.primary }}>
+                {isPremium ? 'Premium' : 'Free'}
               </Text>
             </View>
-          </View>
-          <View style={{ flex: 1, backgroundColor: '#F9FAFB', borderRadius: 10, padding: 14 }}>
-            <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Views hoje</Text>
+          </AppCard>
+          <AppCard style={{ flex: 1 }} raised>
+            <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Views hoje</Text>
             {viewsLoading ? (
-              <ActivityIndicator size="small" color="#2094F3" style={{ marginTop: 6 }} />
+              <ActivityIndicator size="small" color={colors.brand[500]} style={{ marginTop: 8 }} />
             ) : (
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827', marginTop: 4 }}>
-                {balance.isPremium ? 'Ilimitado' : `${balance.remaining}/${balance.dailyLimit}`}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 6 }}>
+                <AppIcon name="eye" size={15} color={colors.brand[500]} />
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text.primary, fontVariant: ['tabular-nums'] }}>
+                  {balance.isPremium ? 'Ilimitado' : `${balance.remaining}/${balance.dailyLimit}`}
+                </Text>
+              </View>
             )}
-          </View>
+          </AppCard>
         </View>
 
-        <InfoRow label="Telefone" value={profile?.telefone ? formatPhone(profile.telefone) : '—'} />
-        <InfoRow label="Província" value={profile?.provincia || '—'} />
-        <InfoRow label="Cidade" value={profile?.cidade || '—'} />
+        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+          <InfoCard icon="call-outline" label="Telefone" value={profile?.telefone ? formatPhone(profile.telefone) : '—'} />
+          <InfoCard icon="business-outline" label="Província" value={profile?.provincia || '—'} />
+        </View>
+        <InfoCard icon="home-outline" label="Cidade" value={profile?.cidade || '—'} />
 
         {!editing && (
-          <TouchableOpacity
-            style={{ backgroundColor: '#2094F3', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginBottom: 10 }}
+          <AppButton
+            label="Editar perfil"
             onPress={() => setEditing(true)}
-          >
-            <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>Editar perfil</Text>
-          </TouchableOpacity>
+            fullWidth
+            variant="secondary"
+            icon="create-outline"
+            haptic
+          />
         )}
 
         {editing && (
-          <View style={{ backgroundColor: '#F9FAFB', borderRadius: 12, padding: 14, marginBottom: 10 }}>
-            <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 12 }}>Editar perfil</Text>
+          <AppCard style={{ marginBottom: 10 }} raised>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text.primary, marginBottom: 12 }}>
+              Editar perfil
+            </Text>
 
-            <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: 6 }}>Nome</Text>
+            <Text style={editLabel}>Nome</Text>
             <TextInput
               style={inputStyle}
               value={nome}
               onChangeText={setNome}
               placeholder="Seu nome"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.text.tertiary}
               maxLength={100}
             />
 
-            <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: 6 }}>Província</Text>
-            <TouchableOpacity style={inputStyle} onPress={() => setProvinciaModal(true)}>
-              <Text style={{ fontSize: 14, color: provincia ? '#111827' : '#9CA3AF' }}>
+            <Text style={editLabel}>Província</Text>
+            <TouchableOpacity style={[inputStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]} onPress={() => setProvinciaModal(true)}>
+              <Text style={{ fontSize: 14, color: provincia ? colors.text.primary : colors.text.tertiary }}>
                 {provincia || 'Selecionar...'}
               </Text>
+              <AppIcon name="chevron-down" size={15} color={colors.text.tertiary} />
             </TouchableOpacity>
 
-            <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: 6 }}>Cidade</Text>
+            <Text style={editLabel}>Cidade</Text>
             <TextInput
               style={inputStyle}
               value={cidade}
               onChangeText={setCidade}
               placeholder="Ex: Viana"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.text.tertiary}
               maxLength={80}
             />
 
             {isAgent && (
               <>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#111827', marginTop: 12, marginBottom: 4 }}>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text.primary, marginTop: 12, marginBottom: 4 }}>
                   Dados Bancários (Levantamentos)
                 </Text>
-                <Text style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 8 }}>
+                <Text style={{ fontSize: 11, color: colors.text.tertiary, marginBottom: 8 }}>
                   Estes dados serão usados nas suas solicitações de levantamento.
                 </Text>
-                <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: 6 }}>Titular da conta</Text>
+                <Text style={editLabel}>Titular da conta</Text>
                 <TextInput
                   style={inputStyle}
                   value={ibanTitular}
                   onChangeText={setIbanTitular}
                   placeholder="Nome completo do titular"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.text.tertiary}
                   maxLength={120}
                 />
-                <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: 6 }}>IBAN</Text>
+                <Text style={editLabel}>IBAN</Text>
                 <TextInput
                   style={inputStyle}
                   value={iban}
                   onChangeText={setIban}
                   placeholder="AO06 ..."
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.text.tertiary}
                   maxLength={34}
                 />
               </>
             )}
 
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-              <TouchableOpacity
-                style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB' }}
-                onPress={() => setEditing(false)}
-                disabled={saving}
-              >
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#6B7280' }}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{ flex: 1.4, backgroundColor: '#2094F3', borderRadius: 10, paddingVertical: 12, alignItems: 'center' }}
-                onPress={handleSave}
-                disabled={saving}
-              >
-                {saving ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>Guardar</Text>
-                )}
-              </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+              <AppButton label="Cancelar" variant="outline" onPress={() => setEditing(false)} disabled={saving} style={{ flex: 1 }} />
+              <AppButton label="Guardar" onPress={handleSave} loading={saving} style={{ flex: 1.4 }} icon="checkmark" haptic />
             </View>
-          </View>
+          </AppCard>
         )}
 
-        <SectionLink icon="👁️" label="As minhas views" onPress={() => router.push('/my-views')} />
-        <SectionLink icon="👑" label={isPremium ? 'Premium activo' : 'Upgrade Premium'} onPress={() => setPremiumVisible(true)} />
-        <SectionLink icon="🏆" label="Ranking de Agentes" onPress={() => router.push('/ranking')} />
-        <SectionLink icon="🔗" label="Referências" onPress={() => router.push('/referrals')} />
+        <SectionLink icon="eye-outline" label="As minhas views" onPress={() => router.push('/my-views')} />
+        <SectionLink icon="diamond-outline" label={isPremium ? 'Premium activo' : 'Upgrade Premium'} onPress={() => setPremiumVisible(true)} />
+        <SectionLink icon="trophy-outline" label="Ranking de Agentes" onPress={() => router.push('/ranking')} />
+        <SectionLink icon="link-outline" label="Referências" onPress={() => router.push('/referrals')} />
 
         <HelpSection isAgent={isAgent} />
-      </View>
 
-      <View style={{ padding: 16 }}>
-        <TouchableOpacity
-          style={{
-            backgroundColor: '#FEF2F2',
-            borderRadius: 10,
-            paddingVertical: 14,
-            alignItems: 'center',
-            borderWidth: 1,
-            borderColor: '#FECACA',
-          }}
+        <AppButton
+          label="Terminar sessão"
+          variant="danger"
           onPress={handleSignOut}
-        >
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#DC2626' }}>Terminar sessão</Text>
-        </TouchableOpacity>
+          fullWidth
+          icon="log-out-outline"
+          haptic
+        />
       </View>
 
       <Modal visible={provinciaModal} transparent animationType="slide" onRequestClose={() => setProvinciaModal(false)}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '60%' }}>
-            <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F3F4F6', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827' }}>Selecionar Província</Text>
+            <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text.primary }}>Selecionar Província</Text>
               <TouchableOpacity onPress={() => setProvinciaModal(false)}>
-                <Text style={{ fontSize: 14, color: '#2094F3', fontWeight: '600' }}>Fechar</Text>
+                <Text style={{ fontSize: 14, color: colors.brand[500], fontWeight: '600' }}>Fechar</Text>
               </TouchableOpacity>
             </View>
             <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
-              {PROVINCIAS_ANGOLA.map((p) => (
-                <TouchableOpacity
-                  key={p}
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#F9FAFB',
-                    backgroundColor: p === provincia ? '#EEF6FE' : 'transparent',
-                  }}
-                  onPress={() => { setProvincia(p); setProvinciaModal(false) }}
-                >
-                  <Text style={{ fontSize: 15, color: p === provincia ? '#2094F3' : '#374151', fontWeight: p === provincia ? '600' : '400' }}>
-                    {p}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {PROVINCIAS_ANGOLA.map((p) => {
+                const active = p === provincia
+                return (
+                  <TouchableOpacity
+                    key={p}
+                    style={{
+                      paddingHorizontal: 16,
+                      paddingVertical: 14,
+                      borderBottomWidth: 1,
+                      borderBottomColor: colors.surface,
+                      backgroundColor: active ? colors.brand[50] : 'transparent',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                    onPress={() => { setProvincia(p); setProvinciaModal(false) }}
+                  >
+                    <Text style={{ fontSize: 15, color: active ? colors.brand[600] : '#374151', fontWeight: active ? '600' : '400' }}>
+                      {p}
+                    </Text>
+                    {active && <AppIcon name="checkmark" size={16} color={colors.brand[500]} />}
+                  </TouchableOpacity>
+                )
+              })}
             </ScrollView>
           </View>
         </View>
@@ -289,25 +325,36 @@ export default function ProfileScreen() {
   )
 }
 
+const editLabel = {
+  fontSize: 12,
+  color: colors.text.secondary,
+  marginBottom: 6,
+}
+
 const inputStyle = {
   backgroundColor: '#fff',
   borderWidth: 1,
-  borderColor: '#E5E7EB',
+  borderColor: colors.border,
   borderRadius: 10,
   paddingHorizontal: 12,
   paddingVertical: 10,
   fontSize: 14,
-  color: '#111827',
+  color: colors.text.primary,
   marginBottom: 12,
   justifyContent: 'center' as const,
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function InfoCard({ icon, label, value }: { icon: AppIconName; label: string; value: string }) {
   return (
-    <View style={{ backgroundColor: '#F9FAFB', borderRadius: 10, padding: 14, marginBottom: 10 }}>
-      <Text style={{ fontSize: 12, color: '#9CA3AF' }}>{label}</Text>
-      <Text style={{ fontSize: 14, fontWeight: '500', color: '#111827', marginTop: 2 }} selectable>{value}</Text>
-    </View>
+    <AppCard style={{ flex: 1 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+        <AppIcon name={icon} size={13} color={colors.text.tertiary} />
+        <Text style={{ fontSize: 12, color: colors.text.tertiary }}>{label}</Text>
+      </View>
+      <Text style={{ fontSize: 14, fontWeight: '500', color: colors.text.primary }} selectable numberOfLines={1}>
+        {value}
+      </Text>
+    </AppCard>
   )
 }
 
@@ -332,46 +379,35 @@ function HelpSection({ isAgent }: { isAgent: boolean }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      onPress={() => setOpen((v) => !v)}
-      style={{
-        backgroundColor: '#F9FAFB',
-        borderRadius: 10,
-        padding: 14,
-        marginBottom: 10,
-        borderWidth: 1,
-        borderColor: '#F3F4F6',
-      }}
-    >
+    <AppCard onPress={() => setOpen((v) => !v)} style={{ marginBottom: 10 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={{ fontSize: 18 }}>📘</Text>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>Como usar o app</Text>
+          <AppIcon name="book-outline" size={18} color={colors.brand[500]} />
+          <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.primary }}>Como usar o app</Text>
         </View>
-        <Text style={{ fontSize: 14, color: '#9CA3AF' }}>{open ? '▴' : '▾'}</Text>
+        <AppIcon name={open ? 'chevron-up' : 'chevron-down'} size={16} color={colors.text.tertiary} />
       </View>
 
       {open && (
         <View style={{ marginTop: 12 }}>
-          <Text style={{ fontSize: 12, fontWeight: '700', color: '#6B7280', marginBottom: 8, textTransform: 'uppercase' }}>
+          <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text.secondary, marginBottom: 8, textTransform: 'uppercase' }}>
             Para utilizadores
           </Text>
           {USER_STEPS.map((s) => (
             <View key={s} style={{ flexDirection: 'row', gap: 8, marginBottom: 6 }}>
-              <Text style={{ fontSize: 13, color: '#2094F3', marginTop: 1 }}>•</Text>
+              <Text style={{ fontSize: 13, color: colors.brand[500], marginTop: 1 }}>•</Text>
               <Text style={{ fontSize: 13, color: '#374151', lineHeight: 19, flex: 1 }}>{s}</Text>
             </View>
           ))}
 
           {isAgent && (
             <>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#6B7280', marginTop: 12, marginBottom: 8, textTransform: 'uppercase' }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text.secondary, marginTop: 12, marginBottom: 8, textTransform: 'uppercase' }}>
                 Para agentes — como lucrar
               </Text>
               {AGENT_STEPS.map((s) => (
                 <View key={s} style={{ flexDirection: 'row', gap: 8, marginBottom: 6 }}>
-                  <Text style={{ fontSize: 13, color: '#10B981', marginTop: 1 }}>•</Text>
+                  <Text style={{ fontSize: 13, color: colors.money, marginTop: 1 }}>•</Text>
                   <Text style={{ fontSize: 13, color: '#374151', lineHeight: 19, flex: 1 }}>{s}</Text>
                 </View>
               ))}
@@ -379,29 +415,29 @@ function HelpSection({ isAgent }: { isAgent: boolean }) {
           )}
         </View>
       )}
-    </TouchableOpacity>
+    </AppCard>
   )
 }
 
-function SectionLink({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
+function SectionLink({ icon, label, onPress }: { icon: AppIconName; label: string; onPress: () => void }) {
   return (
-    <TouchableOpacity
-      style={{
-        backgroundColor: '#F9FAFB',
-        borderRadius: 10,
-        padding: 14,
-        marginBottom: 10,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}
-      onPress={onPress}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Text style={{ fontSize: 18 }}>{icon}</Text>
-        <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>{label}</Text>
+    <AppCard onPress={onPress} style={{ marginBottom: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <View
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 17,
+            backgroundColor: colors.brand[50],
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <AppIcon name={icon} size={17} color={colors.brand[500]} />
+        </View>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.primary, flex: 1 }}>{label}</Text>
+        <AppIcon name="chevron-forward" size={16} color={colors.text.tertiary} />
       </View>
-      <Text style={{ fontSize: 14, color: '#9CA3AF' }}>→</Text>
-    </TouchableOpacity>
+    </AppCard>
   )
 }

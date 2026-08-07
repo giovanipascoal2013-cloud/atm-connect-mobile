@@ -1,12 +1,77 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { View, Text, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native'
 import { useRouter, Link } from 'expo-router'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useAuth } from '../../src/hooks/useAuth'
 import { supabase } from '../../src/lib/supabase'
 import { PROVINCIAS_ANGOLA } from '../../src/constants/provinces'
 import { AccountTypeSelector, type AccountType } from '../../src/components/auth/AccountTypeSelector'
 import { formatPhone, isValidPhone, phoneToEmail } from '../../src/lib/phone'
 import { friendlyAuthError } from '../../src/lib/errors'
+import { HeaderBackButton } from '../../src/components/navigation/HeaderBackButton'
+import { AppButton } from '../../src/components/ui/AppButton'
+import { AppIcon, type AppIconName } from '../../src/components/ui/AppIcon'
+import { colors, brandGradient } from '../../src/theme/tokens'
+
+function Field({
+  label,
+  icon,
+  value,
+  onChangeText,
+  placeholder,
+  secureTextEntry,
+  keyboardType,
+  maxLength,
+  autoCapitalize,
+  required,
+  rightNode,
+}: {
+  label: string
+  icon: AppIconName
+  value: string
+  onChangeText: (v: string) => void
+  placeholder: string
+  secureTextEntry?: boolean
+  keyboardType?: 'phone-pad' | 'email-address'
+  maxLength?: number
+  autoCapitalize?: 'none' | 'characters'
+  required?: boolean
+  rightNode?: ReactNode
+}) {
+  return (
+    <View className="mb-4">
+      <Text className="text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <Text className="text-brand-600">*</Text>}
+      </Text>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: colors.surface,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: 12,
+          paddingHorizontal: 14,
+        }}
+      >
+        <AppIcon name={icon} size={17} color={colors.text.tertiary} />
+        <TextInput
+          style={{ flex: 1, paddingVertical: 13, paddingHorizontal: 10, fontSize: 15 }}
+          placeholder={placeholder}
+          placeholderTextColor={colors.text.tertiary}
+          value={value}
+          onChangeText={onChangeText}
+          secureTextEntry={secureTextEntry}
+          keyboardType={keyboardType}
+          maxLength={maxLength}
+          autoCapitalize={autoCapitalize}
+          autoCorrect={false}
+        />
+        {rightNode}
+      </View>
+    </View>
+  )
+}
 
 export default function RegisterScreen() {
   const [accountType, setAccountType] = useState<AccountType>('user')
@@ -23,11 +88,6 @@ export default function RegisterScreen() {
   const [inviteCodeAgentId, setInviteCodeAgentId] = useState<string | null>(null)
   const { signUp } = useAuth()
   const router = useRouter()
-
-  const goBack = () => {
-    if (router.canGoBack()) router.back()
-    else router.replace('/(tabs)/map')
-  }
 
   const validateInviteCode = async (code: string) => {
     const trimmed = (code || '').trim()
@@ -121,31 +181,60 @@ export default function RegisterScreen() {
       className="flex-1 bg-white"
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-        <TouchableOpacity
-          onPress={goBack}
-          className="absolute top-12 left-4 z-10 p-2"
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        <LinearGradient
+          colors={brandGradient as unknown as [string, string]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ paddingTop: Platform.OS === 'ios' ? 60 : 44, paddingHorizontal: 24, paddingBottom: 32 }}
         >
-          <Text className="text-2xl text-brand-600">←</Text>
-        </TouchableOpacity>
-        <View className="flex-1 justify-center px-8 py-12">
-          <View className="items-center mb-8">
-            <Text className="text-3xl font-bold text-brand-600">Criar Conta</Text>
-            <Text className="text-base text-gray-500 mt-2">Junte-se ao ATM Connect</Text>
+          <HeaderBackButton fallback="/(tabs)/map" color="#fff" />
+          <View style={{ marginTop: 16 }}>
+            <Text style={{ fontSize: 26, fontWeight: '800', color: '#fff', letterSpacing: -0.4 }}>
+              Criar Conta
+            </Text>
+            <Text style={{ fontSize: 15, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>
+              Junte-se ao ATM Connect
+            </Text>
           </View>
+        </LinearGradient>
 
-          <View className="space-y-4">
+        <View style={{ marginTop: -22, paddingHorizontal: 24 }}>
+          <View
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: 20,
+              borderCurve: 'continuous',
+              padding: 20,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.08,
+              shadowRadius: 20,
+              elevation: 4,
+              marginBottom: 24,
+            }}
+          >
             <AccountTypeSelector value={accountType} onChange={setAccountType} />
 
-            <View>
+            <View className="mt-4">
               <Text className="text-sm font-medium text-gray-700 mb-1">
                 Código de convite <Text className="text-gray-400 font-normal">(opcional)</Text>
               </Text>
-              <View className="flex-row items-center border border-gray-300 rounded-lg px-4">
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: colors.surface,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 12,
+                  paddingHorizontal: 14,
+                }}
+              >
+                <AppIcon name="gift-outline" size={17} color={colors.text.tertiary} />
                 <TextInput
-                  className="flex-1 py-3 text-base uppercase"
+                  style={{ flex: 1, paddingVertical: 13, paddingHorizontal: 10, fontSize: 15, textTransform: 'uppercase' }}
                   placeholder="Ex: ATM-X7K3"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.text.tertiary}
                   value={inviteCode}
                   onChangeText={(v) => {
                     setInviteCode(v.toUpperCase())
@@ -158,37 +247,52 @@ export default function RegisterScreen() {
                   autoCapitalize="characters"
                   autoCorrect={false}
                 />
-                {inviteCodeStatus === 'validating' && <ActivityIndicator size="small" color="#2094F3" />}
-                {inviteCodeStatus === 'valid' && <Text style={{ fontSize: 16, color: '#10B981', fontWeight: '700' }}>✓</Text>}
-                {inviteCodeStatus === 'invalid' && <Text style={{ fontSize: 16, color: '#EF4444', fontWeight: '700' }}>✕</Text>}
+                {inviteCodeStatus === 'validating' && <ActivityIndicator size="small" color={colors.brand[500]} />}
+                {inviteCodeStatus === 'valid' && <AppIcon name="checkmark-circle" size={18} color={colors.money} />}
+                {inviteCodeStatus === 'invalid' && <AppIcon name="close-circle" size={18} color={colors.danger} />}
               </View>
               {inviteCodeStatus === 'valid' && inviteCodeAgent && (
-                <Text className="text-xs text-green-600 mt-1">Convidado por: {inviteCodeAgent}</Text>
+                <Text style={{ fontSize: 12, color: colors.accent[600], marginTop: 4 }}>
+                  Convidado por: {inviteCodeAgent}
+                </Text>
               )}
               {inviteCodeStatus === 'invalid' && inviteCode.length > 0 && (
-                <Text className="text-xs text-red-500 mt-1">Código inválido</Text>
+                <Text style={{ fontSize: 12, color: colors.danger, marginTop: 4 }}>Código inválido</Text>
               )}
             </View>
 
-            <View>
-              <Text className="text-sm font-medium text-gray-700 mb-1">Nome *</Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg px-4 py-3 text-base"
-                placeholder="Seu nome"
-                placeholderTextColor="#9CA3AF"
+            <View className="mt-4">
+              <Field
+                label="Nome"
+                icon="person-outline"
                 value={nome}
                 onChangeText={setNome}
+                placeholder="Seu nome"
+                required
               />
             </View>
 
             <View>
-              <Text className="text-sm font-medium text-gray-700 mb-1">Telefone *</Text>
-              <View className="flex-row items-center border border-gray-300 rounded-lg px-4">
-                <Text className="text-gray-500 font-medium">+244</Text>
+              <Text className="text-sm font-medium text-gray-700 mb-1">
+                Telefone <Text className="text-brand-600">*</Text>
+              </Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: colors.surface,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 12,
+                  paddingHorizontal: 14,
+                }}
+              >
+                <AppIcon name="call-outline" size={17} color={colors.text.tertiary} />
+                <Text style={{ color: colors.text.secondary, fontWeight: '600', marginLeft: 8 }}>+244</Text>
                 <TextInput
-                  className="flex-1 px-2 py-3 text-base"
+                  style={{ flex: 1, paddingVertical: 13, paddingHorizontal: 8, fontSize: 15 }}
                   placeholder="9XX XXX XXX"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.text.tertiary}
                   value={telefone}
                   onChangeText={(v) => setTelefone(formatPhone(v))}
                   keyboardType="phone-pad"
@@ -197,72 +301,77 @@ export default function RegisterScreen() {
               </View>
             </View>
 
-            <View>
+            <View className="mt-4">
               <Text className="text-sm font-medium text-gray-700 mb-1">Província</Text>
-              <View className="border border-gray-300 rounded-lg overflow-hidden">
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {PROVINCIAS_ANGOLA.map((p) => (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {PROVINCIAS_ANGOLA.map((p) => {
+                  const selected = provincia === p
+                  return (
                     <TouchableOpacity
                       key={p}
                       onPress={() => setProvincia(p)}
-                      className={`px-4 py-3 ${provincia === p ? 'bg-brand-500' : 'bg-white'}`}
+                      style={{
+                        paddingHorizontal: 14,
+                        paddingVertical: 8,
+                        borderRadius: 999,
+                        borderCurve: 'continuous',
+                        backgroundColor: selected ? colors.brand[500] : '#fff',
+                        borderWidth: 1,
+                        borderColor: selected ? colors.brand[500] : colors.border,
+                      }}
                     >
-                      <Text className={`text-sm ${provincia === p ? 'text-white font-semibold' : 'text-gray-700'}`}>
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: selected ? '#fff' : '#374151' }}>
                         {p}
                       </Text>
                     </TouchableOpacity>
-                  ))}
-                </ScrollView>
+                  )
+                })}
               </View>
             </View>
 
-            <View>
-              <Text className="text-sm font-medium text-gray-700 mb-1">Cidade</Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg px-4 py-3 text-base"
-                placeholder="Ex: Viana"
-                placeholderTextColor="#9CA3AF"
+            <View className="mt-4">
+              <Field
+                label="Cidade"
+                icon="business-outline"
                 value={cidade}
                 onChangeText={setCidade}
+                placeholder="Ex: Viana"
               />
             </View>
 
-            <View>
-              <Text className="text-sm font-medium text-gray-700 mb-1">Senha *</Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg px-4 py-3 text-base"
-                placeholder="Mínimo 6 caracteres"
-                placeholderTextColor="#9CA3AF"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-            </View>
+            <Field
+              label="Senha"
+              icon="lock-closed-outline"
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Mínimo 6 caracteres"
+              secureTextEntry
+              required
+            />
 
-            <View>
-              <Text className="text-sm font-medium text-gray-700 mb-1">Confirmar senha *</Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg px-4 py-3 text-base"
-                placeholder="Repita a senha"
-                placeholderTextColor="#9CA3AF"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-              />
-            </View>
+            <Field
+              label="Confirmar senha"
+              icon="shield-checkmark-outline"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="Repita a senha"
+              secureTextEntry
+              required
+            />
 
-            <TouchableOpacity
+            <AppButton
+              label={loading ? 'Criando conta...' : 'Criar Conta'}
               onPress={handleRegister}
               disabled={loading}
-              className="bg-brand-500 rounded-lg py-4 items-center mt-2"
-            >
-              <Text className="text-white font-semibold text-base">
-                {loading ? 'Criando conta...' : 'Criar Conta'}
-              </Text>
-            </TouchableOpacity>
+              loading={loading}
+              fullWidth
+              size="lg"
+              icon="person-add-outline"
+              haptic
+            />
           </View>
 
-          <View className="flex-row justify-center mt-8">
+          <View className="flex-row justify-center mb-10">
             <Text className="text-gray-500 text-sm">Já tem conta? </Text>
             <Link href="/(auth)/login" asChild>
               <TouchableOpacity>

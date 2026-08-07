@@ -1,6 +1,9 @@
 import React, { useState } from 'react'
 import { View, Text, Switch, TouchableOpacity, TextInput } from 'react-native'
 import { timeSince } from '../../lib/time'
+import { AppCard } from '../ui/AppCard'
+import { AppIcon } from '../ui/AppIcon'
+import { colors, radius } from '../../theme/tokens'
 
 interface AgentATM {
   id: string
@@ -49,10 +52,10 @@ export function AgentATMCard({
 
   const statusColor =
     atm.status === 'Fora de Serviço'
-      ? '#7F8C8D'
+      ? colors.text.tertiary
       : atm.has_cash
-        ? '#34A853'
-        : '#EA4335'
+        ? colors.money
+        : colors.danger
 
   const handleSaveObs = () => {
     onSetObs(obsText || null)
@@ -60,34 +63,23 @@ export function AgentATMCard({
   }
 
   return (
-    <View
-      style={{
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 14,
-        borderWidth: 1,
-        borderColor: '#F3F4F6',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
-        marginBottom: 12,
-      }}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+    <AppCard style={{ marginBottom: 12, padding: 14 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
         <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: statusColor }} />
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 15, fontWeight: '600', color: '#111827' }} numberOfLines={1}>
+          <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.primary }} numberOfLines={1}>
             {atm.bank_name}
           </Text>
-          <Text style={{ fontSize: 12, color: '#9CA3AF' }} numberOfLines={1}>
+          <Text style={{ fontSize: 12, color: colors.text.tertiary }} numberOfLines={1}>
             {atm.address}
           </Text>
         </View>
-        <Text style={{ fontSize: 11, color: '#9CA3AF' }}>
-          {timeSince(atm.last_updated)}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+          <AppIcon name="time-outline" size={12} color={colors.text.tertiary} />
+          <Text style={{ fontSize: 11, color: colors.text.tertiary }}>
+            {timeSince(atm.last_updated)}
+          </Text>
+        </View>
       </View>
 
       <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
@@ -97,19 +89,22 @@ export function AgentATMCard({
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            backgroundColor: '#F9FAFB',
-            borderRadius: 8,
+            backgroundColor: colors.surface,
+            borderRadius: radius.sm,
             paddingHorizontal: 12,
             paddingVertical: 8,
           }}
         >
-          <Text style={{ fontSize: 13, color: '#6B7280' }}>Dinheiro</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <AppIcon name="cash-outline" size={15} color={colors.text.secondary} />
+            <Text style={{ fontSize: 13, color: colors.text.secondary }}>Dinheiro</Text>
+          </View>
           <Switch
             value={atm.has_cash}
             onValueChange={onToggleCash}
             disabled={updating}
-            trackColor={{ false: '#D1D5DB', true: '#34D399' }}
-            thumbColor={atm.has_cash ? '#10B981' : '#fff'}
+            trackColor={{ false: '#D1D5DB', true: colors.accent[400] }}
+            thumbColor={atm.has_cash ? colors.money : '#fff'}
           />
         </View>
         <View
@@ -118,19 +113,22 @@ export function AgentATMCard({
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            backgroundColor: '#F9FAFB',
-            borderRadius: 8,
+            backgroundColor: colors.surface,
+            borderRadius: radius.sm,
             paddingHorizontal: 12,
             paddingVertical: 8,
           }}
         >
-          <Text style={{ fontSize: 13, color: '#6B7280' }}>Papel</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <AppIcon name="receipt-outline" size={15} color={colors.text.secondary} />
+            <Text style={{ fontSize: 13, color: colors.text.secondary }}>Papel</Text>
+          </View>
           <Switch
             value={!!atm.has_paper}
             onValueChange={onTogglePaper}
             disabled={updating}
-            trackColor={{ false: '#D1D5DB', true: '#34D399' }}
-            thumbColor={atm.has_paper ? '#10B981' : '#fff'}
+            trackColor={{ false: '#D1D5DB', true: colors.accent[400] }}
+            thumbColor={atm.has_paper ? colors.money : '#fff'}
           />
         </View>
       </View>
@@ -139,15 +137,15 @@ export function AgentATMCard({
         <TouchableOpacity
           style={{
             flex: 1,
-            backgroundColor: '#F9FAFB',
-            borderRadius: 8,
+            backgroundColor: colors.surface,
+            borderRadius: radius.sm,
             paddingHorizontal: 12,
             paddingVertical: 8,
           }}
           onPress={() => setShowFilaPicker(!showFilaPicker)}
         >
-          <Text style={{ fontSize: 11, color: '#9CA3AF' }}>Fila</Text>
-          <Text style={{ fontSize: 13, color: '#111827', fontWeight: '500', marginTop: 2 }}>
+          <Text style={{ fontSize: 11, color: colors.text.tertiary }}>Fila</Text>
+          <Text style={{ fontSize: 13, color: colors.text.primary, fontWeight: '500', marginTop: 2 }}>
             {FILA_OPTIONS.find((f) => f.value === atm.fila)?.label || 'Sem info'}
           </Text>
         </TouchableOpacity>
@@ -155,65 +153,79 @@ export function AgentATMCard({
         <TouchableOpacity
           style={{
             flex: 1,
-            backgroundColor: '#F9FAFB',
-            borderRadius: 8,
+            backgroundColor: colors.surface,
+            borderRadius: radius.sm,
             paddingHorizontal: 12,
             paddingVertical: 8,
           }}
           onPress={() => setShowStatusPicker(!showStatusPicker)}
         >
-          <Text style={{ fontSize: 11, color: '#9CA3AF' }}>Estado</Text>
-          <Text style={{ fontSize: 13, color: '#111827', fontWeight: '500', marginTop: 2 }}>
+          <Text style={{ fontSize: 11, color: colors.text.tertiary }}>Estado</Text>
+          <Text style={{ fontSize: 13, color: colors.text.primary, fontWeight: '500', marginTop: 2 }}>
             {atm.status || 'Operacional'}
           </Text>
         </TouchableOpacity>
       </View>
 
       {showFilaPicker && (
-        <View style={{ backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8, marginBottom: 10, gap: 4 }}>
-          {FILA_OPTIONS.map((opt) => (
-            <TouchableOpacity
-              key={opt.label}
-              style={{
-                paddingVertical: 8,
-                paddingHorizontal: 12,
-                borderRadius: 6,
-                backgroundColor: atm.fila === opt.value ? '#2094F3' : 'transparent',
-              }}
-              onPress={() => {
-                onSetFila(opt.value)
-                setShowFilaPicker(false)
-              }}
-            >
-              <Text style={{ fontSize: 13, color: atm.fila === opt.value ? '#fff' : '#374151' }}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={{ backgroundColor: colors.surface, borderRadius: radius.sm, padding: 8, marginBottom: 10, gap: 4 }}>
+          {FILA_OPTIONS.map((opt) => {
+            const active = atm.fila === opt.value
+            return (
+              <TouchableOpacity
+                key={opt.label}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  borderRadius: 6,
+                  backgroundColor: active ? colors.brand[500] : 'transparent',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+                onPress={() => {
+                  onSetFila(opt.value)
+                  setShowFilaPicker(false)
+                }}
+              >
+                <Text style={{ fontSize: 13, color: active ? '#fff' : colors.text.primary }}>
+                  {opt.label}
+                </Text>
+                {active && <AppIcon name="checkmark" size={15} color="#fff" />}
+              </TouchableOpacity>
+            )
+          })}
         </View>
       )}
 
       {showStatusPicker && (
-        <View style={{ backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8, marginBottom: 10, gap: 4 }}>
-          {STATUS_OPTIONS.map((s) => (
-            <TouchableOpacity
-              key={s}
-              style={{
-                paddingVertical: 8,
-                paddingHorizontal: 12,
-                borderRadius: 6,
-                backgroundColor: atm.status === s ? '#2094F3' : 'transparent',
-              }}
-              onPress={() => {
-                onSetStatus(s)
-                setShowStatusPicker(false)
-              }}
-            >
-              <Text style={{ fontSize: 13, color: atm.status === s ? '#fff' : '#374151' }}>
-                {s}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={{ backgroundColor: colors.surface, borderRadius: radius.sm, padding: 8, marginBottom: 10, gap: 4 }}>
+          {STATUS_OPTIONS.map((s) => {
+            const active = atm.status === s
+            return (
+              <TouchableOpacity
+                key={s}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  borderRadius: 6,
+                  backgroundColor: active ? colors.brand[500] : 'transparent',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+                onPress={() => {
+                  onSetStatus(s)
+                  setShowStatusPicker(false)
+                }}
+              >
+                <Text style={{ fontSize: 13, color: active ? '#fff' : colors.text.primary }}>
+                  {s}
+                </Text>
+                {active && <AppIcon name="checkmark" size={15} color="#fff" />}
+              </TouchableOpacity>
+            )
+          })}
         </View>
       )}
 
@@ -221,39 +233,42 @@ export function AgentATMCard({
         <View style={{ gap: 6 }}>
           <TextInput
             style={{
-              backgroundColor: '#F9FAFB',
-              borderRadius: 8,
+              backgroundColor: colors.surface,
+              borderRadius: radius.sm,
               padding: 10,
               fontSize: 13,
               minHeight: 60,
               textAlignVertical: 'top',
+              borderWidth: 1,
+              borderColor: colors.border,
+              color: colors.text.primary,
             }}
             value={obsText}
             onChangeText={setObsText}
             placeholder="Observações..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.text.tertiary}
             multiline
           />
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <TouchableOpacity onPress={handleSaveObs}>
-              <Text style={{ fontSize: 13, color: '#2094F3', fontWeight: '600' }}>Guardar</Text>
+              <Text style={{ fontSize: 13, color: colors.brand[500], fontWeight: '600' }}>Guardar</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setEditingObs(false)}>
-              <Text style={{ fontSize: 13, color: '#9CA3AF' }}>Cancelar</Text>
+              <Text style={{ fontSize: 13, color: colors.text.tertiary }}>Cancelar</Text>
             </TouchableOpacity>
           </View>
         </View>
       ) : (
         <TouchableOpacity onPress={() => { setEditingObs(true); setObsText(atm.obs || '') }}>
           {atm.obs ? (
-            <Text style={{ fontSize: 12, color: '#6B7280', backgroundColor: '#F9FAFB', borderRadius: 6, padding: 8 }}>
+            <Text style={{ fontSize: 12, color: colors.text.secondary, backgroundColor: colors.surface, borderRadius: 6, padding: 8 }}>
               {atm.obs}
             </Text>
           ) : (
-            <Text style={{ fontSize: 12, color: '#D1D5DB' }}>+ Adicionar observação</Text>
+            <Text style={{ fontSize: 12, color: colors.text.tertiary }}>+ Adicionar observação</Text>
           )}
         </TouchableOpacity>
       )}
-    </View>
+    </AppCard>
   )
 }

@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity } from 'react-native'
+import { AppIcon, type AppIconName } from '../ui/AppIcon'
 
 export type AccountType = 'user' | 'agent'
 
@@ -8,9 +9,9 @@ interface Props {
 }
 
 export function AccountTypeSelector({ value, onChange }: Props) {
-  const options: { type: AccountType; icon: string; title: string; subtitle: string }[] = [
-    { type: 'user', icon: '👤', title: 'Sou Cliente', subtitle: 'Quero consultar ATMs com dinheiro' },
-    { type: 'agent', icon: '💼', title: 'Sou Agente', subtitle: 'Quero registar ATMs e ganhar' },
+  const options: { type: AccountType; icon: AppIconName; title: string; subtitle: string }[] = [
+    { type: 'user', icon: 'person', title: 'Sou Cliente', subtitle: 'Quero consultar ATMs com dinheiro' },
+    { type: 'agent', icon: 'briefcase', title: 'Sou Agente', subtitle: 'Quero registar ATMs e ganhar' },
   ]
 
   return (
@@ -25,7 +26,11 @@ export function AccountTypeSelector({ value, onChange }: Props) {
               onPress={() => onChange(opt.type)}
               className={`flex-1 rounded-xl border p-4 ${selected ? 'border-brand-500 bg-brand-50' : 'border-gray-300 bg-white'}`}
             >
-              <Text style={{ fontSize: 24 }}>{opt.icon}</Text>
+              <View
+                className={`h-11 w-11 rounded-full items-center justify-center ${selected ? 'bg-brand-500' : 'bg-gray-100'}`}
+              >
+                <AppIcon name={opt.icon} size={22} color={selected ? '#fff' : '#9CA3AF'} />
+              </View>
               <Text className={`mt-2 text-sm font-semibold ${selected ? 'text-brand-700' : 'text-gray-800'}`}>
                 {opt.title}
               </Text>

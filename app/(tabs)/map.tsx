@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { View, ActivityIndicator, Text, TouchableOpacity, Keyboard, TouchableWithoutFeedback } from 'react-native'
+import { View, ActivityIndicator, Text, Keyboard, TouchableWithoutFeedback } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useAuth } from '../../src/hooks/useAuth'
 import { useLocation } from '../../src/hooks/useLocation'
@@ -11,6 +11,11 @@ import { MapFilters } from '../../src/components/map/MapFilters'
 import { ATMList } from '../../src/components/map/ATMList'
 import { ATMDetailSheet } from '../../src/components/map/ATMDetailSheet'
 import { PremiumModal } from '../../src/components/premium/PremiumModal'
+import { SegmentedControl } from '../../src/components/ui/SegmentedControl'
+import { Badge } from '../../src/components/ui/Badge'
+import { AppButton } from '../../src/components/ui/AppButton'
+import { AppIcon } from '../../src/components/ui/AppIcon'
+import { colors, shadows } from '../../src/theme/tokens'
 
 type ViewMode = 'map' | 'list'
 
@@ -106,47 +111,46 @@ export default function MapScreen() {
 
   if (locationLoading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }}>
-        <ActivityIndicator size="large" color="#2094F3" />
-        <Text style={{ color: '#6B7280', marginTop: 12 }}>A obter localização...</Text>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface }}>
+        <ActivityIndicator size="large" color={colors.brand[500]} />
+        <Text style={{ color: colors.text.secondary, marginTop: 12 }}>A obter localização...</Text>
       </View>
     )
   }
 
   if (permission === 'denied') {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', paddingHorizontal: 32 }}>
-        <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 8 }}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, paddingHorizontal: 32 }}>
+        <View
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 32,
+            backgroundColor: colors.brand[50],
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 14,
+          }}
+        >
+          <AppIcon name="location" size={30} color={colors.brand[500]} />
+        </View>
+        <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text.primary, marginBottom: 8 }}>
           Localização necessária
         </Text>
-        <Text style={{ color: '#6B7280', textAlign: 'center', marginBottom: 16 }}>
+        <Text style={{ color: colors.text.secondary, textAlign: 'center', marginBottom: 16, lineHeight: 20 }}>
           Permita o acesso à localização para encontrar ATMs próximos
         </Text>
-        <TouchableOpacity
-          onPress={requestAgain}
-          style={{ backgroundColor: '#2094F3', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 24 }}
-        >
-          <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Tentar novamente</Text>
-        </TouchableOpacity>
+        <AppButton label="Tentar novamente" onPress={requestAgain} icon="refresh" />
       </View>
     )
   }
 
   const viewsBadge = user && !balance.isPremium && (
-    <View
-      style={{
-        backgroundColor: balance.remaining > 0 ? 'rgba(255,255,255,0.95)' : 'rgba(254,243,199,0.95)',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#F3F4F6',
-      }}
-    >
-      <Text style={{ fontSize: 11, color: balance.remaining > 0 ? '#6B7280' : '#92400E', fontWeight: '500' }}>
-        {balance.remaining > 0 ? `${balance.remaining}/${balance.dailyLimit} views` : 'Limite atingido'}
-      </Text>
-    </View>
+    <Badge
+      variant={balance.remaining > 0 ? 'neutral' : 'warning'}
+      icon="eye"
+      label={balance.remaining > 0 ? `${balance.remaining}/${balance.dailyLimit} views` : 'Limite atingido'}
+    />
   )
 
   return (
@@ -155,24 +159,15 @@ export default function MapScreen() {
       <View style={{ paddingTop: 12, paddingHorizontal: 12, gap: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ flex: 1 }} />
-          <View style={{ flexDirection: 'row', backgroundColor: '#F3F4F6', borderRadius: 10, padding: 2 }}>
-            {(['map', 'list'] as ViewMode[]).map((m) => (
-              <TouchableOpacity
-                key={m}
-                onPress={() => setViewMode(m)}
-                style={{
-                  paddingHorizontal: 20,
-                  paddingVertical: 6,
-                  borderRadius: 8,
-                  backgroundColor: viewMode === m ? '#fff' : 'transparent',
-                }}
-              >
-                <Text style={{ fontSize: 13, fontWeight: '600', color: viewMode === m ? '#2094F3' : '#6B7280' }}>
-                  {m === 'map' ? '🗺️ Mapa' : '📋 Lista'}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <SegmentedControl
+            options={[
+              { key: 'map', label: 'Mapa' },
+              { key: 'list', label: 'Lista' },
+            ]}
+            value={viewMode}
+            onChange={(m) => setViewMode(m)}
+            style={{ width: 180 }}
+          />
           <View style={{ flex: 1, alignItems: 'flex-end' }}>{viewsBadge}</View>
         </View>
 
@@ -224,69 +219,28 @@ export default function MapScreen() {
         )}
 
         {viewMode === 'map' && atmsLoading && (
-          <View
-            style={{
-              position: 'absolute',
-              bottom: 20,
-              alignSelf: 'center',
-              backgroundColor: 'rgba(255,255,255,0.9)',
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-          >
-            <Text style={{ fontSize: 13, color: '#6B7280' }}>A carregar ATMs...</Text>
+          <View style={[styles.floatingPill, shadows.floating]}>
+            <Text style={{ fontSize: 13, color: colors.text.secondary }}>A carregar ATMs...</Text>
           </View>
         )}
 
         {viewMode === 'map' && !atmsLoading && atms.length === 0 && (
           <View
-            style={{
-              position: 'absolute',
-              bottom: error ? 96 : 20,
-              alignSelf: 'center',
-              backgroundColor: error ? 'rgba(254,226,226,0.95)' : 'rgba(255,255,255,0.9)',
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
+            style={[
+              styles.floatingPill,
+              shadows.floating,
+              { backgroundColor: error ? 'rgba(254,226,226,0.95)' : 'rgba(255,255,255,0.95)', bottom: error ? 96 : 20 },
+            ]}
           >
-            <Text style={{ fontSize: 13, color: error ? '#B91C1C' : '#6B7280' }}>
+            <Text style={{ fontSize: 13, color: error ? '#B91C1C' : colors.text.secondary }}>
               {error ? 'Erro ao carregar ATMs' : 'Nenhum ATM encontrado'}
             </Text>
           </View>
         )}
 
         {viewMode === 'map' && error && !atmsLoading && (
-          <View
-            style={{
-              position: 'absolute',
-              bottom: 20,
-              alignSelf: 'center',
-              backgroundColor: 'rgba(255,255,255,0.95)',
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-          >
-            <TouchableOpacity onPress={refetch}>
-              <Text style={{ fontSize: 13, color: '#2094F3', fontWeight: '600' }}>Tentar novamente</Text>
-            </TouchableOpacity>
+          <View style={[styles.floatingPill, shadows.floating]}>
+            <AppButton label="Tentar novamente" size="sm" variant="secondary" onPress={refetch} icon="refresh" />
           </View>
         )}
       </View>
@@ -312,4 +266,15 @@ export default function MapScreen() {
       </View>
     </TouchableWithoutFeedback>
   )
+}
+
+const styles = {
+  floatingPill: {
+    position: 'absolute' as const,
+    alignSelf: 'center' as const,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
 }

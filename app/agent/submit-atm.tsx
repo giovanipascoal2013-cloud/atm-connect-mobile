@@ -10,6 +10,10 @@ import { useAuth } from '../../src/hooks/useAuth'
 import { useLocation } from '../../src/hooks/useLocation'
 import { reverseGeocode } from '../../src/lib/geocode'
 import { PROVINCIAS_ANGOLA } from '../../src/constants/provinces'
+import { AppCard } from '../../src/components/ui/AppCard'
+import { AppButton } from '../../src/components/ui/AppButton'
+import { AppIcon } from '../../src/components/ui/AppIcon'
+import { colors, radius, typography } from '../../src/theme/tokens'
 
 type Step = 'photo' | 'gps' | 'details'
 
@@ -186,7 +190,7 @@ export default function SubmitATMScreen() {
   const stepIndex = steps.indexOf(step)
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#F9FAFB' }} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
+    <ScrollView style={{ flex: 1, backgroundColor: colors.surface }} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
         {steps.map((s, i) => (
           <View key={s} style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
@@ -197,225 +201,225 @@ export default function SubmitATMScreen() {
                 borderRadius: 14,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: step === s ? '#2094F3' : stepIndex > i ? '#93C5FD' : '#E5E7EB',
+                backgroundColor: step === s ? colors.brand[500] : stepIndex > i ? colors.brand[300] : '#E5E7EB',
               }}
             >
-              <Text style={{ fontSize: 12, fontWeight: '700', color: step === s || stepIndex > i ? '#fff' : '#9CA3AF' }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: step === s || stepIndex > i ? '#fff' : colors.text.tertiary }}>
                 {i + 1}
               </Text>
             </View>
-            {i < steps.length - 1 && <View style={{ flex: 1, height: 2, backgroundColor: stepIndex > i ? '#93C5FD' : '#E5E7EB' }} />}
+            {i < steps.length - 1 && <View style={{ flex: 1, height: 2, backgroundColor: stepIndex > i ? colors.brand[300] : '#E5E7EB' }} />}
           </View>
         ))}
       </View>
 
       {step === 'photo' && (
-        <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#F3F4F6' }}>
-          <View style={{ height: 320, borderRadius: 12, overflow: 'hidden', backgroundColor: '#111827', marginBottom: 16 }}>
+        <AppCard>
+          <View style={{ height: 320, borderRadius: radius.md, overflow: 'hidden', backgroundColor: colors.text.primary, marginBottom: 16 }}>
             {cameraPermission?.granted ? (
               <CameraView ref={cameraRef} style={{ flex: 1 }} facing="back" />
             ) : (
               <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 }}>
-                <Text style={{ fontSize: 32, marginBottom: 8 }}>📷</Text>
+                <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
+                  <AppIcon name="camera" size={30} color="#fff" />
+                </View>
                 <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff', textAlign: 'center' }}>
                   Permita o acesso à câmara
                 </Text>
-                <Text style={{ fontSize: 12, color: '#9CA3AF', textAlign: 'center', marginTop: 4, marginBottom: 12 }}>
+                <Text style={{ fontSize: 12, color: colors.text.tertiary, textAlign: 'center', marginTop: 4, marginBottom: 12 }}>
                   A câmara é usada para fotografar o ATM e validar a localização.
                 </Text>
-                <TouchableOpacity
-                  style={{ backgroundColor: '#2094F3', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 24 }}
+                <AppButton
+                  label="Pedir permissão"
+                  icon="camera"
                   onPress={() => requestCameraPermission()}
-                >
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Pedir permissão</Text>
-                </TouchableOpacity>
+                />
               </View>
             )}
           </View>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 6 }}>Fotografe o ATM</Text>
-          <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: 14 }}>
+          <Text style={[typography.heading, { marginBottom: 6 }]}>Fotografe o ATM</Text>
+          <Text style={{ fontSize: 12, color: colors.text.secondary, marginBottom: 14 }}>
             Tire uma foto clara do ATM para validar a localização.
           </Text>
-          <TouchableOpacity
-            style={{
-              backgroundColor: '#2094F3',
-              borderRadius: 12,
-              paddingVertical: 14,
-              alignItems: 'center',
-              opacity: cameraPermission?.granted ? 1 : 0.5,
-            }}
-            onPress={capturePhoto}
+          <AppButton
+            label="Tirar foto"
+            icon="camera"
+            iconRight="arrow-forward"
+            fullWidth
+            haptic
             disabled={!cameraPermission?.granted}
-          >
-            <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Tirar foto</Text>
-          </TouchableOpacity>
-        </View>
+            onPress={capturePhoto}
+          />
+        </AppCard>
       )}
 
       {step === 'gps' && (
-        <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#F3F4F6' }}>
+        <AppCard>
           {photoUri && (
             <Image
               source={{ uri: photoUri }}
-              style={{ width: '100%', height: 160, borderRadius: 12, marginBottom: 16, backgroundColor: '#F3F4F6' }}
+              style={{ width: '100%', height: 160, borderRadius: radius.md, marginBottom: 16, backgroundColor: colors.border }}
               resizeMode="cover"
             />
           )}
           <View style={{ alignItems: 'center', paddingVertical: 16 }}>
-            <Text style={{ fontSize: 32, marginBottom: 12 }}>📍</Text>
+            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: colors.brand[50], alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+              <AppIcon name="location" size={30} color={colors.brand[500]} />
+            </View>
             {geocoding ? (
               <>
-                <ActivityIndicator size="large" color="#2094F3" />
-                <Text style={{ fontSize: 13, color: '#6B7280', marginTop: 12 }}>A obter localização...</Text>
+                <ActivityIndicator size="large" color={colors.brand[500]} />
+                <Text style={{ fontSize: 13, color: colors.text.secondary, marginTop: 12 }}>A obter localização...</Text>
               </>
             ) : (
               <>
-                <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 6 }}>Localização não obtida</Text>
-                <Text style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', marginBottom: 16 }}>
+                <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text.primary, marginBottom: 6 }}>Localização não obtida</Text>
+                <Text style={{ fontSize: 13, color: colors.text.secondary, textAlign: 'center', marginBottom: 16 }}>
                   {permission === 'denied' ? 'Permita o acesso ao GPS nas definições do dispositivo.' : 'Tente novamente.'}
                 </Text>
-                <TouchableOpacity
-                  style={{ backgroundColor: '#2094F3', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 32 }}
+                <AppButton
+                  label="Tentar novamente"
+                  icon="refresh"
+                  haptic
                   onPress={retryGps}
-                >
-                  <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Tentar novamente</Text>
-                </TouchableOpacity>
+                />
               </>
             )}
           </View>
-        </View>
+        </AppCard>
       )}
 
       {step === 'details' && (
-        <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#F3F4F6' }}>
-          <Text style={{ fontSize: 13, color: '#374151', fontWeight: '600', marginBottom: 6 }}>Nome do ATM *</Text>
+        <AppCard>
+          <Text style={fieldLabel}>Nome do ATM *</Text>
           <TextInput
             style={inputStyle}
             value={name}
             onChangeText={setName}
             placeholder="Ex: ATM BAI Kilamba"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.text.tertiary}
           />
-          <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: -6, marginBottom: 12 }}>
+          <Text style={{ fontSize: 11, color: colors.text.tertiary, marginTop: -6, marginBottom: 12 }}>
             Use uma referência próxima conhecida.
           </Text>
 
-          <Text style={{ fontSize: 13, color: '#374151', fontWeight: '600', marginBottom: 6 }}>Endereço *</Text>
+          <Text style={fieldLabel}>Endereço *</Text>
           <TextInput
             style={inputStyle}
             value={address}
             onChangeText={setAddress}
             placeholder="Auto-preenchido a partir do GPS"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.text.tertiary}
           />
 
-          <Text style={{ fontSize: 13, color: '#374151', fontWeight: '600', marginBottom: 6 }}>Província</Text>
+          <Text style={fieldLabel}>Província</Text>
           <TouchableOpacity style={inputStyle} onPress={() => setProvinciaModal(true)}>
-            <Text style={{ fontSize: 14, color: provincia ? '#111827' : '#9CA3AF' }}>
-              {provincia || 'Selecionar...'}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 14, color: provincia ? colors.text.primary : colors.text.tertiary }}>
+                {provincia || 'Selecionar...'}
+              </Text>
+              <AppIcon name="chevron-down" size={16} color={colors.text.tertiary} />
+            </View>
           </TouchableOpacity>
 
-          <Text style={{ fontSize: 13, color: '#374151', fontWeight: '600', marginBottom: 6 }}>Cidade</Text>
+          <Text style={fieldLabel}>Cidade</Text>
           <TextInput
             style={inputStyle}
             value={cidade}
             onChangeText={setCidade}
             placeholder="Ex: Viana"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.text.tertiary}
           />
 
-          <Text style={{ fontSize: 13, color: '#374151', fontWeight: '600', marginBottom: 6 }}>Coordenadas</Text>
+          <Text style={fieldLabel}>Coordenadas</Text>
           <TextInput
             style={[inputStyle, { fontFamily: 'monospace' }]}
             value={coords ? `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}` : ''}
             editable={false}
           />
 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#F9FAFB' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.surface }}>
             <View>
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>Tem dinheiro?</Text>
-              <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Estado actual do ATM</Text>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.primary }}>Tem dinheiro?</Text>
+              <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Estado actual do ATM</Text>
             </View>
             <Switch
               value={hasCash}
               onValueChange={setHasCash}
-              trackColor={{ false: '#D1D5DB', true: '#34D399' }}
-              thumbColor={hasCash ? '#10B981' : '#fff'}
+              trackColor={{ false: '#D1D5DB', true: colors.accent[400] }}
+              thumbColor={hasCash ? colors.money : '#fff'}
             />
           </View>
 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#F9FAFB' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.surface }}>
             <View>
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>Tem papel?</Text>
-              <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Para imprimir recibos</Text>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.primary }}>Tem papel?</Text>
+              <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Para imprimir recibos</Text>
             </View>
             <Switch
               value={hasPaper}
               onValueChange={setHasPaper}
-              trackColor={{ false: '#D1D5DB', true: '#34D399' }}
-              thumbColor={hasPaper ? '#10B981' : '#fff'}
+              trackColor={{ false: '#D1D5DB', true: colors.accent[400] }}
+              thumbColor={hasPaper ? colors.money : '#fff'}
             />
           </View>
 
-          <Text style={{ fontSize: 13, color: '#374151', fontWeight: '600', marginBottom: 6, marginTop: 8 }}>Observações</Text>
+          <Text style={[fieldLabel, { marginTop: 8 }]}>Observações</Text>
           <TextInput
             style={[inputStyle, { minHeight: 70, textAlignVertical: 'top' }]}
             value={obs}
             onChangeText={setObs}
             placeholder="Informações adicionais (opcional)"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.text.tertiary}
             multiline
           />
 
-          <TouchableOpacity
-            style={{
-              backgroundColor: '#2094F3',
-              borderRadius: 12,
-              paddingVertical: 14,
-              alignItems: 'center',
-              marginTop: 8,
-              opacity: submitting ? 0.7 : 1,
-            }}
+          <AppButton
+            label="Submeter para aprovação"
+            icon="send"
+            fullWidth
+            haptic
+            loading={submitting}
             onPress={submit}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Submeter para aprovação</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+            style={{ marginTop: 8 }}
+          />
+        </AppCard>
       )}
 
       <Modal visible={provinciaModal} transparent animationType="slide" onRequestClose={() => setProvinciaModal(false)}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '60%' }}>
-            <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F3F4F6', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827' }}>Selecionar Província</Text>
+          <View style={{ backgroundColor: colors.card, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, maxHeight: '60%' }}>
+            <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text.primary }}>Selecionar Província</Text>
               <TouchableOpacity onPress={() => setProvinciaModal(false)}>
-                <Text style={{ fontSize: 14, color: '#2094F3', fontWeight: '600' }}>Fechar</Text>
+                <Text style={{ fontSize: 14, color: colors.brand[500], fontWeight: '600' }}>Fechar</Text>
               </TouchableOpacity>
             </View>
             <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
-              {PROVINCIAS_ANGOLA.map((p) => (
-                <TouchableOpacity
-                  key={p}
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#F9FAFB',
-                    backgroundColor: p === provincia ? '#EEF6FE' : 'transparent',
-                  }}
-                  onPress={() => { setProvincia(p); setProvinciaModal(false) }}
-                >
-                  <Text style={{ fontSize: 15, color: p === provincia ? '#2094F3' : '#374151', fontWeight: p === provincia ? '600' : '400' }}>
-                    {p}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {PROVINCIAS_ANGOLA.map((p) => {
+                const active = p === provincia
+                return (
+                  <TouchableOpacity
+                    key={p}
+                    style={{
+                      paddingHorizontal: 16,
+                      paddingVertical: 14,
+                      borderBottomWidth: 1,
+                      borderBottomColor: colors.surface,
+                      backgroundColor: active ? colors.brand[50] : 'transparent',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                    onPress={() => { setProvincia(p); setProvinciaModal(false) }}
+                  >
+                    <Text style={{ fontSize: 15, color: active ? colors.brand[600] : colors.text.primary, fontWeight: active ? '600' : '400' }}>
+                      {p}
+                    </Text>
+                    {active && <AppIcon name="checkmark" size={18} color={colors.brand[600]} />}
+                  </TouchableOpacity>
+                )
+              })}
             </ScrollView>
           </View>
         </View>
@@ -424,15 +428,22 @@ export default function SubmitATMScreen() {
   )
 }
 
+const fieldLabel = {
+  fontSize: 13,
+  color: colors.text.primary,
+  fontWeight: '600' as const,
+  marginBottom: 6,
+}
+
 const inputStyle = {
-  backgroundColor: '#F9FAFB',
+  backgroundColor: colors.surface,
   borderWidth: 1,
-  borderColor: '#E5E7EB',
-  borderRadius: 10,
+  borderColor: colors.border,
+  borderRadius: radius.sm,
   paddingHorizontal: 12,
   paddingVertical: 10,
   fontSize: 14,
-  color: '#111827',
+  color: colors.text.primary,
   marginBottom: 12,
   justifyContent: 'center' as const,
 }

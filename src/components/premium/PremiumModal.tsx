@@ -1,7 +1,11 @@
 import React, { useState } from 'react'
-import { View, Text, TouchableOpacity, Modal, ActivityIndicator, Alert, Linking } from 'react-native'
+import { View, Text, TouchableOpacity, Modal, Alert, Linking } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { AppIcon } from '../ui/AppIcon'
+import { AppButton } from '../ui/AppButton'
+import { colors, brandGradient } from '@/theme/tokens'
 
 interface PremiumModalProps {
   visible: boolean
@@ -105,9 +109,10 @@ export function PremiumModal({ visible, onClose }: PremiumModalProps) {
         <View
           style={{
             backgroundColor: '#fff',
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            paddingTop: 20,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            borderCurve: 'continuous',
+            paddingTop: 12,
             paddingBottom: 32,
             maxHeight: '80%',
           }}
@@ -118,127 +123,155 @@ export function PremiumModal({ visible, onClose }: PremiumModalProps) {
 
           {step === 'plan' ? (
             <View style={{ paddingHorizontal: 20 }}>
-              <View style={{ alignItems: 'center', marginBottom: 24 }}>
-                <Text style={{ fontSize: 24, marginBottom: 8 }}>👑</Text>
-                <Text style={{ fontSize: 20, fontWeight: '700', color: '#111827' }}>
+              <LinearGradient
+                colors={brandGradient as unknown as [string, string]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ borderRadius: 16, padding: 20, alignItems: 'center', marginBottom: 20 }}
+              >
+                <View
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 28,
+                    backgroundColor: 'rgba(255,255,255,0.22)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 10,
+                  }}
+                >
+                  <AppIcon name="diamond" size={28} color="#fff" />
+                </View>
+                <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff' }}>
                   Upgrade Premium
                 </Text>
-                <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 4, textAlign: 'center' }}>
+                <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', marginTop: 4, textAlign: 'center' }}>
                   Views ilimitadas e sem anúncios
                 </Text>
-              </View>
+              </LinearGradient>
 
-              {PLANS.map((plan) => (
-                <TouchableOpacity
-                  key={plan.type}
-                  style={{
-                    backgroundColor: selectedPlan === plan.type ? '#EEF6FE' : '#F9FAFB',
-                    borderRadius: 12,
-                    padding: 16,
-                    marginBottom: 12,
-                    borderWidth: 2,
-                    borderColor: selectedPlan === plan.type ? '#2094F3' : '#E5E7EB',
-                  }}
-                  onPress={() => setSelectedPlan(plan.type)}
-                >
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <View>
-                      <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827' }}>{plan.label}</Text>
-                      <Text style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>{plan.period}</Text>
-                    </View>
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ fontSize: 18, fontWeight: '700', color: '#10B981' }}>
-                        {plan.price.toLocaleString()} Kz
-                      </Text>
-                      {plan.savings && (
-                        <Text style={{ fontSize: 12, color: '#10B981', marginTop: 2 }}>
-                          Economia {plan.savings}
+              {PLANS.map((plan) => {
+                const selected = selectedPlan === plan.type
+                return (
+                  <TouchableOpacity
+                    key={plan.type}
+                    style={{
+                      backgroundColor: selected ? colors.brand[50] : colors.surface,
+                      borderRadius: 12,
+                      borderCurve: 'continuous',
+                      padding: 16,
+                      marginBottom: 12,
+                      borderWidth: 2,
+                      borderColor: selected ? colors.brand[500] : colors.border,
+                    }}
+                    onPress={() => setSelectedPlan(plan.type)}
+                  >
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <View
+                          style={{
+                            width: 38,
+                            height: 38,
+                            borderRadius: 19,
+                            backgroundColor: selected ? colors.brand[500] : '#fff',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <AppIcon name={plan.type === 'annual' ? 'star' : plan.type === 'quarterly' ? 'trending-up' : 'calendar'} size={18} color={selected ? '#fff' : colors.brand[500]} />
+                        </View>
+                        <View>
+                          <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>{plan.label}</Text>
+                          <Text style={{ fontSize: 13, color: colors.text.secondary, marginTop: 1 }}>{plan.period}</Text>
+                        </View>
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text style={{ fontSize: 18, fontWeight: '700', color: colors.money, fontVariant: ['tabular-nums'] }}>
+                          {plan.price.toLocaleString()} Kz
                         </Text>
-                      )}
+                        {plan.savings && (
+                          <View style={{ backgroundColor: colors.accent[50], borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginTop: 4 }}>
+                            <Text style={{ fontSize: 11, color: colors.accent[600], fontWeight: '700' }}>
+                              -{plan.savings.replace('~', '')}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
                     </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
+                  </TouchableOpacity>
+                )
+              })}
 
-              <TouchableOpacity
-                style={{
-                  backgroundColor: '#2094F3',
-                  borderRadius: 12,
-                  paddingVertical: 14,
-                  alignItems: 'center',
-                  marginTop: 8,
-                  opacity: creating ? 0.7 : 1,
-                }}
+              <AppButton
+                label="Continuar"
                 onPress={() => handleSelectPlan(selectedPlan)}
+                loading={creating}
                 disabled={creating}
-              >
-                {creating ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>
-                    Continuar
-                  </Text>
-                )}
-              </TouchableOpacity>
+                fullWidth
+                size="lg"
+                icon="arrow-forward"
+                haptic
+              />
 
               <TouchableOpacity onPress={handleClose} style={{ paddingVertical: 12, alignItems: 'center' }}>
-                <Text style={{ fontSize: 14, color: '#9CA3AF' }}>Agora não</Text>
+                <Text style={{ fontSize: 14, color: colors.text.tertiary }}>Agora não</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <View style={{ paddingHorizontal: 20 }}>
               <View style={{ alignItems: 'center', marginBottom: 20 }}>
-                <Text style={{ fontSize: 20, fontWeight: '700', color: '#111827' }}>
+                <View
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 28,
+                    backgroundColor: colors.brand[50],
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 10,
+                  }}
+                >
+                  <AppIcon name="card-outline" size={28} color={colors.brand[500]} />
+                </View>
+                <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text.primary }}>
                   Pagamento via Multicaixa Express
                 </Text>
-                <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 4, textAlign: 'center' }}>
+                <Text style={{ fontSize: 14, color: colors.text.secondary, marginTop: 4, textAlign: 'center' }}>
                   Siga os passos abaixo para efectuar o pagamento
                 </Text>
               </View>
 
-              <View style={{ backgroundColor: '#F9FAFB', borderRadius: 12, padding: 16, marginBottom: 16 }}>
+              <View style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 16, marginBottom: 16 }}>
                 <Step number={1} text="Abra o Multicaixa Express" />
                 <Step number={2} text="Entidade: 00930" />
                 <Step number={3} text={`Referência: ${paymentRef}`} highlight />
                 <Step number={4} text={`Valor: ${priceKz.toLocaleString()} Kz`} />
               </View>
 
-              <TouchableOpacity
-                style={{
-                  backgroundColor: '#F3F4F6',
-                  borderRadius: 12,
-                  paddingVertical: 12,
-                  alignItems: 'center',
-                  marginBottom: 12,
-                }}
+              <AppButton
+                label="Copiar Referência"
+                variant="outline"
                 onPress={handleCopyRef}
-              >
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151' }}>
-                  Copiar Referência
-                </Text>
-              </TouchableOpacity>
+                fullWidth
+                icon="copy-outline"
+              />
 
-              <TouchableOpacity
-                style={{
-                  backgroundColor: '#25D366',
-                  borderRadius: 12,
-                  paddingVertical: 12,
-                  alignItems: 'center',
-                  marginBottom: 12,
-                }}
-                onPress={handleSendProof}
-              >
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>
-                  Enviar Comprovativo (WhatsApp)
-                </Text>
-              </TouchableOpacity>
+              <View style={{ marginBottom: 12, marginTop: 0 }}>
+                <AppButton
+                  label="Enviar Comprovativo (WhatsApp)"
+                  onPress={handleSendProof}
+                  fullWidth
+                  icon="logo-whatsapp"
+                  haptic
+                />
+              </View>
 
-              <Text style={{ fontSize: 12, color: '#9CA3AF', textAlign: 'center', marginBottom: 12 }}>
+              <Text style={{ fontSize: 12, color: colors.text.tertiary, textAlign: 'center', marginBottom: 12 }}>
                 A subscrição será activada após confirmação do pagamento (até 24h)
               </Text>
 
               <TouchableOpacity onPress={handleClose} style={{ paddingVertical: 12, alignItems: 'center' }}>
-                <Text style={{ fontSize: 14, color: '#9CA3AF' }}>Fechar</Text>
+                <Text style={{ fontSize: 14, color: colors.text.tertiary }}>Fechar</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -256,14 +289,14 @@ function Step({ number, text, highlight }: { number: number; text: string; highl
           width: 24,
           height: 24,
           borderRadius: 12,
-          backgroundColor: highlight ? '#10B981' : '#E5E7EB',
+          backgroundColor: highlight ? colors.money : '#E5E7EB',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <Text style={{ fontSize: 12, fontWeight: '700', color: highlight ? '#fff' : '#6B7280' }}>{number}</Text>
+        <Text style={{ fontSize: 12, fontWeight: '700', color: highlight ? '#fff' : colors.text.secondary }}>{number}</Text>
       </View>
-      <Text style={{ fontSize: 14, fontWeight: highlight ? '600' : '400', color: highlight ? '#111827' : '#374151', flex: 1 }}>
+      <Text style={{ fontSize: 14, fontWeight: highlight ? '600' : '400', color: highlight ? colors.text.primary : '#374151', flex: 1 }}>
         {text}
       </Text>
     </View>

@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native'
+import { AppIcon } from '../ui/AppIcon'
+import { colors } from '@/theme/tokens'
 
 interface CityDropdownProps {
   city: string
@@ -27,12 +29,12 @@ export function CityDropdown({ city, cities, onCityChange }: CityDropdownProps) 
         }}
       >
         <Text
-          style={{ fontSize: 12, fontWeight: '600', color: city === 'all' ? '#6B7280' : '#2094F3' }}
+          style={{ fontSize: 12, fontWeight: '600', color: city === 'all' ? colors.text.secondary : colors.brand[500] }}
           numberOfLines={1}
         >
           {selected}
         </Text>
-        <Text style={{ fontSize: 12, color: '#9CA3AF' }}>▾</Text>
+        <AppIcon name="chevron-down" size={13} color={colors.text.tertiary} />
       </TouchableOpacity>
 
       <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
@@ -40,9 +42,9 @@ export function CityDropdown({ city, cities, onCityChange }: CityDropdownProps) 
           <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setOpen(false)} />
           <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '60%' }}>
             <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F3F4F6', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827' }}>Filtrar por cidade</Text>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text.primary }}>Filtrar por cidade</Text>
               <TouchableOpacity onPress={() => setOpen(false)}>
-                <Text style={{ fontSize: 14, color: '#2094F3', fontWeight: '600' }}>Fechar</Text>
+                <Text style={{ fontSize: 14, color: colors.brand[500], fontWeight: '600' }}>Fechar</Text>
               </TouchableOpacity>
             </View>
             <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
@@ -52,11 +54,11 @@ export function CityDropdown({ city, cities, onCityChange }: CityDropdownProps) 
                   paddingVertical: 14,
                   borderBottomWidth: 1,
                   borderBottomColor: '#F9FAFB',
-                  backgroundColor: city === 'all' ? '#EEF6FE' : 'transparent',
+                  backgroundColor: city === 'all' ? '#F0F6FE' : 'transparent',
                 }}
                 onPress={() => { onCityChange('all'); setOpen(false) }}
               >
-                <Text style={{ fontSize: 15, color: city === 'all' ? '#2094F3' : '#374151', fontWeight: city === 'all' ? '600' : '400' }}>
+                <Text style={{ fontSize: 15, color: city === 'all' ? '#1573D6' : '#374151', fontWeight: city === 'all' ? '600' : '400' }}>
                   Todas as cidades
                 </Text>
               </TouchableOpacity>
@@ -68,11 +70,11 @@ export function CityDropdown({ city, cities, onCityChange }: CityDropdownProps) 
                     paddingVertical: 14,
                     borderBottomWidth: 1,
                     borderBottomColor: '#F9FAFB',
-                    backgroundColor: city === c ? '#EEF6FE' : 'transparent',
+                    backgroundColor: city === c ? '#F0F6FE' : 'transparent',
                   }}
                   onPress={() => { onCityChange(c); setOpen(false) }}
                 >
-                  <Text style={{ fontSize: 15, color: city === c ? '#2094F3' : '#374151', fontWeight: city === c ? '600' : '400' }}>
+                  <Text style={{ fontSize: 15, color: city === c ? '#1573D6' : '#374151', fontWeight: city === c ? '600' : '400' }}>
                     {c}
                   </Text>
                 </TouchableOpacity>
