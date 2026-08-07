@@ -11,6 +11,8 @@ import { MapFilters } from '../../src/components/map/MapFilters'
 import { ATMList } from '../../src/components/map/ATMList'
 import { ATMDetailSheet } from '../../src/components/map/ATMDetailSheet'
 import { PremiumModal } from '../../src/components/premium/PremiumModal'
+import { AdBanner } from '../../src/components/ads/AdBanner'
+import { useInterstitial } from '../../src/hooks/useInterstitial'
 
 type ViewMode = 'map' | 'list'
 
@@ -19,6 +21,7 @@ export default function MapScreen() {
   const { user } = useAuth()
   const { location, permission, loading: locationLoading, requestAgain } = useLocation()
   const { balance, consumeView } = useViews()
+  const { showInterstitial } = useInterstitial()
   const [viewMode, setViewMode] = useState<ViewMode>('map')
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<ATMStatus | 'all'>('all')
@@ -74,9 +77,10 @@ export default function MapScreen() {
     if (result) {
       setUnlocked(true)
       setUnlockedIds((prev) => new Set(prev).add(selectedATM.id))
+      showInterstitial()
     }
     setUnlocking(false)
-  }, [selectedATM, consumeView, user, router, unlocking])
+  }, [selectedATM, consumeView, user, router, unlocking, showInterstitial])
 
   const handleVote = useCallback(async (value: 'like' | 'dislike') => {
     if (!selectedATM) return
@@ -103,6 +107,16 @@ export default function MapScreen() {
     setSheetVisible(false)
     setUnlocked(false)
   }
+
+  const handleStatusChange = useCallback(
+    (nextStatus: ATMStatus | 'all') => {
+      setStatus(nextStatus)
+      if (nextStatus === 'cash') {
+        showInterstitial()
+      }
+    },
+    [showInterstitial]
+  )
 
   if (locationLoading) {
     return (
@@ -180,7 +194,7 @@ export default function MapScreen() {
           search={search}
           onSearchChange={setSearch}
           status={status}
-          onStatusChange={setStatus}
+          onStatusChange={handleStatusChange}
           city={city}
           cities={cities}
           onCityChange={setCity}
@@ -290,6 +304,8 @@ export default function MapScreen() {
           </View>
         )}
       </View>
+
+      {viewMode === 'map' && !balance.isPremium && <AdBanner />}
 
       <ATMDetailSheet
         atm={selectedATM}

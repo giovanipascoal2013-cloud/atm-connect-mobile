@@ -2,6 +2,26 @@
 
 ## Estado Actual
 
+### Sistema de Anúncios AdMob (test IDs) (2026-08-07) 🚧
+
+Integração de anúncios Google AdMob com **IDs de teste da Google** (decisão do utilizador: todas as 4 posições + sample IDs). Usa **`react-native-google-mobile-ads`** (o `expo-ads-admob` está deprecated) — **não funciona em Expo Go**, requer dev build (o projecto já tem `expo-dev-client`):
+
+- **Configuração** — `app.json`: plugin `react-native-google-mobile-ads` com App IDs de teste (Android `ca-app-pub-3940256099942544~3347511713`, iOS `ca-app-pub-3940256099942544~1458002511`). `.env`/`.env.example`: banners/interstitials preenchidos com sample IDs + novos `EXPO_PUBLIC_ADMOB_NATIVE_ANDROID/IOS` (`ca-app-pub-3940256099942544/2247696110`).
+- **`src/lib/ads.ts`** (novo) — `initializeAds()` idempotente (`mobileAds().initialize()`) + `getUnitId(type)` lê do env por plataforma com fallback para `TestIds` da lib.
+- **`src/hooks/useInterstitial.ts`** (novo) — carrega e mostra interstitial com **cooldown de 2 min** entre mostras e gating `isPremium` (boa prática AdMob: não mostrar em cada unlock).
+- **`src/components/ads/AdBanner.tsx`** (novo) — `BannerAd` anchored adaptive, `null` se sem unit id, erro silencioso (log warning).
+- **`src/components/ads/NativeAdCard.tsx`** (novo) — `NativeAd` via API de classe (`createForAdRequest`), template advanced com `NativeAdView`/`NativeAsset`/`NativeMediaView` (headline, advertiser, body, media, CTA), com "Patrocinado" label.
+- **Integração (4 pontos)**: (1) banner no rodapé do mapa (`map.tsx`, só modo mapa, oculto para premium); (2) interstitial após `consumeView` com sucesso em `handleUnlock`; (3) interstitial no chip "Com dinheiro" (`handleStatusChange` quando `nextStatus === 'cash'`); (4) native ad na lista após o 3º ATM (`ATMList.tsx`, `data` intercalado, só se `!isPremium`).
+- **Init** — `app/_layout.tsx`: `initializeAds()` no mount.
+- **API verificada contra v15.8.3**: `NativeAd` é classe (`createForAdRequest`), `NativeAdView` aceita `nativeAd`+`style`, `NativeMediaView` aceita style e aplica aspectRatio; `BannerAdSize.ANCHORED_ADAPTIVE_BANNER` (o `ADAPTIVE_BANNER` está deprecated); evento `AdEventType.ERROR` passa `Error`.
+- **Pendente (utilizador, regra do projecto)**: `npx expo install react-native-google-mobile-ads@15.8.3` → depois `npx tsc --noEmit` + `npx expo lint` + **rebuild dev client** (`npx expo start --dev-client` ou `eas build --profile development`).
+- **Verificação**: edições aplicadas; tsc/lint só fazem sentido após instalar a dependência (hoje o LSP reporta "Cannot find module 'react-native-google-mobile-ads'").
+
+**Fase Actual**: Sistema de anúncios AdMob (test IDs) — aguarda instalação da dependência + tsc/lint + rebuild
+**Última Actualização**: 2026-08-07
+**Branch Activa**: `feature/freemium-model`
+**Deploy**: N/A (desenvolvimento local / dev build)
+
 ### Correções 3ª ronda errr.txt — Fórum admin-only + Onboarding gate + Foto ArrayBuffer (2026-08-07) 🚧
 
 Fixes aos 3 problemas reportados na 3ª leitura de `errr.txt` (o PGRST202 e a foto partida persistiam após a 2ª ronda):

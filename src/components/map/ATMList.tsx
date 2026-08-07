@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshContr
 import type { ATMWithDistance } from '../../hooks/useATMs'
 import { getATMStatus, getATMColor, getATMStatusLabel } from '../../hooks/useATMs'
 import { timeSince } from '../../lib/time'
+import { NativeAdCard } from '../ads/NativeAdCard'
 
 interface ATMListProps {
   atms: ATMWithDistance[]
@@ -16,6 +17,10 @@ interface ATMListProps {
   isPremium?: boolean
   isLoggedIn?: boolean
 }
+
+type ATMListItem =
+  | { type: 'atm'; atm: ATMWithDistance }
+  | { type: 'ad'; id: string }
 
 const ATMListRow = React.memo(function ATMListRow({
   item,
@@ -103,12 +108,26 @@ export function ATMList({
     [isPremium, isLoggedIn, lockedIds]
   )
 
+  const data = useMemo<ATMListItem[]>(() => {
+    if (isPremium || atms.length < 4) {
+      return atms.map((atm) => ({ type: 'atm', atm }))
+    }
+    const items: ATMListItem[] = atms.map((atm) => ({ type: 'atm', atm }))
+    items.splice(3, 0, { type: 'ad', id: `native-ad-${atms[3].id}` })
+    return items
+  }, [atms, isPremium])
+
   const renderItem = useCallback(
-    ({ item }: { item: ATMWithDistance }) => (
-      <ATMListRow item={item} onPress={onPress} locked={isLocked(item)} />
-    ),
+    ({ item }: { item: ATMListItem }) => {
+      if (item.type === 'ad') return <NativeAdCard />
+      return <ATMListRow item={item.atm} onPress={onPress} locked={isLocked(item.atm)} />
+    },
     [onPress, isLocked]
   )
+
+  const keyExtractor = useCallback((item: ATMListItem) => {
+    return item.type === 'ad' ? item.id : item.atm.id
+  }, [])
 
   const listContentStyle = useMemo(() => ({ padding: 16, paddingBottom: 140, gap: 10 }), [])
 
@@ -153,8 +172,8 @@ export function ATMList({
 
   return (
     <FlatList
-      data={atms}
-      keyExtractor={(item) => item.id}
+      data={data}
+      keyExtractor={keyExtractor}
       renderItem={renderItem}
       contentContainerStyle={listContentStyle}
       ListEmptyComponent={emptyComponent}
