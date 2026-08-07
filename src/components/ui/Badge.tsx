@@ -12,9 +12,9 @@ interface BadgeProps {
 }
 
 const VARIANT: Record<BadgeVariant, { bg: string; fg: string }> = {
-  neutral: { bg: '#F1F3F5', fg: colors.text.secondary },
-  brand: { bg: colors.brand[50], fg: colors.brand[600] },
-  success: { bg: colors.accent[50], fg: colors.accent[600] },
+  neutral: { bg: '#E9ECEF', fg: '#4B5563' },
+  brand: { bg: colors.brand[50], fg: colors.brand[700] },
+  success: { bg: colors.accent[50], fg: colors.accent[700] },
   warning: { bg: '#FEF3C7', fg: '#B45309' },
   danger: { bg: '#FEE2E2', fg: '#B91C1C' },
   premium: { bg: '#FEF3C7', fg: '#B45309' },

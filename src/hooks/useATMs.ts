@@ -59,34 +59,19 @@ export function useATMs(options: UseATMsOptions = {}) {
         .select('*')
         .eq('status_approval', 'approved')
         .is('deleted_at', null)
-        .order('bank_name')
 
       if (fetchError) {
         setError(fetchError.message)
         return
       }
 
-      let result = (data || []) as ATMWithDistance[]
-
-      if (userLocation) {
-        result = result.map((atm) => ({
-          ...atm,
-          distance: haversineDistance(
-            userLocation.latitude,
-            userLocation.longitude,
-            atm.latitude,
-            atm.longitude
-          ),
-        }))
-      }
-
-      setAtms(result)
+      setAtms((data || []) as ATMWithDistance[])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
-  }, [userLocation])
+  }, [])
 
   useEffect(() => {
     fetchATMs()
@@ -97,8 +82,21 @@ export function useATMs(options: UseATMsOptions = {}) {
     [atms]
   )
 
+  const withDistance = useMemo(() => {
+    if (!userLocation) return atms
+    return atms.map((atm) => ({
+      ...atm,
+      distance: haversineDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        atm.latitude,
+        atm.longitude
+      ),
+    }))
+  }, [atms, userLocation])
+
   const filtered = useMemo(() => {
-    let result = atms.filter((atm) => {
+    let result = withDistance.filter((atm) => {
       if (options.search) {
         const q = options.search.toLowerCase()
         const match =
@@ -123,12 +121,12 @@ export function useATMs(options: UseATMsOptions = {}) {
         if (nameCmp !== 0) return nameCmp
         return (a.cidade || '').localeCompare(b.cidade || '')
       })
-    } else if (options.sortMode === 'proximity' && userLocation) {
-      result = [...result].sort((a, b) => (a.distance || 0) - (b.distance || 0))
+    } else if (options.sortMode === 'proximity') {
+      result = [...result].sort((a, b) => (a.distance ?? Number.MAX_SAFE_INTEGER) - (b.distance ?? Number.MAX_SAFE_INTEGER))
     }
 
     return result
-  }, [atms, options.search, options.city, options.status, options.sortMode, userLocation])
+  }, [withDistance, options.search, options.city, options.status, options.sortMode])
 
   return {
     atms: filtered,

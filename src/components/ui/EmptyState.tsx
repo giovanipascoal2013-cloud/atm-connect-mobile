@@ -22,12 +22,14 @@ export function EmptyState({ icon, title, description, actionLabel, onAction }: 
             height: 64,
             borderRadius: 32,
             backgroundColor: colors.brand[50],
+            borderWidth: 1,
+            borderColor: colors.brand[100],
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: 14,
           }}
         >
-          <AppIcon name={icon} size={30} color={colors.brand[400]} />
+          <AppIcon name={icon} size={30} color={colors.brand[600]} />
         </View>
       )}
       <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary, textAlign: 'center' }}>

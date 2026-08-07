@@ -20,7 +20,9 @@ export function SegmentedControl<T extends string>({ options, value, onChange, s
       style={[
         {
           flexDirection: 'row',
-          backgroundColor: '#F1F3F5',
+          backgroundColor: '#E9ECEF',
+          borderWidth: 1,
+          borderColor: '#E5E7EB',
           borderRadius: radius.pill,
           padding: 3,
         },

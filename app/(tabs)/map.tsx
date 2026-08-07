@@ -229,7 +229,7 @@ export default function MapScreen() {
             style={[
               styles.floatingPill,
               shadows.floating,
-              { backgroundColor: error ? 'rgba(254,226,226,0.95)' : 'rgba(255,255,255,0.95)', bottom: error ? 96 : 20 },
+              { backgroundColor: error ? '#FEE2E2' : '#FFFFFF', bottom: error ? 96 : 20, borderColor: error ? '#FCA5A5' : colors.border },
             ]}
           >
             <Text style={{ fontSize: 13, color: error ? '#B91C1C' : colors.text.secondary }}>
@@ -272,7 +272,9 @@ const styles = {
   floatingPill: {
     position: 'absolute' as const,
     alignSelf: 'center' as const,
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: colors.border,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,

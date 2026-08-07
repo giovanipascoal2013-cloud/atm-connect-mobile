@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useAuth } from '../../src/hooks/useAuth'
 import { formatPhone, isValidPhone, phoneToEmail } from '../../src/lib/phone'
 import { friendlyAuthError } from '../../src/lib/errors'
+import { supportWhatsAppUrl } from '../../src/lib/support'
 import { HeaderBackButton } from '../../src/components/navigation/HeaderBackButton'
 import { SegmentedControl } from '../../src/components/ui/SegmentedControl'
 import { AppButton } from '../../src/components/ui/AppButton'
@@ -12,10 +13,6 @@ import { AppIcon } from '../../src/components/ui/AppIcon'
 import { colors, brandGradient } from '../../src/theme/tokens'
 
 type LoginMethod = 'phone' | 'email'
-
-const SUPPORT_WHATSAPP = 'https://wa.me/244933986318?text=' + encodeURIComponent(
-  'Olá, preciso de ajuda para recuperar a senha da minha conta no ATM Connect.'
-)
 
 export default function LoginScreen() {
   const [method, setMethod] = useState<LoginMethod>('phone')
@@ -207,7 +204,7 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity
-              onPress={() => Linking.openURL(SUPPORT_WHATSAPP)}
+              onPress={() => Linking.openURL(supportWhatsAppUrl('Olá, preciso de ajuda para recuperar a senha da minha conta no ATM Connect.'))}
               className="items-center mt-1 mb-4"
             >
               <Text style={{ color: colors.brand[500], fontSize: 14 }}>Esqueceu a senha?</Text>

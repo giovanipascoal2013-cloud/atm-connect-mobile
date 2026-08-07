@@ -32,7 +32,7 @@ const ATMListRow = React.memo(function ATMListRow({
   locked: boolean
 }) {
   const status = locked ? 'locked' : getATMStatus(item)
-  const color = locked ? '#9CA3AF' : getATMColor(status)
+  const color = locked ? '#6B7280' : getATMColor(status)
 
   const formatDistance = (km: number) => {
     if (km < 1) return `${Math.round(km * 1000)}m`

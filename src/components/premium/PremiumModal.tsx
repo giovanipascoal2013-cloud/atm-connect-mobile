@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { View, Text, TouchableOpacity, Modal, Alert, Linking } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../lib/supabase'
+import { SUPPORT_WHATSAPP_NUMBER } from '../../lib/support'
 import { useAuth } from '../../hooks/useAuth'
 import { AppIcon } from '../ui/AppIcon'
 import { AppButton } from '../ui/AppButton'
@@ -32,8 +33,6 @@ const PLAN_LABEL: Record<PlanType, string> = {
   quarterly: 'Trimestral',
   annual: 'Anual',
 }
-
-const WHATSAPP_NUMBER = '+244933986318'
 
 export function PremiumModal({ visible, onClose }: PremiumModalProps) {
   const { user } = useAuth()
@@ -94,7 +93,7 @@ export function PremiumModal({ visible, onClose }: PremiumModalProps) {
     const msg = encodeURIComponent(
       `Olá! Gostaria de activar a minha subscrição ATM Connect Premium.\n\nReferência: ${paymentRef}\nValor: ${priceKz.toLocaleString()} Kz\nPlano: ${PLAN_LABEL[selectedPlan]}`
     )
-    Linking.openURL(`https://wa.me/${WHATSAPP_NUMBER.replace('+', '')}?text=${msg}`)
+    Linking.openURL(`https://wa.me/${SUPPORT_WHATSAPP_NUMBER.replace('+', '')}?text=${msg}`)
   }
 
   const handleClose = () => {

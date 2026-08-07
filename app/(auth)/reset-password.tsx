@@ -4,11 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { AppButton } from '../../src/components/ui/AppButton'
 import { AppIcon } from '../../src/components/ui/AppIcon'
 import { HeaderBackButton } from '../../src/components/navigation/HeaderBackButton'
+import { supportWhatsAppUrl } from '../../src/lib/support'
 import { colors, brandGradient } from '../../src/theme/tokens'
-
-const SUPPORT_WHATSAPP = 'https://wa.me/244933986318?text=' + encodeURIComponent(
-  'Olá, preciso de ajuda para recuperar a senha da minha conta no ATM Connect.'
-)
 
 export default function ResetPasswordScreen() {
   return (
@@ -65,7 +62,7 @@ export default function ResetPasswordScreen() {
           <View style={{ marginTop: 20, width: '100%' }}>
             <AppButton
               label="Contactar suporte via WhatsApp"
-              onPress={() => Linking.openURL(SUPPORT_WHATSAPP)}
+              onPress={() => Linking.openURL(supportWhatsAppUrl('Olá, preciso de ajuda para recuperar a senha da minha conta no ATM Connect.'))}
               fullWidth
               icon="logo-whatsapp"
               haptic

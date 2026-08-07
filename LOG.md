@@ -2,6 +2,21 @@
 
 ## Estado Actual
 
+### Correções 4ª ronda errr.txt — WhatsApp, ordenação por proximidade, contraste (2026-08-07) ✅ (tsc + lint OK)
+
+Novos pedidos do utilizador (4ª leitura de `errr.txt`), implementados e validados com `npx tsc --noEmit` (0 erros) e `npx expo lint` (0 problemas):
+
+- **Botão de apoio ao cliente (WhatsApp)** — novo `src/lib/support.ts` (`SUPPORT_WHATSAPP_NUMBER`, `SUPPORT_DEFAULT_MESSAGE`, `supportWhatsAppUrl()` reutilizando `waLink`). `app/(tabs)/profile.tsx`: novo `SectionLink` "Apoio ao Cliente" (ícone `logo-whatsapp`) entre "Referências" e a secção de ajuda. Refactor de reutilização em `login.tsx`, `reset-password.tsx` e `PremiumModal.tsx` (número de WhatsApp deduplicado).
+- **Fix ordenação por proximidade após login** — causa-raiz: a distância só era calculada no fetch e o sort por proximidade exigia `userLocation`; após login o navigator `(tabs)` remonta e a lista caía para a ordem alfabética do servidor. `useLocation.ts`: cache de última localização em módulo (`getCachedLocation`) para remounts instantâneos. `useATMs.ts`: distância reactiva num `useMemo` sobre `[atms, userLocation]`, sort `proximity` sempre aplicado por `distance ?? MAX_SAFE_INTEGER`, `.order('bank_name')` removido.
+- **Revisão de contraste** — `text.tertiary` `#9CA3AF` → `#6B7280`; marcadores do mapa com stroke branco (`circle-stroke-width: 2`) para se destacarem do fundo escuro; `EmptyState` (ícone `brand[600]` + borda), `Badge neutral`, track do `SegmentedControl`, pills do mapa sólidas + borda, botão "Copiar" do `ReferralCard`, `AppButton secondary` (`brand[700]`), tint inactivo das tabs, círculos de ícone do Perfil e dot de bloqueado da lista.
+- **Spec**: `docs/superpowers/specs/2026-08-07-errr-round4-fixes-design.md`.
+- **Pendente (utilizador)**: teste visual em Expo Go / web (ordenação após login, botão WhatsApp, contraste).
+
+**Fase Actual**: ✅ Correções 4ª ronda errr.txt — aguarda teste em dispositivo
+**Última Actualização**: 2026-08-07
+**Branch Activa**: `main`
+**Deploy**: N/A (desenvolvimento local / Expo Go)
+
 ### Redesign UI — Design System + sweep completo (2026-08-07) ✅ (tsc + lint OK)
 
 Reforma visual completa do app (palete alinhada ao logo: azul `#1573D6` dominante + teal `#10B981` subtil). Corre em **Expo Go / web**, sem novos módulos nativos. Validado com `npx tsc --noEmit` (0 erros) e `npx eslint .` (0 warnings).

@@ -137,7 +137,8 @@ map.on('load', function() {
     paint: {
       'circle-color': ['get', 'color'],
       'circle-radius': 12,
-      'circle-stroke-width': 0
+      'circle-stroke-width': 2,
+      'circle-stroke-color': '#ffffff'
     }
   });
 

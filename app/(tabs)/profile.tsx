@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect } from 'react'
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Modal, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Modal, Alert, ActivityIndicator, Linking } from 'react-native'
 import { useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useAuth } from '../../src/hooks/useAuth'
 import { useViews } from '../../src/hooks/useViews'
 import { supabase } from '../../src/lib/supabase'
 import { formatPhone } from '../../src/lib/phone'
+import { supportWhatsAppUrl } from '../../src/lib/support'
 import { PROVINCIAS_ANGOLA } from '../../src/constants/provinces'
 import { PremiumModal } from '../../src/components/premium/PremiumModal'
 import { AppButton } from '../../src/components/ui/AppButton'
@@ -268,6 +269,7 @@ export default function ProfileScreen() {
         <SectionLink icon="diamond-outline" label={isPremium ? 'Premium activo' : 'Upgrade Premium'} onPress={() => setPremiumVisible(true)} />
         <SectionLink icon="trophy-outline" label="Ranking de Agentes" onPress={() => router.push('/ranking')} />
         <SectionLink icon="link-outline" label="Referências" onPress={() => router.push('/referrals')} />
+        <SectionLink icon="logo-whatsapp" label="Apoio ao Cliente" onPress={() => Linking.openURL(supportWhatsAppUrl())} />
 
         <HelpSection isAgent={isAgent} />
 
@@ -429,6 +431,8 @@ function SectionLink({ icon, label, onPress }: { icon: AppIconName; label: strin
             height: 34,
             borderRadius: 17,
             backgroundColor: colors.brand[50],
+            borderWidth: 1,
+            borderColor: colors.brand[100],
             alignItems: 'center',
             justifyContent: 'center',
           }}

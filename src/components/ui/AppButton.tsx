@@ -23,7 +23,7 @@ interface AppButtonProps {
 
 const VARIANT_STYLES: Record<ButtonVariant, { bg: string; fg: string; border?: string }> = {
   primary: { bg: colors.brand[500], fg: '#FFFFFF' },
-  secondary: { bg: colors.brand[50], fg: colors.brand[600] },
+  secondary: { bg: colors.brand[50], fg: colors.brand[700] },
   ghost: { bg: 'transparent', fg: colors.brand[500], border: colors.brand[200] },
   danger: { bg: '#FEE2E2', fg: '#DC2626' },
   success: { bg: colors.money, fg: '#FFFFFF' },

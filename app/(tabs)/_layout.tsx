@@ -9,14 +9,14 @@ export default function TabLayout() {
   const router = useRouter()
 
   const tabIcon = (focused: boolean, outline: AppIconName, filled: AppIconName) => (
-    <AppIcon name={focused ? filled : outline} size={22} color={focused ? colors.brand[500] : '#9CA3AF'} />
+    <AppIcon name={focused ? filled : outline} size={22} color={focused ? colors.brand[500] : '#6B7280'} />
   )
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.brand[500],
-        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarInactiveTintColor: '#6B7280',
         tabBarStyle: {
           backgroundColor: '#fff',
           borderTopColor: colors.border,

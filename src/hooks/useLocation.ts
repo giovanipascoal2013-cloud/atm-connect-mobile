@@ -6,8 +6,23 @@ export type LocationState = {
   longitude: number
 } | null
 
+let cachedLocation: LocationState = null
+
+function applyLocation(loc: Location.LocationObject): LocationState {
+  const next = {
+    latitude: loc.coords.latitude,
+    longitude: loc.coords.longitude,
+  }
+  cachedLocation = next
+  return next
+}
+
+export function getCachedLocation(): LocationState {
+  return cachedLocation
+}
+
 export function useLocation() {
-  const [location, setLocation] = useState<LocationState>(null)
+  const [location, setLocation] = useState<LocationState>(cachedLocation)
   const [permission, setPermission] = useState<'granted' | 'denied' | 'undetermined'>('undetermined')
   const [loading, setLoading] = useState(true)
 
@@ -21,10 +36,7 @@ export function useLocation() {
           const loc = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.Balanced,
           })
-          setLocation({
-            latitude: loc.coords.latitude,
-            longitude: loc.coords.longitude,
-          })
+          setLocation(applyLocation(loc))
         }
       } catch (err) {
         console.warn('Location error:', err)
@@ -43,10 +55,7 @@ export function useLocation() {
         const loc = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         })
-        setLocation({
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-        })
+        setLocation(applyLocation(loc))
       }
     } catch (err) {
       console.warn('Location error:', err)

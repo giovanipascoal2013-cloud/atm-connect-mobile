@@ -30,7 +30,7 @@ export const colors = {
   text: {
     primary: '#111827',
     secondary: '#6B7280',
-    tertiary: '#9CA3AF',
+    tertiary: '#6B7280',
   },
   danger: '#EF4444',
   warning: '#F59E0B',

@@ -77,7 +77,7 @@ export function ReferralCard({ referralCode, userId, commissionPct = 20 }: Refer
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleCopy}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F3F5', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 }}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#E9ECEF', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 }}
           >
             <AppIcon name="copy-outline" size={13} color="#374151" />
             <Text style={{ fontSize: 12, fontWeight: '600', color: '#374151' }}>Copiar</Text>
