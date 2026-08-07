@@ -58,7 +58,7 @@ export default function RankingScreen() {
   if (loading) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F9FAFB' }}>
-        <ActivityIndicator size="large" color="#10B981" />
+        <ActivityIndicator size="large" color="#2094F3" />
         <Text style={{ color: '#6B7280', marginTop: 12 }}>A carregar ranking...</Text>
       </View>
     )
@@ -68,7 +68,7 @@ export default function RankingScreen() {
     <ScrollView
       style={{ flex: 1, backgroundColor: '#F9FAFB' }}
       contentContainerStyle={{ padding: 16 }}
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchRanking} tintColor="#10B981" />}
+      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchRanking} tintColor="#2094F3" />}
     >
       <View style={{ alignItems: 'center', marginBottom: 20 }}>
         <Text style={{ fontSize: 28, marginBottom: 4 }}>🏆</Text>

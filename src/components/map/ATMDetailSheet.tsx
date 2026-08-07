@@ -2,6 +2,7 @@ import React from 'react'
 import { View, Text, TouchableOpacity, ScrollView, Pressable, ActivityIndicator } from 'react-native'
 import type { ATMWithDistance } from '../../hooks/useATMs'
 import { getATMStatus, getATMColor } from '../../hooks/useATMs'
+import { timeSince } from '../../lib/time'
 
 interface ATMDetailSheetProps {
   atm: ATMWithDistance | null
@@ -9,9 +10,14 @@ interface ATMDetailSheetProps {
   unlocked: boolean
   unlocking: boolean
   isPremium: boolean
+  isLoggedIn: boolean
   remainingViews: number
+  userVote?: 'like' | 'dislike' | null
+  agentRating?: { likes: number; dislikes: number } | null
+  onVote?: (value: 'like' | 'dislike') => void
   onClose: () => void
   onUnlock: () => void
+  onLogin: () => void
   onOpenPremium: () => void
 }
 
@@ -21,9 +27,14 @@ export function ATMDetailSheet({
   unlocked,
   unlocking,
   isPremium,
+  isLoggedIn,
   remainingViews,
+  userVote,
+  agentRating,
+  onVote,
   onClose,
   onUnlock,
+  onLogin,
   onOpenPremium,
 }: ATMDetailSheetProps) {
   if (!visible || !atm) return null
@@ -34,16 +45,6 @@ export function ATMDetailSheet({
     status === 'cash' ? 'Com Dinheiro' :
     status === 'no_cash' ? 'Sem Dinheiro' :
     'Fora de Serviço'
-
-  const timeSince = (date: string) => {
-    const diff = Date.now() - new Date(date).getTime()
-    const minutes = Math.floor(diff / 60000)
-    if (minutes < 60) return `há ${minutes}min`
-    const hours = Math.floor(minutes / 60)
-    if (hours < 24) return `há ${hours}h`
-    const days = Math.floor(hours / 24)
-    return `há ${days}d`
-  }
 
   return (
     <View
@@ -110,6 +111,54 @@ export function ATMDetailSheet({
             </View>
           )}
 
+          {atm.agent_id && agentRating && (
+            <View style={{ backgroundColor: '#F0F9FF', borderRadius: 10, padding: 12, marginBottom: 12 }}>
+              <Text style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 8 }}>
+                Avalie a fiabilidade deste ATM — ajude a comunidade!
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <TouchableOpacity
+                  onPress={() => onVote?.('like')}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    backgroundColor: userVote === 'like' ? '#10B981' : '#fff',
+                    borderRadius: 10,
+                    paddingVertical: 8,
+                    paddingHorizontal: 14,
+                    borderWidth: 1,
+                    borderColor: userVote === 'like' ? '#10B981' : '#E5E7EB',
+                  }}
+                >
+                  <Text style={{ fontSize: 15 }}>👍</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: userVote === 'like' ? '#fff' : '#10B981' }}>
+                    {agentRating.likes}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => onVote?.('dislike')}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    backgroundColor: userVote === 'dislike' ? '#EF4444' : '#fff',
+                    borderRadius: 10,
+                    paddingVertical: 8,
+                    paddingHorizontal: 14,
+                    borderWidth: 1,
+                    borderColor: userVote === 'dislike' ? '#EF4444' : '#E5E7EB',
+                  }}
+                >
+                  <Text style={{ fontSize: 15 }}>👎</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: userVote === 'dislike' ? '#fff' : '#EF4444' }}>
+                    {agentRating.dislikes}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
             <Text style={{ fontSize: 12, color: '#9CA3AF' }}>
               Actualizado {timeSince(atm.last_updated)}
@@ -131,10 +180,24 @@ export function ATMDetailSheet({
             </View>
           </View>
 
-          {isPremium ? (
+          {!isLoggedIn ? (
             <TouchableOpacity
               style={{
-                backgroundColor: '#10B981',
+                backgroundColor: '#2094F3',
+                borderRadius: 12,
+                paddingVertical: 12,
+                alignItems: 'center',
+              }}
+              onPress={onLogin}
+            >
+              <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>
+                Entrar para ver detalhes
+              </Text>
+            </TouchableOpacity>
+          ) : isPremium ? (
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#2094F3',
                 borderRadius: 12,
                 paddingVertical: 12,
                 alignItems: 'center',
@@ -151,7 +214,7 @@ export function ATMDetailSheet({
           ) : remainingViews > 0 ? (
             <TouchableOpacity
               style={{
-                backgroundColor: '#10B981',
+                backgroundColor: '#2094F3',
                 borderRadius: 12,
                 paddingVertical: 12,
                 alignItems: 'center',

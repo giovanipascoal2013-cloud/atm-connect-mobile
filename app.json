@@ -42,6 +42,12 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Permitir acesso à localização para encontrar ATMs próximos"
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permitir acesso à câmara para fotografar ATMs que submeter."
+        }
       ]
     ],
     "experiments": {

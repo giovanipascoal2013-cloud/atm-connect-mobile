@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Database } from '../lib/supabase-types'
 import { haversineDistance } from '../lib/distance'
@@ -8,6 +8,8 @@ type ATM = Database['public']['Tables']['atms']['Row']
 export type ATMWithDistance = ATM & { distance?: number }
 
 export type ATMStatus = 'cash' | 'no_cash' | 'offline' | 'locked'
+
+export type SortMode = 'proximity' | 'alphabetic'
 
 export function getATMStatus(atm: ATM): ATMStatus {
   if (atm.status === 'Fora de Serviço') return 'offline'
@@ -24,14 +26,26 @@ export function getATMColor(status: ATMStatus): string {
   }
 }
 
+export function getATMStatusLabel(status: ATMStatus): string {
+  switch (status) {
+    case 'cash': return 'Com Dinheiro'
+    case 'no_cash': return 'Sem Dinheiro'
+    case 'offline': return 'Fora de Serviço'
+    case 'locked': return 'Bloqueado'
+  }
+}
+
 interface UseATMsOptions {
   search?: string
   bank?: string
   status?: ATMStatus | 'all'
+  city?: string
+  sortMode?: SortMode
   userLocation?: { latitude: number; longitude: number } | null
 }
 
 export function useATMs(options: UseATMsOptions = {}) {
+  const { userLocation } = options
   const [atms, setAtms] = useState<ATMWithDistance[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -55,17 +69,16 @@ export function useATMs(options: UseATMsOptions = {}) {
 
       let result = (data || []) as ATMWithDistance[]
 
-      if (options.userLocation) {
+      if (userLocation) {
         result = result.map((atm) => ({
           ...atm,
           distance: haversineDistance(
-            options.userLocation!.latitude,
-            options.userLocation!.longitude,
+            userLocation.latitude,
+            userLocation.longitude,
             atm.latitude,
             atm.longitude
           ),
         }))
-        result.sort((a, b) => (a.distance || 0) - (b.distance || 0))
       }
 
       setAtms(result)
@@ -74,30 +87,65 @@ export function useATMs(options: UseATMsOptions = {}) {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [userLocation])
 
   useEffect(() => {
     fetchATMs()
   }, [fetchATMs])
 
-  const filtered = atms.filter((atm) => {
-    if (options.search) {
-      const q = options.search.toLowerCase()
-      const match =
-        atm.bank_name.toLowerCase().includes(q) ||
-        atm.address.toLowerCase().includes(q) ||
-        (atm.cidade && atm.cidade.toLowerCase().includes(q)) ||
-        (atm.provincia && atm.provincia.toLowerCase().includes(q))
-      if (!match) return false
-    }
-    if (options.bank && options.bank !== 'all') {
-      if (atm.bank_name !== options.bank) return false
-    }
-    if (options.status && options.status !== 'all') {
-      if (getATMStatus(atm) !== options.status) return false
-    }
-    return true
-  })
+  const banks = useMemo(
+    () => Array.from(new Set(atms.map((a) => a.bank_name).filter(Boolean))).sort(),
+    [atms]
+  )
 
-  return { atms: filtered, allAtms: atms, loading, error, refetch: fetchATMs }
+  const cities = useMemo(
+    () => Array.from(new Set(atms.map((a) => a.cidade).filter(Boolean) as string[])).sort(),
+    [atms]
+  )
+
+  const filtered = useMemo(() => {
+    let result = atms.filter((atm) => {
+      if (options.search) {
+        const q = options.search.toLowerCase()
+        const match =
+          atm.bank_name.toLowerCase().includes(q) ||
+          atm.address.toLowerCase().includes(q) ||
+          (atm.cidade && atm.cidade.toLowerCase().includes(q)) ||
+          (atm.provincia && atm.provincia.toLowerCase().includes(q))
+        if (!match) return false
+      }
+      if (options.bank && options.bank !== 'all') {
+        if (atm.bank_name !== options.bank) return false
+      }
+      if (options.city && options.city !== 'all') {
+        if (atm.cidade !== options.city) return false
+      }
+      if (options.status && options.status !== 'all') {
+        if (getATMStatus(atm) !== options.status) return false
+      }
+      return true
+    })
+
+    if (options.sortMode === 'alphabetic') {
+      result = [...result].sort((a, b) => {
+        const nameCmp = a.bank_name.localeCompare(b.bank_name)
+        if (nameCmp !== 0) return nameCmp
+        return (a.cidade || '').localeCompare(b.cidade || '')
+      })
+    } else if (options.sortMode === 'proximity' && userLocation) {
+      result = [...result].sort((a, b) => (a.distance || 0) - (b.distance || 0))
+    }
+
+    return result
+  }, [atms, options.search, options.bank, options.city, options.status, options.sortMode, userLocation])
+
+  return {
+    atms: filtered,
+    allAtms: atms,
+    banks,
+    cities,
+    loading,
+    error,
+    refetch: fetchATMs,
+  }
 }

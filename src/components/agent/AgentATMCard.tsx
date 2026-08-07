@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { View, Text, Switch, TouchableOpacity, TextInput, Alert } from 'react-native'
+import { View, Text, Switch, TouchableOpacity, TextInput } from 'react-native'
+import { timeSince } from '../../lib/time'
 
 interface AgentATM {
   id: string
@@ -52,16 +53,6 @@ export function AgentATMCard({
       : atm.has_cash
         ? '#34A853'
         : '#EA4335'
-
-  const timeSince = (date: string) => {
-    const diff = Date.now() - new Date(date).getTime()
-    const minutes = Math.floor(diff / 60000)
-    if (minutes < 60) return `há ${minutes}min`
-    const hours = Math.floor(minutes / 60)
-    if (hours < 24) return `há ${hours}h`
-    const days = Math.floor(hours / 24)
-    return `há ${days}d`
-  }
 
   const handleSaveObs = () => {
     onSetObs(obsText || null)
@@ -187,7 +178,7 @@ export function AgentATMCard({
                 paddingVertical: 8,
                 paddingHorizontal: 12,
                 borderRadius: 6,
-                backgroundColor: atm.fila === opt.value ? '#10B981' : 'transparent',
+                backgroundColor: atm.fila === opt.value ? '#2094F3' : 'transparent',
               }}
               onPress={() => {
                 onSetFila(opt.value)
@@ -211,7 +202,7 @@ export function AgentATMCard({
                 paddingVertical: 8,
                 paddingHorizontal: 12,
                 borderRadius: 6,
-                backgroundColor: atm.status === s ? '#10B981' : 'transparent',
+                backgroundColor: atm.status === s ? '#2094F3' : 'transparent',
               }}
               onPress={() => {
                 onSetStatus(s)
@@ -240,11 +231,12 @@ export function AgentATMCard({
             value={obsText}
             onChangeText={setObsText}
             placeholder="Observações..."
+            placeholderTextColor="#9CA3AF"
             multiline
           />
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <TouchableOpacity onPress={handleSaveObs}>
-              <Text style={{ fontSize: 13, color: '#10B981', fontWeight: '600' }}>Guardar</Text>
+              <Text style={{ fontSize: 13, color: '#2094F3', fontWeight: '600' }}>Guardar</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setEditingObs(false)}>
               <Text style={{ fontSize: 13, color: '#9CA3AF' }}>Cancelar</Text>

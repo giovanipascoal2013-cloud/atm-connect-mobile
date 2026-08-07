@@ -8,37 +8,52 @@ interface PremiumModalProps {
   onClose: () => void
 }
 
-type Step = 'plan' | 'payment'
+type PaymentStep = 'plan' | 'payment'
+type PlanType = 'monthly' | 'quarterly' | 'annual'
 
-const PLANS = [
-  { type: 'monthly' as const, label: 'Mensal', price: 1500, period: 'por mês' },
-  { type: 'annual' as const, label: 'Anual', price: 13500, period: 'por ano', savings: '~25%' },
+const PLANS: { type: PlanType; label: string; price: number; period: string; savings?: string }[] = [
+  { type: 'monthly', label: 'Mensal', price: 290, period: 'por mês' },
+  { type: 'quarterly', label: 'Trimestral', price: 700, period: 'por 3 meses', savings: '~20%' },
+  { type: 'annual', label: 'Anual', price: 1500, period: 'por ano', savings: '~57%' },
 ]
+
+const PLAN_CONFIG: Record<PlanType, { settingKey: string; fallback: string; days: number }> = {
+  monthly: { settingKey: 'premium_monthly_price_kz', fallback: '290', days: 30 },
+  quarterly: { settingKey: 'premium_quarterly_price_kz', fallback: '700', days: 90 },
+  annual: { settingKey: 'premium_annual_price_kz', fallback: '1500', days: 365 },
+}
+
+const PLAN_LABEL: Record<PlanType, string> = {
+  monthly: 'Mensal',
+  quarterly: 'Trimestral',
+  annual: 'Anual',
+}
 
 const WHATSAPP_NUMBER = '+244933986318'
 
 export function PremiumModal({ visible, onClose }: PremiumModalProps) {
   const { user } = useAuth()
-  const [step, setStep] = useState<Step>('plan')
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('monthly')
+  const [step, setStep] = useState<PaymentStep>('plan')
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>('monthly')
   const [paymentRef, setPaymentRef] = useState('')
   const [creating, setCreating] = useState(false)
 
   const priceKz = PLANS.find((p) => p.type === selectedPlan)?.price ?? 0
 
-  const handleSelectPlan = async (planType: 'monthly' | 'annual') => {
+  const handleSelectPlan = async (planType: PlanType) => {
     if (!user) return
     setSelectedPlan(planType)
     setCreating(true)
 
     try {
+      const config = PLAN_CONFIG[planType]
       const { data: priceRes } = await supabase
         .from('app_settings')
         .select('value')
-        .eq('key', planType === 'monthly' ? 'premium_monthly_price_kz' : 'premium_annual_price_kz')
+        .eq('key', config.settingKey)
         .maybeSingle()
 
-      const price = parseInt(priceRes?.value ?? (planType === 'monthly' ? '1500' : '13500'), 10)
+      const price = parseInt(priceRes?.value ?? config.fallback, 10)
 
       const ref = `DEM-${Date.now().toString(36).toUpperCase()}`
 
@@ -47,7 +62,7 @@ export function PremiumModal({ visible, onClose }: PremiumModalProps) {
         plan_type: planType,
         price_kz: price,
         started_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + (planType === 'monthly' ? 30 : 365) * 24 * 60 * 60 * 1000).toISOString(),
+        expires_at: new Date(Date.now() + config.days * 24 * 60 * 60 * 1000).toISOString(),
         status: 'pending',
         payment_ref: ref,
       })
@@ -73,7 +88,7 @@ export function PremiumModal({ visible, onClose }: PremiumModalProps) {
 
   const handleSendProof = () => {
     const msg = encodeURIComponent(
-      `Olá! Gostaria de activar a minha subscrição ATM Connect Premium.\n\nReferência: ${paymentRef}\nValor: ${priceKz.toLocaleString()} Kz\nPlano: ${selectedPlan === 'monthly' ? 'Mensal' : 'Anual'}`
+      `Olá! Gostaria de activar a minha subscrição ATM Connect Premium.\n\nReferência: ${paymentRef}\nValor: ${priceKz.toLocaleString()} Kz\nPlano: ${PLAN_LABEL[selectedPlan]}`
     )
     Linking.openURL(`https://wa.me/${WHATSAPP_NUMBER.replace('+', '')}?text=${msg}`)
   }
@@ -117,12 +132,12 @@ export function PremiumModal({ visible, onClose }: PremiumModalProps) {
                 <TouchableOpacity
                   key={plan.type}
                   style={{
-                    backgroundColor: selectedPlan === plan.type ? '#ECFDF5' : '#F9FAFB',
+                    backgroundColor: selectedPlan === plan.type ? '#EEF6FE' : '#F9FAFB',
                     borderRadius: 12,
                     padding: 16,
                     marginBottom: 12,
                     borderWidth: 2,
-                    borderColor: selectedPlan === plan.type ? '#10B981' : '#E5E7EB',
+                    borderColor: selectedPlan === plan.type ? '#2094F3' : '#E5E7EB',
                   }}
                   onPress={() => setSelectedPlan(plan.type)}
                 >
@@ -147,7 +162,7 @@ export function PremiumModal({ visible, onClose }: PremiumModalProps) {
 
               <TouchableOpacity
                 style={{
-                  backgroundColor: '#10B981',
+                  backgroundColor: '#2094F3',
                   borderRadius: 12,
                   paddingVertical: 14,
                   alignItems: 'center',

@@ -1,8 +1,10 @@
 import React, { useState, useCallback } from 'react'
-import { View, Text, TouchableOpacity, TextInput, FlatList } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput } from 'react-native'
+import { useRouter } from 'expo-router'
 import type { ForumPost, ForumComment } from '../../hooks/useForum'
 import { useForum } from '../../hooks/useForum'
 import { useAuth } from '../../hooks/useAuth'
+import { timeSince } from '../../lib/time'
 
 interface PostCardProps {
   post: ForumPost
@@ -10,21 +12,12 @@ interface PostCardProps {
 
 export function PostCard({ post }: PostCardProps) {
   const { user } = useAuth()
+  const router = useRouter()
   const { fetchComments, addComment } = useForum(post.provincia)
   const [expanded, setExpanded] = useState(false)
   const [comments, setComments] = useState<ForumComment[]>([])
   const [commentText, setCommentText] = useState('')
   const [loadingComments, setLoadingComments] = useState(false)
-
-  const timeSince = (date: string) => {
-    const diff = Date.now() - new Date(date).getTime()
-    const minutes = Math.floor(diff / 60000)
-    if (minutes < 60) return `há ${minutes}min`
-    const hours = Math.floor(minutes / 60)
-    if (hours < 24) return `há ${hours}h`
-    const days = Math.floor(hours / 24)
-    return `há ${days}d`
-  }
 
   const handleExpand = useCallback(async () => {
     if (!expanded) {
@@ -127,11 +120,12 @@ export function PostCard({ post }: PostCardProps) {
                 value={commentText}
                 onChangeText={setCommentText}
                 placeholder="Comentar..."
+                placeholderTextColor="#9CA3AF"
                 onSubmitEditing={handleAddComment}
               />
               <TouchableOpacity
                 style={{
-                  backgroundColor: commentText.trim() ? '#10B981' : '#E5E7EB',
+                  backgroundColor: commentText.trim() ? '#2094F3' : '#E5E7EB',
                   borderRadius: 8,
                   paddingHorizontal: 12,
                   paddingVertical: 8,
@@ -145,6 +139,17 @@ export function PostCard({ post }: PostCardProps) {
                 </Text>
               </TouchableOpacity>
             </View>
+          )}
+
+          {!user && (
+            <TouchableOpacity
+              onPress={() => router.push('/(auth)/login')}
+              style={{ backgroundColor: '#EEF6FE', borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginTop: 4 }}
+            >
+              <Text style={{ fontSize: 13, color: '#1A7ED6', fontWeight: '600' }}>
+                Inicia sessão para comentar
+              </Text>
+            </TouchableOpacity>
           )}
         </View>
       )}

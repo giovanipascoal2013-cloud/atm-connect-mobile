@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import { WebView } from 'react-native-webview'
 import type { ATMWithDistance } from '../../hooks/useATMs'
 import { getATMStatus, getATMColor } from '../../hooks/useATMs'
@@ -9,14 +9,25 @@ interface MapboxWebViewProps {
   userLocation: LocationState
   selectedATMId: string | null
   onATMPress: (atm: ATMWithDistance) => void
+  lockedIds?: Set<string>
+  isPremium?: boolean
+  isLoggedIn?: boolean
 }
 
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN || ''
 
-function buildHTML(atms: ATMWithDistance[], userLocation: LocationState): string {
+const LOCKED_COLOR = '#9CA3AF'
+
+function buildGeoJSON(
+  atms: ATMWithDistance[],
+  lockedIds?: Set<string>,
+  isPremium?: boolean,
+  isLoggedIn?: boolean
+) {
   const features = atms.map((atm) => {
-    const status = getATMStatus(atm)
-    const color = getATMColor(status)
+    const locked = !isPremium && !(isLoggedIn && lockedIds?.has(atm.id))
+    const status = locked ? 'locked' : getATMStatus(atm)
+    const color = locked ? LOCKED_COLOR : getATMColor(status)
     return {
       type: 'Feature' as const,
       properties: {
@@ -33,10 +44,20 @@ function buildHTML(atms: ATMWithDistance[], userLocation: LocationState): string
     }
   })
 
-  const geojson = {
+  return {
     type: 'FeatureCollection' as const,
     features,
   }
+}
+
+function buildHTML(
+  atms: ATMWithDistance[],
+  userLocation: LocationState,
+  lockedIds?: Set<string>,
+  isPremium?: boolean,
+  isLoggedIn?: boolean
+): string {
+  const geojson = buildGeoJSON(atms, lockedIds, isPremium, isLoggedIn)
 
   const centerLng = userLocation?.longitude ?? 13.2894
   const centerLat = userLocation?.latitude ?? -8.8399
@@ -201,8 +222,11 @@ window.addEventListener('message', function(e) {
 </html>`
 }
 
-export function MapboxWebView({ atms, userLocation, selectedATMId, onATMPress }: MapboxWebViewProps) {
+export function MapboxWebView({ atms, userLocation, selectedATMId, onATMPress, lockedIds, isPremium, isLoggedIn }: MapboxWebViewProps) {
   const webRef = useRef<WebView>(null)
+
+  const html = useMemo(() => buildHTML(atms, userLocation, lockedIds, isPremium, isLoggedIn), [atms, userLocation, lockedIds, isPremium, isLoggedIn])
+  const geojson = useMemo(() => buildGeoJSON(atms, lockedIds, isPremium, isLoggedIn), [atms, lockedIds, isPremium, isLoggedIn])
 
   const handleMessage = useCallback(
     (event: any) => {
@@ -217,7 +241,21 @@ export function MapboxWebView({ atms, userLocation, selectedATMId, onATMPress }:
     [atms, onATMPress]
   )
 
-  const html = buildHTML(atms, userLocation)
+  const syncData = useCallback(() => {
+    webRef.current?.injectJavaScript(`window.updateData && window.updateData(${JSON.stringify(geojson)}); true;`)
+  }, [geojson])
+
+  useEffect(() => {
+    syncData()
+  }, [syncData])
+
+  useEffect(() => {
+    if (userLocation) {
+      webRef.current?.injectJavaScript(
+        `window.centerOn && window.centerOn(${userLocation.longitude}, ${userLocation.latitude}); true;`
+      )
+    }
+  }, [userLocation])
 
   return (
     <WebView
@@ -225,6 +263,8 @@ export function MapboxWebView({ atms, userLocation, selectedATMId, onATMPress }:
       source={{ html }}
       style={{ flex: 1 }}
       onMessage={handleMessage}
+      onLoad={syncData}
+      onError={(event) => console.warn('Map WebView error:', event.nativeEvent.description)}
       javaScriptEnabled
       originWhitelist={['*']}
       cacheEnabled={false}

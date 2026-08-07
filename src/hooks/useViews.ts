@@ -75,7 +75,11 @@ export function useViews() {
   }, [fetchBalance])
 
   const consumeView = useCallback(async (atmId: string): Promise<ConsumeResult | null> => {
-    if (!user || isPremium) {
+    if (!user) {
+      return null
+    }
+
+    if (isPremium) {
       return { viewId: '', expiresAt: '', reused: true }
     }
 
@@ -86,6 +90,27 @@ export function useViews() {
       if (msg.includes('Daily view limit reached') || msg.includes('P0002')) {
         return null
       }
+
+      if ((error as { code?: string }).code === '23505') {
+        const { data: existing } = await supabase
+          .from('atm_views')
+          .select('id, expires_at')
+          .eq('user_id', user.id)
+          .eq('atm_id', atmId)
+          .gt('expires_at', new Date().toISOString())
+          .order('expires_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (existing) {
+          return {
+            viewId: existing.id,
+            expiresAt: existing.expires_at,
+            reused: true,
+          }
+        }
+      }
+
       console.error('Error consuming view:', error)
       return null
     }

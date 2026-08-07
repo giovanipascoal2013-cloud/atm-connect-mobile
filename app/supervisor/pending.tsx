@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput, RefreshControl } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput, RefreshControl, Keyboard, TouchableWithoutFeedback } from 'react-native'
 import { useSupervisor, type PendingATM } from '../../src/hooks/useSupervisor'
+import { timeSince } from '../../src/lib/time'
 
 export default function PendingATMsScreen() {
   const { pendingATMs, loading, refetch, approveATM, rejectATM } = useSupervisor()
@@ -39,21 +40,11 @@ export default function PendingATMsScreen() {
     }
   }, [rejectATM, rejectReason])
 
-  const timeSince = (date: string) => {
-    const diff = Date.now() - new Date(date).getTime()
-    const minutes = Math.floor(diff / 60000)
-    if (minutes < 60) return `há ${minutes}min`
-    const hours = Math.floor(minutes / 60)
-    if (hours < 24) return `há ${hours}h`
-    const days = Math.floor(hours / 24)
-    return `há ${days}d`
-  }
-
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
       <ScrollView
         contentContainerStyle={{ padding: 16 }}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} tintColor="#10B981" />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} tintColor="#2094F3" />}
       >
         {pendingATMs.length === 0 ? (
           <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 32, alignItems: 'center', borderWidth: 1, borderColor: '#F3F4F6' }}>
@@ -89,6 +80,8 @@ export default function PendingATMsScreen() {
 
       {selectedATM && (
         <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8, padding: 20, maxHeight: '60%' }}>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View>
           <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#D1D5DB', alignSelf: 'center', marginBottom: 16 }} />
 
           <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>{selectedATM.bank_name}</Text>
@@ -103,7 +96,7 @@ export default function PendingATMsScreen() {
 
           <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
             <TouchableOpacity
-              style={{ flex: 1, backgroundColor: '#10B981', borderRadius: 12, paddingVertical: 12, alignItems: 'center', opacity: processing ? 0.7 : 1 }}
+              style={{ flex: 1, backgroundColor: '#2094F3', borderRadius: 12, paddingVertical: 12, alignItems: 'center', opacity: processing ? 0.7 : 1 }}
               onPress={() => handleApprove(selectedATM.id)}
               disabled={processing}
             >
@@ -125,6 +118,7 @@ export default function PendingATMsScreen() {
                 value={rejectReason}
                 onChangeText={setRejectReason}
                 placeholder="Motivo da rejeição..."
+                placeholderTextColor="#9CA3AF"
                 multiline
               />
               <TouchableOpacity
@@ -140,6 +134,8 @@ export default function PendingATMsScreen() {
           <TouchableOpacity onPress={() => setSelectedATM(null)} style={{ paddingVertical: 12, alignItems: 'center', marginTop: 8 }}>
             <Text style={{ fontSize: 14, color: '#9CA3AF' }}>Fechar</Text>
           </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
       )}
     </View>

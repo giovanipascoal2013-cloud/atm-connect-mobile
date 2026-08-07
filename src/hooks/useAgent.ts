@@ -23,8 +23,14 @@ interface AgentStats {
   availableBalance: number
 }
 
+interface AgentRating {
+  likes: number
+  dislikes: number
+  total_ratings: number
+}
+
 export function useAgent() {
-  const { user, profile } = useAuth()
+  const { user, profile, isAgent: isAuthAgent } = useAuth()
   const [atms, setAtms] = useState<AgentATM[]>([])
   const [stats, setStats] = useState<AgentStats>({
     totalATMs: 0,
@@ -33,6 +39,8 @@ export function useAgent() {
     totalWithdrawn: 0,
     availableBalance: 0,
   })
+  const [agentRating, setAgentRating] = useState<AgentRating | null>(null)
+  const [commissionPct, setCommissionPct] = useState(20)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
 
@@ -40,7 +48,7 @@ export function useAgent() {
     if (!user) return
     setLoading(true)
     try {
-      const [atmsRes, earningsRes, withdrawalsRes] = await Promise.all([
+      const [atmsRes, earningsRes, withdrawalsRes, ratingRes, commissionRes] = await Promise.all([
         supabase
           .from('atms')
           .select('id, bank_name, address, has_cash, has_paper, fila, status, obs, last_updated, agent_id')
@@ -54,6 +62,12 @@ export function useAgent() {
           .from('withdrawals')
           .select('amount_kz, status')
           .eq('agent_id', user.id),
+        supabase.rpc('get_agent_rating_stats', { _agent_id: user.id, _user_id: user.id }),
+        supabase
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'referral_commission_pct')
+          .maybeSingle(),
       ])
 
       const agentAtms = (atmsRes.data ?? []) as AgentATM[]
@@ -71,6 +85,22 @@ export function useAgent() {
         totalWithdrawn,
         availableBalance: Math.max(0, (profile?.agent_balance_kz ?? 0)),
       })
+
+      if (ratingRes.data) {
+        const parsed = ratingRes.data as unknown as { likes: number; dislikes: number; total: number }
+        setAgentRating(
+          Number(parsed.total) > 0
+            ? { likes: Number(parsed.likes), dislikes: Number(parsed.dislikes), total_ratings: Number(parsed.total) }
+            : null
+        )
+      } else {
+        setAgentRating(null)
+      }
+
+      if (commissionRes.data?.value) {
+        const pct = Number(commissionRes.data.value)
+        if (!isNaN(pct) && pct > 0) setCommissionPct(pct)
+      }
     } catch (err) {
       console.error('Error fetching agent data:', err)
     } finally {
@@ -136,6 +166,9 @@ export function useAgent() {
   return {
     atms,
     stats,
+    agentRating,
+    commissionPct,
+    referralCode: profile?.referral_code ?? null,
     loading,
     updating,
     refetch: fetchData,
@@ -144,6 +177,6 @@ export function useAgent() {
     setFila,
     setStatus,
     setObs,
-    isAgent: profile?.role === 'agent',
+    isAgent: isAuthAgent,
   }
 }

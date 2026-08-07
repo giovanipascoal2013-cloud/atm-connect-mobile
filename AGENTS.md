@@ -31,6 +31,8 @@
 
 ## Comandos
 
+> **REGRA OBRIGATÓRIA**: O agente NÃO deve instalar dependências (`npm install`, `npx expo install`, etc.) nem executar comandos de terminal longos/persistentes (dev server, builds, lint que instala coisas) de forma autónoma. Quando for necessário, **indicar ao utilizador o comando exacto para ele executar manualmente** no seu terminal e aguardar confirmação.
+
 ```bash
 # Desenvolvimento
 npx expo start              # Dev server
@@ -88,4 +90,4 @@ apps/mobile/
 - **Estado**: React hooks + Context
 - **Backend**: Supabase (mesmo que o web app)
 - **Storage**: expo-secure-store (em vez de localStorage)
-- **Brand**: Primary `#10B981` (green), Danger `#EF4444`, Info `#3B82F6`
+- **Brand**: Primary `#2094F3` (blue), Verde `#10B981` (dinheiro/sucesso), Danger `#EF4444`, Info `#3B82F6`

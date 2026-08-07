@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from './useAuth'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let NotificationsModule: any = null
 
 function getNotifications(): any | null {
   if (NotificationsModule) return NotificationsModule
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     NotificationsModule = require('expo-notifications')
     NotificationsModule.setNotificationHandler({
       handleNotification: async () => ({

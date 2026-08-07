@@ -9,9 +9,12 @@ interface ATMMapViewProps {
   userLocation: LocationState
   selectedATMId: string | null
   onATMPress: (atm: ATMWithDistance) => void
+  lockedIds?: Set<string>
+  isPremium?: boolean
+  isLoggedIn?: boolean
 }
 
-export function ATMMapView({ atms, userLocation, selectedATMId, onATMPress }: ATMMapViewProps) {
+export function ATMMapView({ atms, userLocation, selectedATMId, onATMPress, lockedIds, isPremium, isLoggedIn }: ATMMapViewProps) {
   return (
     <View style={StyleSheet.absoluteFill}>
       <MapboxWebView
@@ -19,6 +22,9 @@ export function ATMMapView({ atms, userLocation, selectedATMId, onATMPress }: AT
         userLocation={userLocation}
         selectedATMId={selectedATMId}
         onATMPress={onATMPress}
+        lockedIds={lockedIds}
+        isPremium={isPremium}
+        isLoggedIn={isLoggedIn}
       />
     </View>
   )

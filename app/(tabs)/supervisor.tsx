@@ -12,7 +12,7 @@ function StatCard({ label, value, color }: { label: string; value: string | numb
 }
 
 export default function SupervisorScreen() {
-  const { stats, pendingATMs, loading, refetch, isSupervisor } = useSupervisor()
+  const { stats, loading, refetch, isSupervisor } = useSupervisor()
   const router = useRouter()
 
   if (!isSupervisor) {
@@ -27,16 +27,16 @@ export default function SupervisorScreen() {
   if (loading) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F9FAFB' }}>
-        <ActivityIndicator size="large" color="#10B981" />
+        <ActivityIndicator size="large" color="#2094F3" />
         <Text style={{ color: '#6B7280', marginTop: 12 }}>A carregar painel...</Text>
       </View>
     )
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#F9FAFB' }} contentContainerStyle={{ padding: 16 }} refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} tintColor="#10B981" />}>
+    <ScrollView style={{ flex: 1, backgroundColor: '#F9FAFB' }} contentContainerStyle={{ padding: 16 }} refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} tintColor="#2094F3" />}>
       <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
-        <StatCard label="ATMs Aprovados" value={stats.totalATMs} color="#10B981" />
+        <StatCard label="ATMs Aprovados" value={stats.totalATMs} color="#2094F3" />
         <StatCard label="Pendentes" value={stats.pendingATMs} color="#F59E0B" />
       </View>
       <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>

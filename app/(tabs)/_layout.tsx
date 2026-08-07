@@ -1,14 +1,15 @@
-import { Tabs } from 'expo-router'
-import { Text } from 'react-native'
+import { Tabs, useRouter } from 'expo-router'
+import { Text, TouchableOpacity } from 'react-native'
 import { useAuth } from '../../src/hooks/useAuth'
 
 export default function TabLayout() {
-  const { isAgent, isSupervisor } = useAuth()
+  const { user, isAgent, isSupervisor } = useAuth()
+  const router = useRouter()
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#10B981',
+        tabBarActiveTintColor: '#2094F3',
         tabBarInactiveTintColor: '#9CA3AF',
         tabBarStyle: {
           backgroundColor: '#fff',
@@ -21,7 +22,7 @@ export default function TabLayout() {
           fontWeight: '600',
         },
         headerStyle: {
-          backgroundColor: '#10B981',
+          backgroundColor: '#2094F3',
         },
         headerTintColor: '#fff',
         headerTitleStyle: {
@@ -35,6 +36,12 @@ export default function TabLayout() {
           title: 'Mapa',
           headerTitle: 'ATM Connect',
           tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 22 }}>📍</Text>,
+          headerRight: () =>
+            !user ? (
+              <TouchableOpacity onPress={() => router.push('/(auth)/login')} style={{ paddingHorizontal: 16 }}>
+                <Text style={{ color: '#fff', fontWeight: '700' }}>Entrar</Text>
+              </TouchableOpacity>
+            ) : undefined,
         }}
       />
       <Tabs.Screen

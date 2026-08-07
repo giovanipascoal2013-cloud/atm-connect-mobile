@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router'
 import { HeaderBackButton } from '../../src/components/navigation/HeaderBackButton'
 
-export default function ReferralsLayout() {
+export default function AgentStackLayout() {
   return (
     <Stack
       screenOptions={{
@@ -11,10 +11,10 @@ export default function ReferralsLayout() {
       }}
     >
       <Stack.Screen
-        name="index"
+        name="submit-atm"
         options={{
-          title: 'Referências',
-          headerLeft: () => <HeaderBackButton fallback="/(tabs)/profile" />,
+          title: 'Submeter ATM',
+          headerLeft: () => <HeaderBackButton fallback="/(tabs)/agent" />,
         }}
       />
     </Stack>

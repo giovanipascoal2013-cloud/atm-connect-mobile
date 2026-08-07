@@ -22,6 +22,11 @@ web-build/
 .vscode/
 .idea/
 
+# Agent work files
+errr.txt
+.tmp-create-agent.mjs
+PLAN.md
+
 # eas
 .eas-build/
 

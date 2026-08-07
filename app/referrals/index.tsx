@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
-import { View, Text, ScrollView, RefreshControl, ActivityIndicator } from 'react-native'
+import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity, Share, Alert } from 'react-native'
 import { supabase } from '../../src/lib/supabase'
 import { useAuth } from '../../src/hooks/useAuth'
+import { timeSince } from '../../src/lib/time'
 
 interface ReferralEntry {
   id: string
@@ -21,6 +22,7 @@ export default function ReferralsScreen() {
   const { user, profile } = useAuth()
   const [stats, setStats] = useState<ReferralStats>({ total_referred: 0, total_earnings: 0 })
   const [referrals, setReferrals] = useState<ReferralEntry[]>([])
+  const [commissionPct, setCommissionPct] = useState(20)
   const [loading, setLoading] = useState(true)
 
   const fetchData = useCallback(async () => {
@@ -28,10 +30,16 @@ export default function ReferralsScreen() {
     setLoading(true)
 
     try {
-      const [statsRes, earningsRes] = await Promise.all([
+      const [statsRes, earningsRes, commissionRes] = await Promise.all([
         supabase.rpc('get_agent_referral_stats', { _agent_id: user.id }),
         supabase.from('referral_earnings').select('id, referred_user_id, amount_kz, created_at').eq('agent_id', user.id).order('created_at', { ascending: false }).limit(50),
+        supabase.from('app_settings').select('value').eq('key', 'referral_commission_pct').maybeSingle(),
       ])
+
+      if (commissionRes.data?.value) {
+        const pct = Number(commissionRes.data.value)
+        if (!isNaN(pct) && pct > 0) setCommissionPct(pct)
+      }
 
       if (statsRes.data) {
         const s = statsRes.data as Record<string, unknown>
@@ -67,20 +75,10 @@ export default function ReferralsScreen() {
     fetchData()
   }, [fetchData])
 
-  const timeSince = (date: string) => {
-    const diff = Date.now() - new Date(date).getTime()
-    const minutes = Math.floor(diff / 60000)
-    if (minutes < 60) return `há ${minutes}min`
-    const hours = Math.floor(minutes / 60)
-    if (hours < 24) return `há ${hours}h`
-    const days = Math.floor(hours / 24)
-    return `há ${days}d`
-  }
-
   if (loading) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F9FAFB' }}>
-        <ActivityIndicator size="large" color="#10B981" />
+        <ActivityIndicator size="large" color="#2094F3" />
       </View>
     )
   }
@@ -89,15 +87,36 @@ export default function ReferralsScreen() {
     <ScrollView
       style={{ flex: 1, backgroundColor: '#F9FAFB' }}
       contentContainerStyle={{ padding: 16 }}
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchData} tintColor="#10B981" />}
+      refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchData} tintColor="#2094F3" />}
     >
       {profile?.referral_code && (
         <View style={{ backgroundColor: '#ECFDF5', borderRadius: 12, padding: 16, marginBottom: 16, alignItems: 'center' }}>
           <Text style={{ fontSize: 12, color: '#065F46', marginBottom: 4 }}>O teu código de referral</Text>
           <Text style={{ fontSize: 22, fontWeight: '700', color: '#10B981', letterSpacing: 2 }}>{profile.referral_code}</Text>
           <Text style={{ fontSize: 12, color: '#047857', marginTop: 6, textAlign: 'center' }}>
-            Partilha com amigos e ganha comissão nas subscricões deles!
+            Ganha {commissionPct}% do valor da primeira subscrição dos teus convidados!
           </Text>
+          <TouchableOpacity
+            onPress={async () => {
+              try {
+                await Share.share({
+                  message: `Usa o meu código de convite ${profile.referral_code} para te registares no ATM Connect!`,
+                  title: 'ATM Connect',
+                })
+              } catch {
+                Alert.alert('Erro', 'Não foi possível partilhar o código.')
+              }
+            }}
+            style={{
+              backgroundColor: '#10B981',
+              borderRadius: 10,
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              marginTop: 12,
+            }}
+          >
+            <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>Partilhar código</Text>
+          </TouchableOpacity>
         </View>
       )}
 

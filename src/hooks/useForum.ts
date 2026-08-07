@@ -109,11 +109,28 @@ export function useForum(provincia: string) {
     }
   }, [user])
 
+  const createPost = useCallback(async (title: string, message: string): Promise<string | null> => {
+    if (!user) return null
+    const { error } = await supabase.rpc('create_forum_post', {
+      p_provincia: provincia,
+      p_title: title,
+      p_message: message,
+      p_type: 'admin',
+    })
+    if (error) {
+      console.error('Error creating post:', error)
+      return error.message
+    }
+    await fetchPosts()
+    return null
+  }, [user, provincia, fetchPosts])
+
   return {
     posts,
     loading,
     refetch: fetchPosts,
     fetchComments,
     addComment,
+    createPost,
   }
 }

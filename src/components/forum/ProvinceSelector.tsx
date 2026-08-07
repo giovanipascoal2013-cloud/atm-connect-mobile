@@ -37,7 +37,7 @@ export function ProvinceSelector({ selected, onSelect }: ProvinceSelectorProps) 
             <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F3F4F6', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827' }}>Selecionar Província</Text>
               <TouchableOpacity onPress={() => setVisible(false)}>
-                <Text style={{ fontSize: 14, color: '#10B981', fontWeight: '600' }}>Fechar</Text>
+                <Text style={{ fontSize: 14, color: '#2094F3', fontWeight: '600' }}>Fechar</Text>
               </TouchableOpacity>
             </View>
             <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
@@ -49,11 +49,11 @@ export function ProvinceSelector({ selected, onSelect }: ProvinceSelectorProps) 
                     paddingVertical: 14,
                     borderBottomWidth: 1,
                     borderBottomColor: '#F9FAFB',
-                    backgroundColor: p === selected ? '#ECFDF5' : 'transparent',
+                    backgroundColor: p === selected ? '#EEF6FE' : 'transparent',
                   }}
                   onPress={() => { onSelect(p); setVisible(false) }}
                 >
-                  <Text style={{ fontSize: 15, color: p === selected ? '#10B981' : '#374151', fontWeight: p === selected ? '600' : '400' }}>
+                  <Text style={{ fontSize: 15, color: p === selected ? '#2094F3' : '#374151', fontWeight: p === selected ? '600' : '400' }}>
                     {p}
                   </Text>
                 </TouchableOpacity>

@@ -2,6 +2,142 @@
 
 ## Estado Actual
 
+### Correções errr.txt (2026-08-07) ✅ (tsc OK)
+
+Fixes aplicados aos problemas reportados em `errr.txt` (também cobrem "Missing/not working" do `.tmp-create-agent.mjs`):
+
+- **1. Crash duplicate key 23505** — `src/hooks/useViews.ts`: `consumeView` apanha o erro `23505` (dupla inserção em `atm_views`) e devolve a view existente (`reused: true`) em vez de rebentar. `app/(tabs)/map.tsx`: guarda `unlocking` anti double-tap em `handleUnlock`.
+- **2. SecureStore > 2048 bytes** — `src/lib/supabase.ts`: adaptador de storage com chunking byte-aware (~1024 B/parte + `.meta`), mantém escrita directa ≤2048. Elimina o warning de overflow.
+- **3. Estado de caixa visível antes de desbloquear** — `ATMList.tsx` e `MapboxWebView.tsx` recebem `lockedIds`/`isPremium`/`isLoggedIn`; ATMs bloqueados aparecem como "🔒 Bloqueado" (bolinha cinza `#9CA3AF` / `LOCKED_COLOR`) na lista e nos marcadores até serem desbloqueados (ou o utilizador ser premium). `ATMMapView.tsx` repassa; `map.tsx` liga `unlockedIds`/`balance.isPremium`/`!!user`.
+- **4. Botões de voltar em falta** — novo `src/components/navigation/HeaderBackButton.tsx` (`canGoBack() ? back : replace(fallback)`) aplicado a `my-views`, `ranking`, `referrals`, `supervisor` e `agent`.
+- **5. Teclado não fecha ao tocar fora** — `keyboardShouldPersistTaps="handled"` nos ScrollView de `agent.tsx`, `profile.tsx`, `submit-atm.tsx`, `WithdrawalModal.tsx`, `forum.tsx`; `TouchableWithoutFeedback onPress={Keyboard.dismiss}` no mapa (`map.tsx`), modal de criar post (`forum.tsx`), bottom sheet de rejeição (`supervisor/pending.tsx`).
+- **6. Placeholder invisível** — `placeholderTextColor="#9CA3AF"` adicionado a todos os `TextInput` que não tinham: `submit-atm.tsx` (4), `PostCard.tsx`, `WithdrawalModal.tsx` (5), `AgentATMCard.tsx`, `supervisor/pending.tsx`, `forum.tsx` (2), `profile.tsx` (4), `MapFilters.tsx`, `login.tsx` (3), `register.tsx` (5).
+- **7. Subscrições mensal/trimestral/anual** — `PremiumModal.tsx`: planos novos **Mensal 290 Kz / Trimestral 700 Kz / Anual 1.500 Kz** (antes Mensal 1.500 / Anual 13.500). `plan_type: 'quarterly'` com expiração 90 dias; preço trimestral lido de `app_settings['premium_quarterly_price_kz']` (fallback 700). Link "👑 Upgrade Premium" adicionado ao perfil (`profile.tsx` + `PremiumModal`).
+- **8. Role do agente/supervisor/admin lida de `user_roles`** — `useAuth.ts` passa a buscar `user_roles` (como o web app) e expõe `roles`, `role` e `isAdmin`/`isSupervisor`/`isAgent` derivados. Corrige agentes sem dashboard (o trigger grava o role em `user_roles`, não em `profiles.role`). `useAgent.ts` usa o `isAgent` do auth; `profile.tsx` mostra o role correcto.
+- **⚠️ AdMob**: adiado por decisão do utilizador (requer dev build + IDs reais) — não alterado.
+- **Verificação**: `npx tsc --noEmit` OK (0 erros).
+
+**Fase Actual**: Correções `errr.txt` — aguarda `npx expo lint` + teste em dispositivo
+**Última Actualização**: 2026-08-07
+**Branch Activa**: `feature/freemium-model`
+**Deploy**: N/A (desenvolvimento local / Expo Go)
+
+### Fase 5 — Polish + Limpeza (2026-08-07) ✅
+
+- **`src/components/ui/Skeleton.tsx` removido** + directoria `src/components/ui/` apagada — verificado via grep que não existiam imports em `app/` nem `src/` (código morto da Fase 7 original).
+- **`src/lib/geocode.ts`**: `Array<{...}>` → `{...}[]` — resolve o warning do ESLint (`no-restricted-syntax` para `Array<T>`).
+- **`app/referrals/index.tsx`**: "Ganhe ... teus" → "Ganha ... teus" (consistência PT).
+- **Verificações de limpeza**:
+  - Grep `Skeleton|components/ui` em `app`+`src` → 0 resultados (nenhuma referência quebrada).
+  - Grep de erros de acentuação comuns em PT → 0 resultados.
+  - Revisão manual de `app/agent/submit-atm.tsx` — textos PT consistentes, sem alterações necessárias.
+  - Confirmado que `src/lib/distance.ts` continua em uso (`useATMs.ts` → `haversineDistance`) — mantido.
+  - Nenhum ficheiro morto em `src/hooks/*.ts` nem `src/components/**/*.tsx`.
+  - Assets todos referenciados no `app.json`.
+- **⚠️ Backend a testar (staging)**: continua pendente — `get_agent_rating_stats`, `get_agent_referral_stats`, `request_withdrawal`, `notify_users_by_role` (admin/supervisor), upload ao bucket `atm-photos`, e permissões de insert em `atms` por agentes.
+
+**Fase Actual**: ✅ Fase 5 Polish — aguarda tsc/lint final
+**Última Actualização**: 2026-08-07
+**Branch Activa**: `feature/freemium-model`
+**Deploy**: N/A (desenvolvimento local / Expo Go)
+
+### Fase 4 — Agent UX: reputação, referidos, levantamento, submeter ATM (2026-08-07) ✅ (câmera ligada)
+
+- **`src/hooks/useAgent.ts`**: `fetchData` agora busca também `get_agent_rating_stats` e `app_settings['referral_commission_pct']`. Expostos `agentRating` (likes/dislikes/total), `commissionPct` (default 20) e `referralCode` (do profile).
+- **`src/components/agent/WithdrawalModal.tsx`** (novo): modal bottom-sheet "Levantar Saldo" espelhando o web — 3 steps (form/processing/success), métodos IBAN e MCX Express, valor mínimo de `app_settings['min_withdrawal_amount']` (default 500), saldo como limite, pré-preenche IBAN/titular do perfil, aviso "IBAN não configurado" com link para o perfil, RPC `request_withdrawal` + `refreshProfile` no sucesso.
+- **`src/components/agent/ReferralCard.tsx`** (novo): código de convite + botões Partilhar (RN `Share`) e Copiar (fallback `Alert`), comissão `%` de `app_settings`, stats via `get_agent_referral_stats`.
+- **`app/(tabs)/agent.tsx`**: card "Disponível" clicável → abre `WithdrawalModal` (só com saldo > 0); secção "A sua reputação" (👍/👎, badge Excelente/Bom/Regular/Fraco por %); `ReferralCard`; botão "+ Submeter ATM" no header de ATMs + CTA "Submeter o primeiro" no empty state.
+- **`src/lib/geocode.ts`** (novo, mobile): geocodificação reversa Mapbox espelhando o web (`reverseGeocode`), usando `EXPO_PUBLIC_MAPBOX_TOKEN`.
+- **`app/agent/_layout.tsx` + `app/agent/submit-atm.tsx`** (novos): ecrã "Submeter ATM" com stepper Foto → GPS → Detalhes. **Passo de foto via `expo-camera` (`CameraView` + `useCameraPermissions`)**: pedido de permissão, captura com preview, e transição para GPS. GPS via `expo-location` + reverse geocode (preenche endereço/província/cidade). Form: nome, endereço, província (modal), cidade, coords, switches dinheiro/papel, observações. Submit: upload da foto para bucket `atm-photos`, insert em `atms` com `status_approval: 'pending'`, `agent_onboarding_progress`, notificações `notify_users_by_role` (admin+supervisor).
+- **`app/app.json`**: adicionado plugin `expo-camera` com mensagem de permissão da câmara em PT.
+- **`app/referrals/index.tsx`**: mostra comissão `%` de `app_settings` e botão "Partilhar código" (RN `Share`).
+- **`app/ranking/index.tsx`**: validado — já integra `get_agent_ranking`, medalhas e % de aprovação. Sem alterações.
+- **`.expo/types/router.d.ts`** (gerado): adicionada rota `/agent/submit-atm`.
+- **✅ `expo-camera@~17.0.10` instalado pelo utilizador** (`npx expo install expo-camera`) — passo de foto ligado.
+- **⚠️ Backend a testar (staging)**: `get_agent_rating_stats`, `get_agent_referral_stats`, `request_withdrawal`, `notify_users_by_role` (com role admin/supervisor), upload ao bucket `atm-photos`, e permissões de insert em `atms` por agentes.
+
+**Fase Actual**: ✅ Fase 4 Agent UX — câmera ligada, aguarda tsc/lint
+**Última Actualização**: 2026-08-07
+**Branch Activa**: `feature/freemium-model`
+**Deploy**: N/A (desenvolvimento local / Expo Go)
+
+### Fase 3 — User UX: perfil, views, fórum, time.ts (2026-08-06) ✅
+
+- **`src/lib/time.ts`** (novo): `timeSince` + `timeUntil`. Deduplicadas 6 implementações locais: `ATMList.tsx`, `ATMDetailSheet.tsx`, `AgentATMCard.tsx`, `PostCard.tsx`, `app/referrals/index.tsx`, `app/supervisor/pending.tsx`.
+- **`src/hooks/useAuth.ts`**: exposto `refreshProfile` (re-fetch do perfil + premium).
+- **`app/(tabs)/profile.tsx`** reescrito:
+  - Telefone formatado (`formatPhone`) em vez do UUID a aparecer como "Email".
+  - Role em PT: "Utilizador"/"Agente"/"Supervisor"/"Administrador".
+  - Edição de perfil (nome, província com modal, cidade) com guardar → `profiles` + `refreshProfile`.
+  - Agentes: edição de IBAN + titular da conta.
+  - Estado Premium + saldo de views hoje (`useViews`).
+  - Links: "As minhas views", "Ranking", "Referências". Ecrã de login para anónimos.
+- **`app/my-views/`** (novo): `_layout.tsx` + `index.tsx` — lista de views activas (atm_views + atms), expiração (`timeUntil`), saldo de hoje (`balance.remaining/dailyLimit`), última actualização, link no perfil.
+- **`src/hooks/useForum.ts`**: `createPost` via RPC `create_forum_post`.
+- **`app/(tabs)/forum.tsx`**: província inicial sincronizada com o perfil (até o utilizador trocar), botão "Criar post" com modal (título + mensagem), CTA de login para anónimos.
+- **`src/components/forum/PostCard.tsx`**: `timeSince` do helper + CTA "Inicia sessão para comentar" para anónimos.
+- **`.expo/types/router.d.ts`** (gerado): adicionada rota `/my-views` às rotas tipadas (gitignored; o dev server regenera).
+- **Pendente (utilizador)**: `npx tsc --noEmit` + `npx expo lint`.
+- **⚠️ Backend a confirmar**: RPC `create_forum_post` só era usada por admins no web app — confirmar se utilizadores comuns podem criar posts (policy/security definer), senão o botão "Criar post" vai devolver erro para não-admins.
+
+**Fase Actual**: ✅ Fase 3 User UX — aguarda tsc/lint
+**Última Actualização**: 2026-08-06
+**Branch Activa**: `feature/freemium-model`
+**Deploy**: N/A (desenvolvimento local / Expo Go)
+
+### Resumo
+
+- ✅ Fase 1 CONCLUÍDA: projecto Expo, auth, protected routes, profile
+- ✅ Fase 2 CONCLUÍDA: mapa com marcadores, filtros, clustering, detail sheet
+- ✅ Fase 3 CONCLUÍDA: agent dashboard com gestão de ATMs, stats, ganhos
+- ✅ Fase 4 CONCLUÍDA: sistema de views (freemium), modal premium, gating de detalhe ATM
+- ✅ Fase 5 CONCLUÍDA: fórum com posts/comentários, ranking de agentes
+- ✅ Fase 6 CONCLUÍDA: dashboard supervisor, aprovação/rejeição de ATMs, sistema de referrals
+- ✅ Fase 7 CONCLUÍDA: push notifications (expo-notifications), skeleton loading, polish
+- ⏳ **Revert SDK 57 → 54 + Mapbox WebView**: package.json revertido, componentes criados — pendente `npm install`
+- ✅ `.env` aponta para Supabase Staging (`ndvjitfovhfngrzwtytd`)
+- ⏳ Próximo: Fase 8 — Testes + Publicação (EAS Build)
+
+---
+
+### Fase 1 — Auth: erros PT, botão voltar, código de convite (2026-08-06)
+
+- **`src/lib/errors.ts`**: `friendlyAuthError` agora traduz para PT — "User already registered" → "Esta conta já está registada. Faça login com o mesmo número e senha."; "Invalid login credentials" → "Telefone ou senha incorrectos. Verifique e tente novamente."; "Email not confirmed" e senha curta também traduzidos.
+- **`app/(auth)/login.tsx`**: botão **voltar** no topo (`router.canGoBack() ? back : replace('/(tabs)/map')`); pré-preenche o telefone quando chega via param (`?telefone=...`), usado pelo alert do registo.
+- **`app/(auth)/register.tsx`**: botão voltar no topo; **campo "Código de convite"** (opcional) com validação via RPC `validate_referral_code` (estados validando/válido/inválido, "Convidado por: Nome"); `invited_by` enviado no metadata do signUp; erro **"User already registered"** mostra alert com botão **"Ir para login"** (telefone pré-preenchido).
+- **`src/hooks/useAuth.ts`**: `checkPremium` adiciona `.gt('expires_at', now)` — subscrições expiradas deixam de ser consideradas premium.
+- **Verificacao pendente (pelo utilizador)**: `npx tsc --noEmit` + `npx expo lint`.
+
+### Cleanup ESLint + Bug do mapa (2026-08-06)
+
+- **Cleanup de 9 warnings ESLint** (`npx expo lint` → 0 problemas):
+  - Removidos imports/variáveis mortas: `ForumPost` em `app/(tabs)/forum.tsx`, `pendingATMs` em `app/(tabs)/supervisor.tsx`, `Alert` em `AgentATMCard.tsx`, `FlatList` em `PostCard.tsx`.
+  - `PremiumModal.tsx`: renomeado `type Step` → `PaymentStep` (resolvia `no-redeclare` com a função `Step`).
+  - `useATMs.ts`: extraído `userLocation` do options e adicionado às deps do `fetchATMs` (antes congelava `null` da 1ª render — distância nunca calculada).
+  - `useAuth.ts`: `checkPremium`/`fetchProfile` agora `useCallback`; `fetchProfile` nas deps do `useEffect` (evita stale closure).
+  - `useNotifications.ts`: removido eslint-disable não usado; `require('expo-notifications')` anotado com `eslint-disable-next-line @typescript-eslint/no-require-imports` (lazy load intencional).
+- **Bug do mapa sem marcadores** (feedback `123.txt`): diagnosticado via leitura à API staging — projecto **activo** (HTTP 200) e com ATMs `approved` + coordenadas válidas. Causa-raiz: `MapboxWebView` reconstruía todo o HTML a cada render e dependia de recarregamento do WebView; os handlers `updateData`/`centerOn` já existiam no HTML mas nunca eram chamados pelo RN.
+  - `MapboxWebView.tsx`: HTML memoizado (`useMemo` [atms, userLocation]); sincronização dos dados por `injectJavaScript` em `onLoad` e quando `atms` muda; `centerOn` quando a localização chega; `onError` loga falhas.
+  - `map.tsx`: passa a usar `error`/`refetch` de `useATMs` — overlay "Erro ao carregar ATMs" + botão "Tentar novamente"; mensagem de vazio separada.
+- **Verificacao**: `npx tsc --noEmit` OK (0 erros); `npx expo lint` OK (0 problemas).
+
+### Correcoes requisitadas (2026-08-06)
+
+- **1. Registo sem email**: `app/(auth)/register.tsx` reescrito — campo de email removido; telefone (+244) + nome + provincia + senha + confirmar senha.
+- **2. Cliente ou Agente no registo**: novo `src/components/auth/AccountTypeSelector.tsx` (Cliente/Agente, espelha o web app). O registo envia `account_type: 'user' | 'agent'` no metadata (o trigger `handle_new_user()` do backend já lê `raw_user_meta_data->>'account_type'` — antes enviava `role`, ignorado).
+- **3. Homepage publica + login**: `app/_layout.tsx` deixou de forcar redirect para login; `app/index.tsx` → `<Redirect href="/(tabs)/map" />`; mapa visivel sem sessao. Login exigido para: desbloquear detalhes do ATM (`map.tsx` + `ATMDetailSheet.tsx` + `useViews.consumeView`), forum e area de agente. Botao "Entrar" no header do mapa quando `!user`.
+- **4. Paleta Azul/Branco/Verde**: `tailwind.config.js` — `brand` agora azul (`#2094F3`/`#1A7ED6`), verde movido para `accent`/`money`. Sweep de cores azul em: `(tabs)/_layout`, `forum`, `profile`, `agent`, `supervisor`, `supervisor/pending`, `referrals/*`, `ranking/*`, `auth-callback`, `MapFilters`, `ProvinceSelector`, `ATMDetailSheet`, `AgentATMCard` (seleccao fila/estado + Guardar), `PostCard` (botao Enviar), `PremiumModal` (CTA Continuar + seleccao de plano). Verde `#10B981` mantido apenas para dinheiro/sucesso/estados (precos, ganhos, referral_code, toggles cash/papel, marcadores).
+- **5. Erro "network failed"**: causa raiz = Supabase staging `ndvjitfovhfngrzwtytd` **pausado** (HTTP 000). Decisao do utilizador: manter staging e reativar no dashboard. Codigo corrigido para dar erro amigavel em PT via `src/lib/errors.ts` + `friendlyAuthError()`.
+- **Extras**: `src/lib/phone.ts` ganhou `formatPhone`, `isValidPhone`, `phoneToEmail` (`9XXXXXXXX@dinheiroemao.ao`); login com toggle Telefone/Email; `reset-password.tsx` agora e ecra de suporte WhatsApp (244 933 986 318); `useViews.consumeView` exige login (seguranca).
+- **Verificacao**: `npx tsc --noEmit` OK (0 erros). `npx expo lint` OK (0 erros, 9 warnings pre-existentes). ESLint instalado pelo utilizador (`eslint@^9`, `eslint-config-expo@~10`, `eslint.config.js` criado).
+- **Pendente**: reactivar projecto Supabase staging `ndvjitfovhfngrzwtytd` no dashboard para login/registo funcionarem.
+
+### Recriação .env (2026-08-06)
+
+- `.env` recriado a partir de `.env.example` com credenciais staging (`ndvjitfovhfngrzwtytd`).
+- Corrigido `[Error: supabaseUrl is required.]` no arranque do Metro (variáveis `EXPO_PUBLIC_SUPABASE_*` estavam ausentes).
+- Validado com `npx tsc --noEmit` (sem erros) e `npx expo start` (Metro carrega o `.env` sem erros).
+
 ### Correcao Expo Go (2026-07-30)
 
 - Dependencias alinhadas ao Expo SDK 54: React 19.1, React Native 0.81.5, Expo Router 6 e modulos Expo SDK 54.
@@ -14,8 +150,8 @@
 - `.nvmrc` actualizado para Node 22.16 e `engines.node` definido como `>=20.19`.
 - `npx expo-doctor`: 18/18 verificacoes aprovadas.
 
-**Fase Actual**: ✅ Análise e Configuração Expo Go Completa
-**Última Actualização**: 2026-07-21
+**Fase Actual**: ✅ Fase 1 Auth (erros PT, voltar, código convite) — aguarda tsc/lint
+**Última Actualização**: 2026-08-06
 **Branch Activa**: `feature/freemium-model`
 **Deploy**: N/A (desenvolvimento local / Expo Go)
 

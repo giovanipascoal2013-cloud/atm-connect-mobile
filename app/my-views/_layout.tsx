@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router'
 import { HeaderBackButton } from '../../src/components/navigation/HeaderBackButton'
 
-export default function ReferralsLayout() {
+export default function MyViewsLayout() {
   return (
     <Stack
       screenOptions={{
@@ -13,7 +13,7 @@ export default function ReferralsLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: 'Referências',
+          title: 'As Minhas Views',
           headerLeft: () => <HeaderBackButton fallback="/(tabs)/profile" />,
         }}
       />
