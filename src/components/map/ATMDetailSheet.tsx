@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, ScrollView, Pressable } from 'react-native'
 import type { ATMWithDistance } from '../../hooks/useATMs'
-import { getATMStatus, getATMColor } from '../../hooks/useATMs'
+import { getATMStatus } from '../../hooks/useATMs'
 import { timeSince } from '../../lib/time'
 import { AppIcon } from '../ui/AppIcon'
 import { AppButton } from '../ui/AppButton'
@@ -44,7 +44,6 @@ export function ATMDetailSheet({
   if (!visible || !atm) return null
 
   const status = getATMStatus(atm)
-  const color = getATMColor(status)
   const statusLabel =
     status === 'cash' ? 'Com Dinheiro' :
     status === 'no_cash' ? 'Sem Dinheiro' :
@@ -86,7 +85,7 @@ export function ATMDetailSheet({
         shadowOpacity: 0.12,
         shadowRadius: 16,
         elevation: 10,
-        maxHeight: unlocked ? '50%' : '30%',
+        maxHeight: unlocked ? '50%' : '42%',
       }}
     >
       <Pressable onPress={onClose} style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 4 }}>
@@ -206,12 +205,17 @@ export function ATMDetailSheet({
           </View>
         </ScrollView>
       ) : (
-        <View style={{ paddingHorizontal: 20, paddingBottom: 24, paddingTop: 4 }}>
+        <ScrollView style={{ paddingHorizontal: 20, paddingBottom: 24 }} contentContainerStyle={{ paddingTop: 4 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: color }} />
+            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#6B7280' }} />
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text.primary }}>{atm.bank_name}</Text>
               <Text style={{ fontSize: 13, color: colors.text.tertiary }}>{atm.address}</Text>
+              {(atm.cidade || atm.provincia) && (
+                <Text style={{ fontSize: 12, color: colors.text.tertiary, marginTop: 2 }}>
+                  {[atm.cidade, atm.provincia].filter(Boolean).join(', ')}
+                </Text>
+              )}
             </View>
           </View>
 
@@ -220,6 +224,9 @@ export function ATMDetailSheet({
               label="Entrar para ver detalhes"
               onPress={onLogin}
               fullWidth
+              size="lg"
+              shadow={false}
+              style={{ backgroundColor: colors.brand[600] }}
               icon="log-in-outline"
               haptic
             />
@@ -228,6 +235,9 @@ export function ATMDetailSheet({
               label="Ver Detalhes"
               onPress={onUnlock}
               fullWidth
+              size="lg"
+              shadow={false}
+              style={{ backgroundColor: colors.brand[600] }}
               loading={unlocking}
               icon="eye-outline"
               haptic
@@ -237,6 +247,9 @@ export function ATMDetailSheet({
               label={`Desbloquear (${remainingViews} restantes hoje)`}
               onPress={onUnlock}
               fullWidth
+              size="lg"
+              shadow={false}
+              style={{ backgroundColor: colors.brand[600] }}
               loading={unlocking}
               icon="lock-open-outline"
               haptic
@@ -252,13 +265,13 @@ export function ATMDetailSheet({
                 label="Upgrade Premium"
                 onPress={onOpenPremium}
                 fullWidth
-                variant="success"
+                size="lg"
                 icon="diamond"
                 haptic
               />
             </View>
           )}
-        </View>
+        </ScrollView>
       )}
     </View>
   )

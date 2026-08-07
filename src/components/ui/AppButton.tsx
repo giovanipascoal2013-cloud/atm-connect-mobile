@@ -18,6 +18,7 @@ interface AppButtonProps {
   iconRight?: AppIconName
   haptic?: boolean
   fullWidth?: boolean
+  shadow?: boolean
   style?: StyleProp<ViewStyle>
 }
 
@@ -47,6 +48,7 @@ export function AppButton({
   iconRight,
   haptic,
   fullWidth,
+  shadow = true,
   style,
 }: AppButtonProps) {
   const v = VARIANT_STYLES[variant]
@@ -81,7 +83,7 @@ export function AppButton({
           opacity: isDisabled ? 0.55 : pressed ? 0.85 : 1,
           transform: [{ scale: pressed ? 0.98 : 1 }],
           ...(fullWidth ? { width: '100%' } : {}),
-          ...(variant === 'primary' ? shadows.raised : {}),
+          ...(shadow && variant === 'primary' ? shadows.raised : {}),
         },
         style,
       ]}

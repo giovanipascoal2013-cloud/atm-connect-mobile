@@ -2,6 +2,21 @@
 
 ## Estado Actual
 
+### Correções 5ª ronda errr.txt — Info básica na listagem + botão desbloquear visível (2026-08-07) ✅ (tsc + lint OK)
+
+Novos pedidos do utilizador (5ª leitura de `errr.txt`), implementados e validados com `npx tsc --noEmit` (0 erros) e `npx expo lint` (0 problemas):
+
+- **Listagem mostra nome + info básica sempre** — `src/components/map/ATMList.tsx`: título passa a ser sempre `bank_name`, morada e `cidade, provincia` deixam de depender de `!locked`. Apenas dinheiro/estado ficam ocultos (rodapé mantém "Bloqueado" 🔒 com ponto cinza).
+- **Botão de desbloquear invisível corrigido** — causa-raiz: `AppButton` `primary` aplica `shadows.raised` (`boxShadow`), que no iOS renderiza como overlay translúcido que desbota o azul `brand[500]` contra o fundo branco. `src/components/ui/AppButton.tsx`: novo prop `shadow` (default `true`; `false` omite o sombreado). `ATMDetailSheet.tsx`: CTAs do estado bloqueado com `size="lg"`, `shadow={false}` e `backgroundColor: colors.brand[600]` (azul sólido, contraste ≈5.1:1).
+- **Layout do sheet bloqueado** — `maxHeight` `30%` → `42%` + conteúdo em `ScrollView` (evita clipping); acrescentada linha `cidade, provincia` junto à morada; ponto colorido do cabeçalho passou de cor real do status para cinza fixo `#6B7280` (elimina leak de informação antes do desbloqueio; removido uso de `getATMColor`).
+- **Spec**: `docs/superpowers/specs/2026-08-07-errr-round5-fixes-design.md`.
+- **Pendente (utilizador)**: teste visual em iOS (Expo Go) — listagem e botão de desbloquear.
+
+**Fase Actual**: ✅ Correções 5ª ronda errr.txt — aguarda teste em dispositivo
+**Última Actualização**: 2026-08-07
+**Branch Activa**: `main`
+**Deploy**: N/A (desenvolvimento local / Expo Go)
+
 ### Correções 4ª ronda errr.txt — WhatsApp, ordenação por proximidade, contraste (2026-08-07) ✅ (tsc + lint OK)
 
 Novos pedidos do utilizador (4ª leitura de `errr.txt`), implementados e validados com `npx tsc --noEmit` (0 erros) e `npx expo lint` (0 problemas):

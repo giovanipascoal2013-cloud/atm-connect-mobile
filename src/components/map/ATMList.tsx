@@ -45,10 +45,10 @@ const ATMListRow = React.memo(function ATMListRow({
         <View style={[styles.statusDot, { backgroundColor: color }]} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text.primary }}>
-            {locked ? 'ATM bloqueado' : item.bank_name}
+            {item.bank_name}
           </Text>
-          {!locked && <Text style={{ fontSize: 13, color: colors.text.secondary, marginTop: 2 }}>{item.address}</Text>}
-          {!locked && (item.cidade || item.provincia) && (
+          <Text style={{ fontSize: 13, color: colors.text.secondary, marginTop: 2 }}>{item.address}</Text>
+          {(item.cidade || item.provincia) && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
               <AppIcon name="location-outline" size={12} color={colors.text.tertiary} />
               <Text style={{ fontSize: 12, color: colors.text.tertiary }}>
