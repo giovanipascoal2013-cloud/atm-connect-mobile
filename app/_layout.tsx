@@ -3,7 +3,6 @@ import { Slot, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useAuth } from '../src/hooks/useAuth'
 import { useNotifications } from '../src/hooks/useNotifications'
-import { initializeAds } from '../src/lib/ads'
 import '../global.css'
 
 function RootLayoutNav() {
@@ -11,10 +10,6 @@ function RootLayoutNav() {
   useNotifications()
   const segments = useSegments()
   const router = useRouter()
-
-  useEffect(() => {
-    initializeAds()
-  }, [])
 
   useEffect(() => {
     if (loading) return
