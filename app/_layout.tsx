@@ -3,6 +3,7 @@ import { Slot, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useAuth } from '../src/hooks/useAuth'
 import { useNotifications } from '../src/hooks/useNotifications'
+import { getPendingAgentRedirect, setPendingAgentRedirect } from '../src/lib/navigation-flag'
 import '../global.css'
 
 function RootLayoutNav() {
@@ -16,8 +17,10 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === '(auth)'
 
-    if (user && inAuthGroup) {
+    if (user && inAuthGroup && !getPendingAgentRedirect()) {
       router.replace('/(tabs)/map')
+    } else if (!inAuthGroup && getPendingAgentRedirect()) {
+      setPendingAgentRedirect(false)
     }
   }, [user, loading, segments, router])
 

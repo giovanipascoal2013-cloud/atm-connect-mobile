@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
@@ -55,13 +55,18 @@ export default function AgentOnboardingScreen() {
   const { update } = useAgentOnboarding()
   const markedRef = useRef(false)
 
-  useEffect(() => {
+  const markSeen = useCallback(() => {
     if (markedRef.current) return
     markedRef.current = true
     update({ onboarding_seen: true })
   }, [update])
 
+  useEffect(() => {
+    markSeen()
+  }, [markSeen])
+
   const handleContinue = () => {
+    markSeen()
     router.replace('/agent/submit-atm')
   }
 

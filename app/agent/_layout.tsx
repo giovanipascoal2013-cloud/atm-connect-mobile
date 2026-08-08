@@ -27,6 +27,13 @@ export default function AgentStackLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="welcome"
+        options={{
+          title: 'Bem-vindo, Agente',
+          headerShown: false,
+        }}
+      />
     </Stack>
   )
 }

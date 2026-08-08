@@ -65,11 +65,16 @@ export function useAgentOnboarding() {
   }, [fetch])
 
   const update = useCallback(async (patch: Partial<AgentOnboardingProgress>) => {
-    if (!user) return
+    let uid: string | null | undefined = user?.id
+    if (!uid) {
+      const { data: authData } = await supabase.auth.getUser()
+      uid = authData.user?.id ?? null
+    }
+    if (!uid) return
     const { data } = await supabase
       .from('agent_onboarding_progress')
       .update(patch)
-      .eq('agent_id', user.id)
+      .eq('agent_id', uid)
       .select()
       .maybeSingle()
     if (data) {

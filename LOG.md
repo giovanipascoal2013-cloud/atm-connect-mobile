@@ -2,6 +2,40 @@
 
 ## Estado Actual
 
+### Transformação Freemium: Anúncios + Premium — Investigação e Plano (2026-08-08) 🚧
+
+Novo modelo de negócio: **1 anúncio rewarded = 1 ATM por 24h (sem limite diário)**; subscrição premium **cancela anúncios** (acesso ilimitado). Substitui o modelo "3 views/dia".
+
+- **Fase 0 — Baseline** ✅: `tsc` 0 erros + `lint` 0 problemas; commit `3ea52ec` (fixes da ronda 6: botões sem sombra, logo no login, barra azul no mapa, dashboard agente).
+- **Fase 1 — Investigação do app** ✅: `docs/superpowers/specs/2026-08-08-relatorio-investigacao-app.md` (rotas, fluxo views/premium, navegação N1–N8, lógica L1–L12, histórico AdMob).
+- **Fase 2 — Investigação da BD staging** ✅ (via REST, só leitura): `docs/superpowers/specs/2026-08-08-relatorio-investigacao-bd-staging.md`. Descobertas críticas:
+  - 🔴 `subscriptions.plan_type` CHECK só `('monthly','annual')` — mobile insere `'quarterly'` → falha.
+  - 🔴 Policy de INSERT em `subscriptions` é **só admin** — utilizador não cria a própria subscrição.
+  - 🟠 BD tem preços 1500/13500; plano do produto 290/700/1500 (mobile usa 290/700/1500).
+  - 🟠 Textos "50 Kz/view" vs BD paga 0.15 Kz; `atm_views.is_active` nunca desactivado.
+- **Fase 3 — Spec** ✅ validada pelo utilizador: `docs/superpowers/specs/2026-08-08-modificacoes-ads-premium-design.md`. Decisões resolvidas: (a) preços alinhados ao plano **290/700/1500** na BD; (b) `expo-notifications`/`useNotifications` **removidos por agora**.
+- **Fase 4 — Plano de implementação** ✅: `.opencode/plans/PLANO_AGENTE_ADS_PREMIUM.md` (7 fases: preparação, backend staging, mock ad, core map/views, fixes, validação, AdMob real, adaptação produção).
+- **Investigação do fluxo de agente** ✅ (pedido do utilizador, crucial): `docs/superpowers/specs/2026-08-08-relatorio-investigacao-onboarding-agente.md`. Conclusão: **a BD não é a causa** — trigger `handle_new_user` cria role + onboarding correctamente, `has_role`/RLS/bucket funcionam, `mailer_autoconfirm: true` (sessão imediata). O problema é **navegação no app**: (A) race entre `register.tsx → /agent/onboarding` e o root `_layout.tsx → /(tabs)/map` (quem correr por último ganha); (B) sem redirect pós-login (o gate só existe no separador Agente); (C) `onboarding_seen` marcado num `useEffect` no mount que pode falhar silenciosamente. Propostos fixes O1–O4 adicionados à Fase 4 do plano. Backfill opcional das 23 contas com `onboarding_seen:false`.
+
+**Próximo passo**: Fase 1 do plano — escrever as 3 migrações SQL de staging (`consume_atm_view` sem limite diário, `subscriptions` quarterly + policy, `app_settings` 290/700/1500) para o utilizador aplicar no Supabase staging.
+
+**Fase Actual**: 🚧 Fase 4 do plano criada — aguarda início da implementação
+**Última Actualização**: 2026-08-08
+**Branch Activa**: `main`
+**Deploy**: N/A (desenvolvimento local / Expo Go)
+
+### Onboarding de agente pós-registo — welcome → submit ATM (2026-08-08) ✅ (tsc + lint OK)
+
+Implementado o design `docs/superpowers/specs/2026-08-08-onboarding-pos-registo-agente-design.md` (resolve O1 + O3/O4 do relatório de investigação):
+
+- **Novo `app/agent/welcome.tsx`**: ecrã de boas-vindas logo após criar conta de agente — hero gradiente "Vamos registar o teu primeiro ATM", 3 passos (📷 Foto → 📍 GPS → 📋 Detalhes + submeter), botão único **"Continuar para registar um ATM"** → `/agent/submit-atm`; botão secundário "Explorar o app primeiro". Rota registada em `app/agent/_layout.tsx` (`headerShown: false`).
+- **Fix O1 (race do pós-registo)**: novo `src/lib/navigation-flag.ts` com flag de módulo `pendingAgentRedirect`. `register.tsx` seta a flag **antes** de `router.replace('/agent/welcome')`; `app/_layout.tsx` (root) só redirecciona para `/(tabs)/map` se `!pendingAgentRedirect`, e limpa a flag automaticamente ao sair do grupo `(auth)`.
+- **Fix O3/O4 (marcação fiável)**: `useAgentOnboarding.update` deixa de depender do estado `user` do hook — resolve o id via `supabase.auth.getUser()` se necessário (cobre a janela pós-signUp). `welcome.tsx` e `onboarding.tsx` marcam `onboarding_seen:true` no mount **e** no "Continuar".
+- **Sem gate pós-login** (O2 removido, decisão do utilizador); **gate da tab Agente mantido** (`agent.tsx:55`) — já suprime com ATM pendente/aprovado, logo agentes com ATM em análise não voltam a ver onboarding.
+- **Verificação**: `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+- **Pendente (utilizador)**: teste manual em Expo Go (registar agente → welcome → Continuar → submit-atm).
+- **Backfill das 23 contas** com `onboarding_seen:false`: decisão de produto, não bloqueia.
+
 ### Correções 5ª ronda errr.txt — Info básica na listagem + botão desbloquear visível (2026-08-07) ✅ (tsc + lint OK)
 
 Novos pedidos do utilizador (5ª leitura de `errr.txt`), implementados e validados com `npx tsc --noEmit` (0 erros) e `npx expo lint` (0 problemas):

@@ -9,6 +9,7 @@ import { AccountTypeSelector, type AccountType } from '../../src/components/auth
 import { formatPhone, isValidPhone, phoneToEmail } from '../../src/lib/phone'
 import { friendlyAuthError } from '../../src/lib/errors'
 import { HeaderBackButton } from '../../src/components/navigation/HeaderBackButton'
+import { setPendingAgentRedirect } from '../../src/lib/navigation-flag'
 import { AppButton } from '../../src/components/ui/AppButton'
 import { AppIcon, type AppIconName } from '../../src/components/ui/AppIcon'
 import { colors, brandGradient } from '../../src/theme/tokens'
@@ -161,7 +162,8 @@ export default function RegisterScreen() {
       }
     } else if (accountType === 'agent') {
       if (session) {
-        router.replace('/agent/onboarding')
+        setPendingAgentRedirect(true)
+        router.replace('/agent/welcome')
       } else {
         Alert.alert(
           'Conta criada!',
