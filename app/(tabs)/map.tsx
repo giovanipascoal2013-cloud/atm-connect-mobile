@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { View, ActivityIndicator, Text, Keyboard, TouchableWithoutFeedback } from 'react-native'
+import { View, ActivityIndicator, Text, Keyboard, TouchableWithoutFeedback, TouchableOpacity } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useAuth } from '../../src/hooks/useAuth'
 import { useLocation } from '../../src/hooks/useLocation'
@@ -13,8 +13,8 @@ import { ATMDetailSheet } from '../../src/components/map/ATMDetailSheet'
 import { PremiumModal } from '../../src/components/premium/PremiumModal'
 import { LogoPin } from '../../src/components/ui/LogoPin'
 import { SegmentedControl } from '../../src/components/ui/SegmentedControl'
-import { Badge } from '../../src/components/ui/Badge'
 import { AppButton } from '../../src/components/ui/AppButton'
+import { AppIcon } from '../../src/components/ui/AppIcon'
 import { colors, shadows } from '../../src/theme/tokens'
 
 type ViewMode = 'map' | 'list'
@@ -134,11 +134,23 @@ export default function MapScreen() {
   }
 
   const viewsBadge = user && !balance.isPremium && (
-    <Badge
-      variant={balance.remaining > 0 ? 'neutral' : 'warning'}
-      icon="eye"
-      label={balance.remaining > 0 ? `${balance.remaining} desbloqueio${balance.remaining !== 1 ? 's' : ''} disponíve${balance.remaining !== 1 ? 'is' : 'l'}` : 'Continua amanhã'}
-    />
+    <TouchableOpacity
+      onPress={() => router.push('/my-views')}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: balance.remaining > 0 ? colors.brand[50] : '#FEF3C7',
+        borderRadius: 999,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+      }}
+    >
+      <AppIcon name="eye" size={13} color={balance.remaining > 0 ? colors.brand[600] : '#B45309'} />
+      <Text style={{ fontSize: 12, fontWeight: '700', color: balance.remaining > 0 ? colors.brand[600] : '#B45309' }}>
+        {balance.remaining}
+      </Text>
+    </TouchableOpacity>
   )
 
   return (

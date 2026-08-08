@@ -2,6 +2,14 @@
 
 ## Estado Actual
 
+### Pill compacta de desbloqueios no topo do mapa (2026-08-08) ✅ (tsc + lint OK)
+
+O `viewsBadge` do mapa (antes com label longo "2 desbloqueios disponíveis") estava grande e quebrava a estética ao lado do SegmentedControl.
+
+- **`app/(tabs)/map.tsx`**: substituído por **pill compacta** — ícone `eye` + apenas o número, azul brand (`brand[50]`/`brand[600]`), amarelo quando 0 restantes; **ao tocar** abre `/my-views`. Removido import de `Badge` (já não usado no mapa); adicionado `TouchableOpacity`.
+- **Verificação**: `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+- **Pendente (utilizador)**: teste visual em Expo Go.
+
 ### Nova paleta do logo + componente LogoPin (2026-08-08) ✅ (tsc + lint OK)
 
 Alinhamento da identidade visual à spec do logo (`er.md`): pin de localização azul 3D com nota de dinheiro verde.
