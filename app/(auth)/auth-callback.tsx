@@ -23,7 +23,7 @@ export default function AuthCallbackScreen() {
     <View className="flex-1 items-center justify-center bg-white">
       {status === 'loading' ? (
         <>
-          <ActivityIndicator size="large" color="#1573D6" />
+          <ActivityIndicator size="large" color="#2F7BF0" />
           <Text className="text-gray-500 mt-4">A confirmar sessão...</Text>
         </>
       ) : (

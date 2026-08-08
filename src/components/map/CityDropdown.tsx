@@ -54,11 +54,11 @@ export function CityDropdown({ city, cities, onCityChange }: CityDropdownProps) 
                   paddingVertical: 14,
                   borderBottomWidth: 1,
                   borderBottomColor: '#F9FAFB',
-                  backgroundColor: city === 'all' ? '#F0F6FE' : 'transparent',
+                  backgroundColor: city === 'all' ? '#F0F6FF' : 'transparent',
                 }}
                 onPress={() => { onCityChange('all'); setOpen(false) }}
               >
-                <Text style={{ fontSize: 15, color: city === 'all' ? '#1573D6' : '#374151', fontWeight: city === 'all' ? '600' : '400' }}>
+                <Text style={{ fontSize: 15, color: city === 'all' ? '#2F7BF0' : '#374151', fontWeight: city === 'all' ? '600' : '400' }}>
                   Todas as cidades
                 </Text>
               </TouchableOpacity>
@@ -70,11 +70,11 @@ export function CityDropdown({ city, cities, onCityChange }: CityDropdownProps) 
                     paddingVertical: 14,
                     borderBottomWidth: 1,
                     borderBottomColor: '#F9FAFB',
-                    backgroundColor: city === c ? '#F0F6FE' : 'transparent',
+                    backgroundColor: city === c ? '#F0F6FF' : 'transparent',
                   }}
                   onPress={() => { onCityChange(c); setOpen(false) }}
                 >
-                  <Text style={{ fontSize: 15, color: city === c ? '#1573D6' : '#374151', fontWeight: city === c ? '600' : '400' }}>
+                  <Text style={{ fontSize: 15, color: city === c ? '#2F7BF0' : '#374151', fontWeight: city === c ? '600' : '400' }}>
                     {c}
                   </Text>
                 </TouchableOpacity>

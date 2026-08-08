@@ -2,6 +2,20 @@
 
 ## Estado Actual
 
+### Nova paleta do logo + componente LogoPin (2026-08-08) ✅ (tsc + lint OK)
+
+Alinhamento da identidade visual à spec do logo (`er.md`): pin de localização azul 3D com nota de dinheiro verde.
+
+- **`src/theme/tokens.ts`**: `brand` agora `#2F7BF0` (500), `#5B9BFB` (400), `#1C5FD1` (600); `accent` `#4CAF6B` (500), `#66C687` (400), `#399256` (600), `#EAF6EE` (50); `money` → `#4CAF6B`; `brandGradient` → `[#2F7BF0, #4CAF6B]`.
+- **`tailwind.config.js`**: palete `brand`/`accent`/`money` sincronizada com os novos tokens.
+- **Cores de status**: `useATMs.ts` e `MapFilters.tsx` — `cash #34A853 → #4CAF6B`, `locked #4285F4 → #2F7BF0` (no_cash/offline mantêm).
+- **`MapboxWebView.tsx`**: clusters + user marker `#4285F4 → #2F7BF0`.
+- **Varredura hex hardcoded**: `auth-callback`, `CityDropdown` (#1573D6/#F0F6FE), `ranking` (thumbs-up), `ATMDetailSheet` (dinheiro/like), `agent.tsx` (ganho #399256, warning via tokens, reputação).
+- **`app.json`**: splash + adaptiveIcon background `#10B981 → #4CAF6B`.
+- **`LogoPin.tsx`** (novo): pin gota azul 3D com nota de dinheiro, feito com `LinearGradient` + Views RN (sem imagem). Usado no ecrã de permissão negada (`map.tsx`) e no welcome de agente (`welcome.tsx`).
+- **Verificação**: `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+- **Pendente (utilizador)**: teste visual em Expo Go; regenerar `assets/*.png` com a imagem do novo logo quando disponível.
+
 ### Copywriting em toda a app — reframing de bloqueio/views + tom "tu" (2026-08-08) ✅ (tsc + lint OK)
 
 Ronda de copywriting (framing de perda → ganho) e padronização do tom em "tu", com base nas decisões de brainstorming anteriores. Lógica de negócio inalterada.

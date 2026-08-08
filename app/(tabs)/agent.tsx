@@ -166,12 +166,12 @@ export default function AgentScreen() {
       </View>
 
       <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-        <StatCard label="Total ganho" value={`${Math.round(stats.totalEarnings).toLocaleString()} Kz`} icon="cash-outline" color="#059669" />
+        <StatCard label="Total ganho" value={`${Math.round(stats.totalEarnings).toLocaleString()} Kz`} icon="cash-outline" color="#399256" />
         <StatCard
           label="Disponível"
           value={`${Math.round(stats.availableBalance).toLocaleString()} Kz`}
           icon="wallet-outline"
-          color="#D97706"
+          color={colors.warning}
           onPress={stats.availableBalance > 0 ? () => setShowWithdrawal(true) : undefined}
         />
       </View>
@@ -270,9 +270,9 @@ function ReputationBadge({ likes, total }: { likes: number; total: number }) {
   const approvalPct = total > 0 ? Math.round((likes / total) * 100) : 0
   const label = approvalPct >= 80 ? 'Excelente' : approvalPct >= 60 ? 'Bom' : approvalPct >= 40 ? 'Regular' : 'A melhorar'
   const bg =
-    approvalPct >= 80 ? '#ECFDF5' : approvalPct >= 60 ? colors.brand[50] : approvalPct >= 40 ? '#FEF3C7' : '#FEE2E2'
+    approvalPct >= 80 ? '#EAF6EE' : approvalPct >= 60 ? colors.brand[50] : approvalPct >= 40 ? '#FEF3C7' : '#FEE2E2'
   const fg =
-    approvalPct >= 80 ? colors.money : approvalPct >= 60 ? colors.brand[500] : approvalPct >= 40 ? '#D97706' : colors.danger
+    approvalPct >= 80 ? colors.money : approvalPct >= 60 ? colors.brand[500] : approvalPct >= 40 ? colors.warning : colors.danger
 
   return (
     <View style={{ backgroundColor: bg, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 }}>

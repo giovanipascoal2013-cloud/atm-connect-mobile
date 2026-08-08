@@ -89,4 +89,4 @@ apps/mobile/
 - **Estado**: React hooks + Context
 - **Backend**: Supabase (mesmo que o web app)
 - **Storage**: expo-secure-store (em vez de localStorage)
-- **Brand**: Primary `#2094F3` (blue), Verde `#10B981` (dinheiro/sucesso), Danger `#EF4444`, Info `#3B82F6`
+- **Brand**: Primary `#2F7BF0` (azul do logo), Verde `#4CAF6B` (dinheiro/sucesso, `colors.money`), Danger `#EF4444`, Info `#3B82F6`

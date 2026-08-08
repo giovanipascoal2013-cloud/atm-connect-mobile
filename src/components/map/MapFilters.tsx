@@ -20,7 +20,7 @@ interface MapFiltersProps {
 
 const STATUS_OPTIONS: { key: ATMStatus | 'all'; label: string; color?: string }[] = [
   { key: 'all', label: 'Todos' },
-  { key: 'cash', label: 'Com dinheiro', color: '#34A853' },
+  { key: 'cash', label: 'Com dinheiro', color: '#4CAF6B' },
   { key: 'no_cash', label: 'Sem dinheiro', color: '#EA4335' },
   { key: 'offline', label: 'Offline', color: '#7F8C8D' },
 ]

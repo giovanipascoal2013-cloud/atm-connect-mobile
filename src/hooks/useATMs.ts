@@ -19,10 +19,10 @@ export function getATMStatus(atm: ATM): ATMStatus {
 
 export function getATMColor(status: ATMStatus): string {
   switch (status) {
-    case 'cash': return '#34A853'
+    case 'cash': return '#4CAF6B'
     case 'no_cash': return '#EA4335'
     case 'offline': return '#7F8C8D'
-    case 'locked': return '#4285F4'
+    case 'locked': return '#2F7BF0'
   }
 }
 

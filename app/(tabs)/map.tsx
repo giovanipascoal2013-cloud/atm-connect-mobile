@@ -11,10 +11,10 @@ import { MapFilters } from '../../src/components/map/MapFilters'
 import { ATMList } from '../../src/components/map/ATMList'
 import { ATMDetailSheet } from '../../src/components/map/ATMDetailSheet'
 import { PremiumModal } from '../../src/components/premium/PremiumModal'
+import { LogoPin } from '../../src/components/ui/LogoPin'
 import { SegmentedControl } from '../../src/components/ui/SegmentedControl'
 import { Badge } from '../../src/components/ui/Badge'
 import { AppButton } from '../../src/components/ui/AppButton'
-import { AppIcon } from '../../src/components/ui/AppIcon'
 import { colors, shadows } from '../../src/theme/tokens'
 
 type ViewMode = 'map' | 'list'
@@ -121,20 +121,8 @@ export default function MapScreen() {
   if (permission === 'denied') {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, paddingHorizontal: 32 }}>
-        <View
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 32,
-            backgroundColor: colors.brand[50],
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 14,
-          }}
-        >
-          <AppIcon name="location" size={30} color={colors.brand[500]} />
-        </View>
-        <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text.primary, marginBottom: 8 }}>
+        <LogoPin size={64} />
+        <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text.primary, marginBottom: 8, marginTop: 10 }}>
           Localização necessária
         </Text>
         <Text style={{ color: colors.text.secondary, textAlign: 'center', marginBottom: 16, lineHeight: 20 }}>

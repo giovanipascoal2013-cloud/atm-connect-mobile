@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router'
 import { useAgentOnboarding } from '../../src/hooks/useAgentOnboarding'
 import { AppCard } from '../../src/components/ui/AppCard'
 import { AppButton } from '../../src/components/ui/AppButton'
+import { LogoPin } from '../../src/components/ui/LogoPin'
 import { AppIcon, type AppIconName } from '../../src/components/ui/AppIcon'
 import { colors, radius, brandGradient } from '../../src/theme/tokens'
 import { setPendingAgentRedirect } from '../../src/lib/navigation-flag'
@@ -56,9 +57,7 @@ export default function AgentWelcomeScreen() {
         end={{ x: 1, y: 1 }}
         style={{ paddingHorizontal: 20, paddingTop: 28, paddingBottom: 28, alignItems: 'center' }}
       >
-        <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
-          <AppIcon name="add-circle" size={28} color="#fff" />
-        </View>
+        <LogoPin size={56} />
         <Text style={{ fontSize: 22, fontWeight: '700', color: '#fff' }}>Vamos registar o teu primeiro ATM</Text>
         <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', marginTop: 6, textAlign: 'center', lineHeight: 20 }}>
           Em menos de um minuto podes começar a ganhar.

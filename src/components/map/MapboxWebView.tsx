@@ -107,7 +107,7 @@ map.on('load', function() {
     source: 'atms',
     filter: ['has', 'point_count'],
     paint: {
-      'circle-color': '#4285F4',
+      'circle-color': '#2F7BF0',
       'circle-radius': ['step', ['get', 'point_count'], 20, 5, 28, 15, 36],
       'circle-stroke-width': 2,
       'circle-stroke-color': '#fff'
@@ -161,7 +161,7 @@ map.on('load', function() {
 
   if (${userLocation ? 'true' : 'false'}) {
     var userEl = document.createElement('div');
-    userEl.style.cssText = 'width:18px;height:18px;border-radius:50%;background:#4285F4;border:3px solid #fff;box-shadow:0 0 8px rgba(66,133,244,0.6);';
+    userEl.style.cssText = 'width:18px;height:18px;border-radius:50%;background:#2F7BF0;border:3px solid #fff;box-shadow:0 0 8px rgba(47,123,240,0.6);';
     new mapboxgl.Marker({ element: userEl })
       .setLngLat([${centerLng}, ${centerLat}])
       .addTo(map);

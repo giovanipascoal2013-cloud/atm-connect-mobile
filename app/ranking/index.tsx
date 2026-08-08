@@ -135,8 +135,8 @@ export default function RankingScreen() {
                   </Text>
                   <View style={{ flexDirection: 'row', gap: 8, marginTop: 2 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                      <AppIcon name="thumbs-up" size={12} color="#34A853" />
-                      <Text style={{ fontSize: 12, color: '#34A853' }}>{entry.likes}</Text>
+                      <AppIcon name="thumbs-up" size={12} color="#4CAF6B" />
+                      <Text style={{ fontSize: 12, color: '#4CAF6B' }}>{entry.likes}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                       <AppIcon name="thumbs-down" size={12} color="#EA4335" />

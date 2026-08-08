@@ -61,8 +61,8 @@ export function ATMDetailSheet({
     >
       <Text style={{ fontSize: 12, color: colors.text.tertiary }}>{label}</Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 }}>
-        <AppIcon name={ok ? 'checkmark-circle' : 'close-circle'} size={14} color={ok ? '#34A853' : '#EA4335'} />
-        <Text style={{ fontSize: 15, fontWeight: '700', color: ok ? '#34A853' : '#EA4335' }}>
+        <AppIcon name={ok ? 'checkmark-circle' : 'close-circle'} size={14} color={ok ? '#4CAF6B' : '#EA4335'} />
+        <Text style={{ fontSize: 15, fontWeight: '700', color: ok ? '#4CAF6B' : '#EA4335' }}>
           {value}
         </Text>
       </View>
@@ -151,16 +151,16 @@ export function ATMDetailSheet({
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: 6,
-                    backgroundColor: userVote === 'like' ? '#10B981' : '#fff',
+                    backgroundColor: userVote === 'like' ? '#4CAF6B' : '#fff',
                     borderRadius: 10,
                     paddingVertical: 8,
                     paddingHorizontal: 14,
                     borderWidth: 1,
-                    borderColor: userVote === 'like' ? '#10B981' : colors.border,
+                    borderColor: userVote === 'like' ? '#4CAF6B' : colors.border,
                   }}
                 >
-                  <AppIcon name="thumbs-up" size={15} color={userVote === 'like' ? '#fff' : '#10B981'} />
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: userVote === 'like' ? '#fff' : '#10B981' }}>
+                  <AppIcon name="thumbs-up" size={15} color={userVote === 'like' ? '#fff' : '#4CAF6B'} />
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: userVote === 'like' ? '#fff' : '#4CAF6B' }}>
                     {agentRating.likes}
                   </Text>
                 </TouchableOpacity>
