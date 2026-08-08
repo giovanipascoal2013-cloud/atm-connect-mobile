@@ -92,7 +92,7 @@ export default function MyViewsScreen() {
       refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchViews} tintColor={colors.brand[500]} />}
     >
       <Text style={{ fontSize: 13, color: colors.text.secondary, marginBottom: 12 }}>
-        Acessos a ATMs activos por 24h
+        Os teus desbloqueios de hoje
       </Text>
 
       <AppCard style={{ marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -100,11 +100,11 @@ export default function MyViewsScreen() {
           <AppIcon name="eye" size={22} color={colors.brand[500]} />
         </View>
         <View>
-          <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Views hoje</Text>
+          <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Desbloqueios hoje</Text>
           <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text.primary }}>
             {viewsLoading || balance.isPremium
               ? balance.isPremium ? 'Ilimitado' : '—'
-              : `${balance.remaining}/${balance.dailyLimit} restantes`}
+              : `${balance.remaining} restante${balance.remaining !== 1 ? 's' : ''}`}
           </Text>
         </View>
       </AppCard>
@@ -117,8 +117,8 @@ export default function MyViewsScreen() {
         <AppCard>
           <EmptyState
             icon="eye-outline"
-            title="Sem views activas"
-            description="Ainda não desbloqueaste nenhum ATM."
+            title="Sem desbloqueios ainda"
+            description="Explora o mapa e desbloqueia o teu primeiro ATM."
             actionLabel="Explorar mapa"
             onAction={() => router.replace('/(tabs)/map')}
           />
@@ -135,7 +135,7 @@ export default function MyViewsScreen() {
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.brand[50], borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, marginLeft: 8 }}>
                 <AppIcon name="time-outline" size={10} color={colors.brand[600]} />
-                <Text style={{ fontSize: 10, color: colors.brand[600], fontWeight: '600' }}>expira {timeUntil(v.expires_at)}</Text>
+                <Text style={{ fontSize: 10, color: colors.brand[600], fontWeight: '600' }}>por mais {timeUntil(v.expires_at).replace(/^em /, '')}</Text>
               </View>
             </View>
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>

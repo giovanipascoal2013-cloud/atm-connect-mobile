@@ -56,6 +56,23 @@ const ATMListRow = React.memo(function ATMListRow({
               </Text>
             </View>
           )}
+          {locked && (
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
+              {['Dinheiro · ?', 'Fila · ?'].map((hint) => (
+                <View
+                  key={hint}
+                  style={{
+                    backgroundColor: '#F3F4F6',
+                    borderRadius: 6,
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                  }}
+                >
+                  <Text style={{ fontSize: 11, color: colors.text.tertiary }}>{hint}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </View>
 

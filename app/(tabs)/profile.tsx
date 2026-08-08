@@ -65,7 +65,7 @@ export default function ProfileScreen() {
     if (error) {
       Alert.alert('Erro ao guardar', error.message)
     } else {
-      Alert.alert('Perfil actualizado', 'As suas informações foram guardadas.')
+      Alert.alert('Perfil actualizado', 'As tuas informações foram guardadas.')
       setEditing(false)
       refreshProfile()
     }
@@ -159,19 +159,19 @@ export default function ProfileScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 6 }}>
               <AppIcon name={isPremium ? 'diamond' : 'person'} size={15} color={isPremium ? colors.warning : '#9CA3AF'} />
               <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text.primary }}>
-                {isPremium ? 'Premium' : 'Free'}
+                {isPremium ? 'Premium' : 'Plano gratuito'}
               </Text>
             </View>
           </AppCard>
           <AppCard style={{ flex: 1 }} raised>
-            <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Views hoje</Text>
+            <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Desbloqueios hoje</Text>
             {viewsLoading ? (
               <ActivityIndicator size="small" color={colors.brand[500]} style={{ marginTop: 8 }} />
             ) : (
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 6 }}>
                 <AppIcon name="eye" size={15} color={colors.brand[500]} />
                 <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text.primary, fontVariant: ['tabular-nums'] }}>
-                  {balance.isPremium ? 'Ilimitado' : `${balance.remaining}/${balance.dailyLimit}`}
+                  {balance.isPremium ? 'Ilimitado' : `${balance.remaining} restante${balance.remaining !== 1 ? 's' : ''}`}
                 </Text>
               </View>
             )}
@@ -206,7 +206,7 @@ export default function ProfileScreen() {
               style={inputStyle}
               value={nome}
               onChangeText={setNome}
-              placeholder="Seu nome"
+              placeholder="Teu nome"
               placeholderTextColor={colors.text.tertiary}
               maxLength={100}
             />
@@ -235,7 +235,7 @@ export default function ProfileScreen() {
                   Dados Bancários (Levantamentos)
                 </Text>
                 <Text style={{ fontSize: 11, color: colors.text.tertiary, marginBottom: 8 }}>
-                  Estes dados serão usados nas suas solicitações de levantamento.
+                  Estes dados serão usados nas tuas solicitações de levantamento.
                 </Text>
                 <Text style={editLabel}>Titular da conta</Text>
                 <TextInput

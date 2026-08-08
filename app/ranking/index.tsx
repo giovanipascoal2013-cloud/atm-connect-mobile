@@ -96,8 +96,8 @@ export default function RankingScreen() {
         <AppCard>
           <EmptyState
             icon="podium-outline"
-            title="Sem avaliações ainda"
-            description="Ainda não há avaliações suficientes para o ranking."
+            title="O ranking está a começar"
+            description="Sê o primeiro a avaliar e a aparecer aqui."
           />
         </AppCard>
       ) : (

@@ -2,6 +2,24 @@
 
 ## Estado Actual
 
+### Copywriting em toda a app — reframing de bloqueio/views + tom "tu" (2026-08-08) ✅ (tsc + lint OK)
+
+Ronda de copywriting (framing de perda → ganho) e padronização do tom em "tu", com base nas decisões de brainstorming anteriores. Lógica de negócio inalterada.
+
+- **`ATMList.tsx`**: card bloqueado ganha chips teaser "Dinheiro · ?" e "Fila · ?" (cinza, sem revelar valor) — curiosidade em vez de porta fechada.
+- **`ATMDetailSheet.tsx`**: CTA `Desbloquear (N restantes hoje)` → **"Ver disponibilidade de dinheiro"** (foca o resultado); contagem vira nota subtil "N desbloqueios restantes hoje"; `Limite diário de views atingido` → **"Acabaste os desbloqueios de hoje" + "Volta amanhã para mais"**.
+- **`map.tsx`**: badge `2/3 views` → **"N desbloqueios disponíveis"**; `Limite atingido` → **"Continua amanhã"**.
+- **`profile.tsx`**: "Views hoje" → **"Desbloqueios hoje"** (`N restantes`), "Free" → **"Plano gratuito"**, tom tu.
+- **`my-views/index.tsx`**: título → **"Os teus desbloqueios de hoje"**, chip `expira X` → **"por mais X"**, EmptyState convidativo.
+- **Auth**: `login.tsx` subtítulo hero → **"Encontra dinheiro perto de ti"**; register/reset-password tom tu.
+- **`PremiumModal.tsx`**: "Upgrade Premium" → **"Sem limites. Sem esperas."**; "Agora não" → **"Mais tarde"**.
+- **Agente**: `welcome.tsx` "Explorar o app primeiro" → **"Primeiro quero explorar"**; `agent.tsx` reputação "Fraco" → **"A melhorar"**, "A sua reputação" → **"A tua reputação"**, nota "Acumula 500 Kz para levantar"; `WithdrawalModal` **"Levantar os teus ganhos"** + sucesso reescrito; `ReferralCard` "Partilhe/Ganhe" → "Partilha/Ganha".
+- **Ranking/Forum**: EmptyStates convidativos (oportunidade, não vazio).
+- **Referências**: "código de referral" → **"código de convite"**, mensagem de partilha com benefício, EmptyState de acção.
+- **Supervisor**: EmptyState pendentes → **"Está tudo em dia ✓"**.
+- **Verificação**: `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+- **Pendente (utilizador)**: teste visual em Expo Go.
+
 ### Reframing do card bloqueado — copywriting + cor (2026-08-08) ✅ (tsc OK)
 
 Redesign do card de ATM na listagem para eliminar a sensação de bloqueio e "morte" visual (cinza). Decisões tomadas em brainstorming com copywriting (framing de perda → ganho):

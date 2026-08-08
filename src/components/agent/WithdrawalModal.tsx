@@ -87,7 +87,7 @@ export function WithdrawalModal({ visible, onClose, availableBalance, onSuccess 
       return
     }
     if (amountNum > availableBalance) {
-      Alert.alert('Saldo insuficiente', 'O valor excede o seu saldo disponível.')
+      Alert.alert('Saldo insuficiente', 'O valor excede o teu saldo disponível.')
       return
     }
 
@@ -154,7 +154,7 @@ export function WithdrawalModal({ visible, onClose, availableBalance, onSuccess 
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 16 }}>
                 <AppIcon name="cash" size={20} color={colors.brand[500]} />
                 <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text.primary, textAlign: 'center' }}>
-                  Levantar Saldo
+                  Levantar os teus ganhos
                 </Text>
               </View>
 
@@ -277,9 +277,9 @@ export function WithdrawalModal({ visible, onClose, availableBalance, onSuccess 
               <View style={{ backgroundColor: colors.accent[50], padding: 16, borderRadius: 40 }}>
                 <AppIcon name="checkmark-circle" size={36} color={colors.money} />
               </View>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text.primary }}>Solicitação enviada!</Text>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text.primary }}>Pedido enviado!</Text>
               <Text style={{ fontSize: 13, color: colors.text.secondary, textAlign: 'center' }}>
-                O administrador irá processar o seu levantamento. Será notificado quando for concluído.
+                A equipa vai processar o teu levantamento e avisa-te quando estiver pronto.
               </Text>
               <AppButton
                 label="Entendido"

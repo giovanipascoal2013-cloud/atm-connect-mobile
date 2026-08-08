@@ -176,11 +176,19 @@ export default function AgentScreen() {
         />
       </View>
 
+      {stats.availableBalance <= 0 && stats.totalEarnings > 0 && (
+        <AppCard style={{ marginBottom: 16, backgroundColor: colors.accent[50], borderColor: colors.accent[200] }}>
+          <Text style={{ fontSize: 13, color: colors.accent[800], lineHeight: 19 }}>
+            Acumula 500 Kz para levantar — continua a ganhar por cada view no teu ATM!
+          </Text>
+        </AppCard>
+      )}
+
       {agentRating && agentRating.total_ratings > 0 && (
         <AppCard style={{ marginBottom: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View>
-              <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.primary, marginBottom: 8 }}>A sua reputação</Text>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text.primary, marginBottom: 8 }}>A tua reputação</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <AppIcon name="thumbs-up" size={14} color={colors.money} />
@@ -260,7 +268,7 @@ export default function AgentScreen() {
 
 function ReputationBadge({ likes, total }: { likes: number; total: number }) {
   const approvalPct = total > 0 ? Math.round((likes / total) * 100) : 0
-  const label = approvalPct >= 80 ? 'Excelente' : approvalPct >= 60 ? 'Bom' : approvalPct >= 40 ? 'Regular' : 'Fraco'
+  const label = approvalPct >= 80 ? 'Excelente' : approvalPct >= 60 ? 'Bom' : approvalPct >= 40 ? 'Regular' : 'A melhorar'
   const bg =
     approvalPct >= 80 ? '#ECFDF5' : approvalPct >= 60 ? colors.brand[50] : approvalPct >= 40 ? '#FEF3C7' : '#FEE2E2'
   const fg =

@@ -167,7 +167,7 @@ export default function RegisterScreen() {
       } else {
         Alert.alert(
           'Conta criada!',
-          'Confirme o email na sua caixa de entrada e entre. Depois do login verá o onboarding de agente.'
+          'Confirme o email na tua caixa de entrada e entra. Depois do login verás o onboarding de agente.'
         )
         router.replace('/(auth)/login')
       }
@@ -269,7 +269,7 @@ export default function RegisterScreen() {
                 icon="person-outline"
                 value={nome}
                 onChangeText={setNome}
-                placeholder="Seu nome"
+                placeholder="Teu nome"
                 required
               />
             </View>

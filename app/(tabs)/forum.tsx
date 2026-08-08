@@ -115,8 +115,8 @@ export default function ForumScreen() {
         {posts.length === 0 && !loading ? (
           <EmptyState
             icon="chatbubbles-outline"
-            title="Nenhum post"
-            description={`Nenhum post em ${provincia} nas últimas 48h`}
+            title={`Sê o primeiro a falar sobre ${provincia}`}
+            description="Os posts expiram após 2 dias — partilha novidades enquanto são actuais."
           />
         ) : (
           posts.map((post) => (

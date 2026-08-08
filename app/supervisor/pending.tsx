@@ -55,8 +55,8 @@ export default function PendingATMsScreen() {
           <AppCard>
             <EmptyState
               icon="checkmark-done"
-              title="Nenhum ATM pendente de aprovação"
-              description="Quando um agente submeter um ATM, ele aparecerá aqui."
+              title="Está tudo em dia ✓"
+              description="Novos ATMs submetidos por agentes aparecem aqui automaticamente."
             />
           </AppCard>
         ) : (

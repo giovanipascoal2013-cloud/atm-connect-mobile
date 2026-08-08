@@ -241,21 +241,29 @@ export function ATMDetailSheet({
               haptic
             />
           ) : remainingViews > 0 ? (
-            <AppButton
-              label={`Desbloquear (${remainingViews} restantes hoje)`}
-              onPress={onUnlock}
-              fullWidth
-              size="lg"
-              style={{ backgroundColor: colors.brand[600] }}
-              loading={unlocking}
-              icon="lock-open-outline"
-              haptic
-            />
+            <>
+              <AppButton
+                label="Ver disponibilidade de dinheiro"
+                onPress={onUnlock}
+                fullWidth
+                size="lg"
+                style={{ backgroundColor: colors.brand[600] }}
+                loading={unlocking}
+                icon="eye-outline"
+                haptic
+              />
+              <Text style={{ fontSize: 12, color: colors.text.tertiary, textAlign: 'center', marginTop: -4 }}>
+                {remainingViews} desbloqueio{remainingViews !== 1 ? 's' : ''} restante{remainingViews !== 1 ? 's' : ''} hoje
+              </Text>
+            </>
           ) : (
             <View style={{ gap: 10 }}>
               <View style={{ backgroundColor: '#FEF3C7', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16 }}>
-                <Text style={{ fontSize: 13, color: '#92400E', textAlign: 'center' }}>
-                  Limite diário de views atingido
+                <Text style={{ fontSize: 13, color: '#92400E', textAlign: 'center', fontWeight: '600' }}>
+                  Acabaste os desbloqueios de hoje
+                </Text>
+                <Text style={{ fontSize: 12, color: '#B45309', textAlign: 'center', marginTop: 3 }}>
+                  Volta amanhã para mais
                 </Text>
               </View>
               <AppButton

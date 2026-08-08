@@ -93,7 +93,7 @@ export default function ReferralsScreen() {
     if (!profile?.referral_code) return
     try {
       await Share.share({
-        message: `Usa o meu código de convite ${profile.referral_code} para te registares no ATM Connect!`,
+        message: `Usa o meu código de convite ${profile.referral_code} para veres ATMs com dinheiro em tempo real no ATM Connect!`,
         title: 'ATM Connect',
       })
     } catch {
@@ -111,7 +111,7 @@ export default function ReferralsScreen() {
         <AppCard style={{ marginBottom: 16, alignItems: 'center', backgroundColor: colors.accent[50], borderColor: colors.accent[200] }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
             <AppIcon name="gift" size={18} color={colors.accent[600]} />
-            <Text style={[typography.label, { color: colors.accent[700] }]}>O teu código de referral</Text>
+            <Text style={[typography.label, { color: colors.accent[700] }]}>O teu código de convite</Text>
           </View>
           <Text style={{ fontSize: 26, fontWeight: '700', color: colors.money, letterSpacing: 3, fontVariant: ['tabular-nums'] }}>
             {profile.referral_code}
@@ -155,8 +155,8 @@ export default function ReferralsScreen() {
         <AppCard>
           <EmptyState
             icon="link"
-            title="Ainda não tens referidos."
-            description="Partilha o teu código para começar a ganhar!"
+            title="Partilha o teu código"
+            description={`Ganha ${commissionPct}% da primeira subscrição de quem usar o teu convite!`}
           />
         </AppCard>
       ) : (

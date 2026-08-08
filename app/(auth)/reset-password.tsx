@@ -56,7 +56,7 @@ export default function ResetPasswordScreen() {
             <AppIcon name="chatbubble-ellipses-outline" size={30} color={colors.brand[500]} />
           </View>
           <Text style={{ fontSize: 15, color: colors.text.secondary, textAlign: 'center', lineHeight: 22 }}>
-            Para redefinir a sua senha, contacte o nosso suporte via WhatsApp. A nossa equipa irá ajudar o mais rápido possível.
+            Para redefinir a tua senha, contacta o nosso suporte via WhatsApp. A nossa equipa irá ajudar o mais rápido possível.
           </Text>
 
           <View style={{ marginTop: 20, width: '100%' }}>

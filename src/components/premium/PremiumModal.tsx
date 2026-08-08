@@ -142,7 +142,7 @@ export function PremiumModal({ visible, onClose }: PremiumModalProps) {
                   <AppIcon name="diamond" size={28} color="#fff" />
                 </View>
                 <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff' }}>
-                  Upgrade Premium
+                  Sem limites. Sem esperas.
                 </Text>
                 <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', marginTop: 4, textAlign: 'center' }}>
                   Views ilimitadas e sem anúncios
@@ -213,7 +213,7 @@ export function PremiumModal({ visible, onClose }: PremiumModalProps) {
               />
 
               <TouchableOpacity onPress={handleClose} style={{ paddingVertical: 12, alignItems: 'center' }}>
-                <Text style={{ fontSize: 14, color: colors.text.tertiary }}>Agora não</Text>
+                <Text style={{ fontSize: 14, color: colors.text.tertiary }}>Mais tarde</Text>
               </TouchableOpacity>
             </View>
           ) : (

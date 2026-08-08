@@ -34,7 +34,7 @@ export function ReferralCard({ referralCode, userId, commissionPct = 20 }: Refer
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Usa o meu código de convite ${referralCode} para te registares no ATM Connect!`,
+        message: `Usa o meu código de convite ${referralCode} para veres ATMs com dinheiro em tempo real no ATM Connect!`,
         title: 'ATM Connect',
       })
     } catch {
@@ -84,7 +84,7 @@ export function ReferralCard({ referralCode, userId, commissionPct = 20 }: Refer
           </TouchableOpacity>
         </View>
         <Text style={{ fontSize: 12, color: colors.text.secondary }}>
-          Partilhe este código com clientes. Ganhe <Text style={{ fontWeight: '700', color: colors.money }}>{commissionPct}%</Text> do valor da primeira subscrição deles!
+          Partilha este código com clientes. Ganha <Text style={{ fontWeight: '700', color: colors.money }}>{commissionPct}%</Text> do valor da primeira subscrição deles!
         </Text>
       </AppCard>
 

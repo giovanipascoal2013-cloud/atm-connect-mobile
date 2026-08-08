@@ -149,7 +149,7 @@ export default function MapScreen() {
     <Badge
       variant={balance.remaining > 0 ? 'neutral' : 'warning'}
       icon="eye"
-      label={balance.remaining > 0 ? `${balance.remaining}/${balance.dailyLimit} views` : 'Limite atingido'}
+      label={balance.remaining > 0 ? `${balance.remaining} desbloqueio${balance.remaining !== 1 ? 's' : ''} disponíve${balance.remaining !== 1 ? 'is' : 'l'}` : 'Continua amanhã'}
     />
   )
 

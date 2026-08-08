@@ -42,7 +42,7 @@ export default function LoginScreen() {
       return
     }
     if (!password) {
-      Alert.alert('Erro', 'Insira a sua senha')
+      Alert.alert('Erro', 'Insere a tua senha')
       return
     }
 
@@ -92,7 +92,7 @@ export default function LoginScreen() {
               ATM Connect
             </Text>
             <Text style={{ fontSize: 15, color: 'rgba(255,255,255,0.85)', marginTop: 6 }}>
-              Localizador de ATMs em tempo real
+              Encontra dinheiro perto de ti
             </Text>
           </View>
         </LinearGradient>

@@ -100,7 +100,7 @@ export default function AgentWelcomeScreen() {
           onPress={handleContinue}
         />
         <TouchableOpacity onPress={() => router.replace('/(tabs)/map')} style={{ paddingVertical: 12, alignItems: 'center' }}>
-          <Text style={{ fontSize: 14, color: colors.text.tertiary }}>Explorar o app primeiro</Text>
+          <Text style={{ fontSize: 14, color: colors.text.tertiary }}>Primeiro quero explorar</Text>
         </TouchableOpacity>
       </View>
     </View>
