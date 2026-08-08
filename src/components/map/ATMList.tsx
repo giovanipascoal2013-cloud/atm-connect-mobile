@@ -32,7 +32,7 @@ const ATMListRow = React.memo(function ATMListRow({
   locked: boolean
 }) {
   const status = locked ? 'locked' : getATMStatus(item)
-  const color = locked ? '#6B7280' : getATMColor(status)
+  const color = locked ? colors.brand[500] : getATMColor(status)
 
   const formatDistance = (km: number) => {
     if (km < 1) return `${Math.round(km * 1000)}m`
@@ -47,7 +47,7 @@ const ATMListRow = React.memo(function ATMListRow({
           <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text.primary }}>
             {item.bank_name}
           </Text>
-          <Text style={{ fontSize: 13, color: colors.text.secondary, marginTop: 2 }}>{item.address}</Text>
+          <Text style={{ fontSize: 13, color: colors.money, marginTop: 2 }}>{item.address}</Text>
           {(item.cidade || item.provincia) && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
               <AppIcon name="location-outline" size={12} color={colors.text.tertiary} />
@@ -62,9 +62,9 @@ const ATMListRow = React.memo(function ATMListRow({
       <View style={styles.cardFooter}>
         {locked ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-            <AppIcon name="lock-closed" size={14} color={color} />
+            <AppIcon name="eye-outline" size={14} color={color} />
             <Text style={{ fontSize: 13, fontWeight: '600', color }}>
-              Bloqueado
+              Ver detalhes
             </Text>
           </View>
         ) : (

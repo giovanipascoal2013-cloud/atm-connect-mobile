@@ -2,6 +2,16 @@
 
 ## Estado Actual
 
+### Reframing do card bloqueado — copywriting + cor (2026-08-08) ✅ (tsc OK)
+
+Redesign do card de ATM na listagem para eliminar a sensação de bloqueio e "morte" visual (cinza). Decisões tomadas em brainstorming com copywriting (framing de perda → ganho):
+
+- **`src/components/map/ATMList.tsx`** — card bloqueado: ícone `lock-closed` + "Bloqueado" cinza → ícone `eye-outline` + **"Ver detalhes"** em azul `colors.brand[500]`; dot de estado do caso bloqueado de `#6B7280` → `colors.brand[500]`; endereço (`item.address`) passa de `colors.text.secondary` → `colors.money` (#10B981) em todos os cards.
+- **`docs/superpowers/specs/2026-08-08-atm-list-copy-design.md`** — doc de design aprovado (Approach A: convite mínimo).
+- **Fora de âmbito**: estado real (Com/Sem Dinheiro) continua no sheet desbloqueado; lógica de views/desbloqueio inalterada; CTA do sheet inalterado.
+- **Verificação**: `npx tsc --noEmit` OK (0 erros).
+- **Pendente (utilizador)**: teste visual em Expo Go.
+
 ### Fix botões invisíveis no iOS (Expo Go / New Architecture) (2026-08-08) ✅ (tsc + lint OK)
 
 Novo reporte do utilizador: **todos os `AppButton`** (Criar Conta, Entrar, Registar ATM, Desbloquear, compra de view, CTA do welcome) estavam invisíveis mas clicáveis no iOS (Expo Go). A teoria anterior (`boxShadow` no `AppButton`, commit `3ea52ec`) estava errada — remover o sombreado do botão não resolveu.
