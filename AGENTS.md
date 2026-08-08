@@ -4,10 +4,9 @@
 
 1. **Ler `LOG.md`** — saber estado actual, o que já foi feito, o que falta
 2. **Carregar skills adequadas** (ver tabela abaixo) conforme a tarefa
-3. **Ler o plano específico da fase** em `.opencode/plans/PLANO_AGENTE_*.md`
-4. **Executar tarefa**
-5. **Actualizar `LOG.md`** com o que foi feito
-6. **Fazer commit** com mensagem descritiva (conventional commit)
+3. **Executar tarefa**
+4. **Actualizar `LOG.md`** com o que foi feito
+5. **Fazer commit** com mensagem descritiva (conventional commit)
 
 ## Ambiente
 

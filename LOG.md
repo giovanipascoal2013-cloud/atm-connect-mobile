@@ -17,15 +17,15 @@ Novo reporte do utilizador: **todos os `AppButton`** (Criar Conta, Entrar, Regis
 Novo modelo de negócio: **1 anúncio rewarded = 1 ATM por 24h (sem limite diário)**; subscrição premium **cancela anúncios** (acesso ilimitado). Substitui o modelo "3 views/dia".
 
 - **Fase 0 — Baseline** ✅: `tsc` 0 erros + `lint` 0 problemas; commit `3ea52ec` (fixes da ronda 6: botões sem sombra, logo no login, barra azul no mapa, dashboard agente).
-- **Fase 1 — Investigação do app** ✅: `docs/superpowers/specs/2026-08-08-relatorio-investigacao-app.md` (rotas, fluxo views/premium, navegação N1–N8, lógica L1–L12, histórico AdMob).
-- **Fase 2 — Investigação da BD staging** ✅ (via REST, só leitura): `docs/superpowers/specs/2026-08-08-relatorio-investigacao-bd-staging.md`. Descobertas críticas:
+- **Fase 1 — Investigação do app** ✅: relatório de investigação (rotas, fluxo views/premium, navegação N1–N8, lógica L1–L12, histórico AdMob).
+- **Fase 2 — Investigação da BD staging** ✅ (via REST, só leitura). Descobertas críticas:
   - 🔴 `subscriptions.plan_type` CHECK só `('monthly','annual')` — mobile insere `'quarterly'` → falha.
   - 🔴 Policy de INSERT em `subscriptions` é **só admin** — utilizador não cria a própria subscrição.
   - 🟠 BD tem preços 1500/13500; plano do produto 290/700/1500 (mobile usa 290/700/1500).
   - 🟠 Textos "50 Kz/view" vs BD paga 0.15 Kz; `atm_views.is_active` nunca desactivado.
-- **Fase 3 — Spec** ✅ validada pelo utilizador: `docs/superpowers/specs/2026-08-08-modificacoes-ads-premium-design.md`. Decisões resolvidas: (a) preços alinhados ao plano **290/700/1500** na BD; (b) `expo-notifications`/`useNotifications` **removidos por agora**.
-- **Fase 4 — Plano de implementação** ✅: `.opencode/plans/PLANO_AGENTE_ADS_PREMIUM.md` (7 fases: preparação, backend staging, mock ad, core map/views, fixes, validação, AdMob real, adaptação produção).
-- **Investigação do fluxo de agente** ✅ (pedido do utilizador, crucial): `docs/superpowers/specs/2026-08-08-relatorio-investigacao-onboarding-agente.md`. Conclusão: **a BD não é a causa** — trigger `handle_new_user` cria role + onboarding correctamente, `has_role`/RLS/bucket funcionam, `mailer_autoconfirm: true` (sessão imediata). O problema é **navegação no app**: (A) race entre `register.tsx → /agent/onboarding` e o root `_layout.tsx → /(tabs)/map` (quem correr por último ganha); (B) sem redirect pós-login (o gate só existe no separador Agente); (C) `onboarding_seen` marcado num `useEffect` no mount que pode falhar silenciosamente. Propostos fixes O1–O4 adicionados à Fase 4 do plano. Backfill opcional das 23 contas com `onboarding_seen:false`.
+- **Fase 3 — Spec** ✅ validada pelo utilizador. Decisões resolvidas: (a) preços alinhados ao plano **290/700/1500** na BD; (b) `expo-notifications`/`useNotifications` **removidos por agora**.
+- **Fase 4 — Plano de implementação** ✅ (7 fases: preparação, backend staging, mock ad, core map/views, fixes, validação, AdMob real, adaptação produção).
+- **Investigação do fluxo de agente** ✅ (pedido do utilizador, crucial). Conclusão: **a BD não é a causa** — trigger `handle_new_user` cria role + onboarding correctamente, `has_role`/RLS/bucket funcionam, `mailer_autoconfirm: true` (sessão imediata). O problema é **navegação no app**: (A) race entre `register.tsx → /agent/onboarding` e o root `_layout.tsx → /(tabs)/map` (quem correr por último ganha); (B) sem redirect pós-login (o gate só existe no separador Agente); (C) `onboarding_seen` marcado num `useEffect` no mount que pode falhar silenciosamente. Propostos fixes O1–O4 adicionados à Fase 4 do plano. Backfill opcional das 23 contas com `onboarding_seen:false`.
 
 **Próximo passo**: Fase 1 do plano — escrever as 3 migrações SQL de staging (`consume_atm_view` sem limite diário, `subscriptions` quarterly + policy, `app_settings` 290/700/1500) para o utilizador aplicar no Supabase staging.
 
@@ -36,7 +36,7 @@ Novo modelo de negócio: **1 anúncio rewarded = 1 ATM por 24h (sem limite diár
 
 ### Onboarding de agente pós-registo — welcome → submit ATM (2026-08-08) ✅ (tsc + lint OK)
 
-Implementado o design `docs/superpowers/specs/2026-08-08-onboarding-pos-registo-agente-design.md` (resolve O1 + O3/O4 do relatório de investigação):
+Implementado o design de onboarding pós-registo de agente (resolve O1 + O3/O4 do relatório de investigação):
 
 - **Novo `app/agent/welcome.tsx`**: ecrã de boas-vindas logo após criar conta de agente — hero gradiente "Vamos registar o teu primeiro ATM", 3 passos (📷 Foto → 📍 GPS → 📋 Detalhes + submeter), botão único **"Continuar para registar um ATM"** → `/agent/submit-atm`; botão secundário "Explorar o app primeiro". Rota registada em `app/agent/_layout.tsx` (`headerShown: false`).
 - **Fix O1 (race do pós-registo)**: novo `src/lib/navigation-flag.ts` com flag de módulo `pendingAgentRedirect`. `register.tsx` seta a flag **antes** de `router.replace('/agent/welcome')`; `app/_layout.tsx` (root) só redirecciona para `/(tabs)/map` se `!pendingAgentRedirect`, e limpa a flag automaticamente ao sair do grupo `(auth)`.
@@ -53,7 +53,6 @@ Novos pedidos do utilizador (5ª leitura de `errr.txt`), implementados e validad
 - **Listagem mostra nome + info básica sempre** — `src/components/map/ATMList.tsx`: título passa a ser sempre `bank_name`, morada e `cidade, provincia` deixam de depender de `!locked`. Apenas dinheiro/estado ficam ocultos (rodapé mantém "Bloqueado" 🔒 com ponto cinza).
 - **Botão de desbloquear invisível corrigido** — causa-raiz: `AppButton` `primary` aplica `shadows.raised` (`boxShadow`), que no iOS renderiza como overlay translúcido que desbota o azul `brand[500]` contra o fundo branco. `src/components/ui/AppButton.tsx`: novo prop `shadow` (default `true`; `false` omite o sombreado). `ATMDetailSheet.tsx`: CTAs do estado bloqueado com `size="lg"`, `shadow={false}` e `backgroundColor: colors.brand[600]` (azul sólido, contraste ≈5.1:1).
 - **Layout do sheet bloqueado** — `maxHeight` `30%` → `42%` + conteúdo em `ScrollView` (evita clipping); acrescentada linha `cidade, provincia` junto à morada; ponto colorido do cabeçalho passou de cor real do status para cinza fixo `#6B7280` (elimina leak de informação antes do desbloqueio; removido uso de `getATMColor`).
-- **Spec**: `docs/superpowers/specs/2026-08-07-errr-round5-fixes-design.md`.
 - **Pendente (utilizador)**: teste visual em iOS (Expo Go) — listagem e botão de desbloquear.
 
 **Fase Actual**: ✅ Correções 5ª ronda errr.txt — aguarda teste em dispositivo
@@ -68,7 +67,6 @@ Novos pedidos do utilizador (4ª leitura de `errr.txt`), implementados e validad
 - **Botão de apoio ao cliente (WhatsApp)** — novo `src/lib/support.ts` (`SUPPORT_WHATSAPP_NUMBER`, `SUPPORT_DEFAULT_MESSAGE`, `supportWhatsAppUrl()` reutilizando `waLink`). `app/(tabs)/profile.tsx`: novo `SectionLink` "Apoio ao Cliente" (ícone `logo-whatsapp`) entre "Referências" e a secção de ajuda. Refactor de reutilização em `login.tsx`, `reset-password.tsx` e `PremiumModal.tsx` (número de WhatsApp deduplicado).
 - **Fix ordenação por proximidade após login** — causa-raiz: a distância só era calculada no fetch e o sort por proximidade exigia `userLocation`; após login o navigator `(tabs)` remonta e a lista caía para a ordem alfabética do servidor. `useLocation.ts`: cache de última localização em módulo (`getCachedLocation`) para remounts instantâneos. `useATMs.ts`: distância reactiva num `useMemo` sobre `[atms, userLocation]`, sort `proximity` sempre aplicado por `distance ?? MAX_SAFE_INTEGER`, `.order('bank_name')` removido.
 - **Revisão de contraste** — `text.tertiary` `#9CA3AF` → `#6B7280`; marcadores do mapa com stroke branco (`circle-stroke-width: 2`) para se destacarem do fundo escuro; `EmptyState` (ícone `brand[600]` + borda), `Badge neutral`, track do `SegmentedControl`, pills do mapa sólidas + borda, botão "Copiar" do `ReferralCard`, `AppButton secondary` (`brand[700]`), tint inactivo das tabs, círculos de ícone do Perfil e dot de bloqueado da lista.
-- **Spec**: `docs/superpowers/specs/2026-08-07-errr-round4-fixes-design.md`.
 - **Pendente (utilizador)**: teste visual em Expo Go / web (ordenação após login, botão WhatsApp, contraste).
 
 **Fase Actual**: ✅ Correções 4ª ronda errr.txt — aguarda teste em dispositivo
@@ -108,7 +106,7 @@ Reforma visual completa do app (palete alinhada ao logo: azul `#1573D6` dominant
 
 ### Anúncios AdMob adiados (integração removida 2026-08-07)
 
-A integração de anúncios Google AdMob foi **removida por completo** e adiada para outra altura, por causar erros de build/web bundling (`react-native-google-mobile-ads` é nativo-only). O app voltou ao estado pré-AdMob (commit `4319769`). Mantém-se o `package-lock.json` sincronizado. Design de remoção: `docs/superpowers/specs/2026-08-07-remove-admob-integration-design.md`.
+A integração de anúncios Google AdMob foi **removida por completo** e adiada para outra altura, por causar erros de build/web bundling (`react-native-google-mobile-ads` é nativo-only). O app voltou ao estado pré-AdMob (commit `4319769`). Mantém-se o `package-lock.json` sincronizado.
 
 ### Correções 3ª ronda errr.txt — Fórum admin-only + Onboarding gate + Foto ArrayBuffer (2026-08-07) 🚧
 
@@ -148,7 +146,7 @@ Novos pedidos do utilizador (2ª ronda de `errr.txt`), implementados e validados
 
 ### Correções errr.txt (2026-08-07) ✅ (tsc OK)
 
-Fixes aplicados aos problemas reportados em `errr.txt` (também cobrem "Missing/not working" do `.tmp-create-agent.mjs`):
+Fixes aplicados aos problemas reportados pelo utilizador na primeira leitura de reportes:
 
 - **1. Crash duplicate key 23505** — `src/hooks/useViews.ts`: `consumeView` apanha o erro `23505` (dupla inserção em `atm_views`) e devolve a view existente (`reused: true`) em vez de rebentar. `app/(tabs)/map.tsx`: guarda `unlocking` anti double-tap em `handleUnlock`.
 - **2. SecureStore > 2048 bytes** — `src/lib/supabase.ts`: adaptador de storage com chunking byte-aware (~1024 B/parte + `.meta`), mantém escrita directa ≤2048. Elimina o warning de overflow.

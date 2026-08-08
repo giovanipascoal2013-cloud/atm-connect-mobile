@@ -24,8 +24,8 @@ web-build/
 
 # Agent work files
 errr.txt
-.tmp-create-agent.mjs
-PLAN.md
+.tmp-*
+.opencode/
 
 # eas
 .eas-build/
