@@ -43,11 +43,20 @@ export default function TabLayout() {
         options={{
           title: 'Mapa',
           headerTitle: 'ATM Connect',
+          headerStyle: {
+            backgroundColor: colors.brand[500],
+          },
+          headerTintColor: '#FFFFFF',
+          headerTitleStyle: {
+            fontWeight: '700',
+            fontSize: 17,
+            color: '#FFFFFF',
+          },
           tabBarIcon: ({ focused }) => tabIcon(focused, 'map-outline', 'map'),
           headerRight: () =>
             !user ? (
               <TouchableOpacity onPress={() => router.push('/(auth)/login')} style={{ paddingHorizontal: 16 }}>
-                <Text style={{ color: colors.brand[500], fontWeight: '700' }}>Entrar</Text>
+                <Text style={{ color: '#FFFFFF', fontWeight: '700' }}>Entrar</Text>
               </TouchableOpacity>
             ) : undefined,
         }}

@@ -10,6 +10,7 @@ import { ReferralCard } from '../../src/components/agent/ReferralCard'
 import { AppButton } from '../../src/components/ui/AppButton'
 import { AppCard } from '../../src/components/ui/AppCard'
 import { EmptyState } from '../../src/components/ui/EmptyState'
+import { Badge } from '../../src/components/ui/Badge'
 import { AppIcon, type AppIconName } from '../../src/components/ui/AppIcon'
 import { colors } from '../../src/theme/tokens'
 
@@ -30,6 +31,7 @@ export default function AgentScreen() {
   const { user } = useAuth()
   const {
     atms,
+    pendingAtms,
     pendingCount,
     hasApprovedAtm,
     stats,
@@ -50,10 +52,10 @@ export default function AgentScreen() {
   const { progress: onboarding, loading: onboardingLoading } = useAgentOnboarding()
 
   useEffect(() => {
-    if (!onboardingLoading && onboarding && !onboarding.onboarding_seen) {
+    if (!onboardingLoading && !loading && onboarding && !onboarding.onboarding_seen && pendingCount === 0 && !hasApprovedAtm) {
       router.replace('/agent/onboarding')
     }
-  }, [onboarding, onboardingLoading, router])
+  }, [onboarding, onboardingLoading, loading, pendingCount, hasApprovedAtm, router])
 
   if (!isAgent) {
     return (
@@ -93,6 +95,36 @@ export default function AgentScreen() {
               : 'O teu painel de agente desbloqueia assim que submeteres um ATM e ele for aprovado pela equipa. Só precisas de uma foto do local.'
           }
         />
+
+        {pending && pendingAtms.length > 0 && (
+          <View style={{ gap: 10, marginBottom: 16 }}>
+            {pendingAtms.map((atm) => (
+              <AppCard key={atm.id}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <View
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      backgroundColor: colors.brand[50],
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <AppIcon name="hourglass-outline" size={18} color={colors.brand[500]} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.primary }}>{atm.bank_name}</Text>
+                    <Text style={{ fontSize: 12, color: colors.text.secondary, marginTop: 2 }} numberOfLines={1}>
+                      {atm.address}
+                    </Text>
+                  </View>
+                  <Badge variant="neutral" label="Em análise" />
+                </View>
+              </AppCard>
+            ))}
+          </View>
+        )}
 
         {pending && (
           <AppCard style={{ marginBottom: 16 }}>

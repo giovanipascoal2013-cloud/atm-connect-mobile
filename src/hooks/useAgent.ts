@@ -34,6 +34,7 @@ interface AgentRating {
 export function useAgent() {
   const { user, profile, isAgent: isAuthAgent } = useAuth()
   const [atms, setAtms] = useState<AgentATM[]>([])
+  const [pendingAtms, setPendingAtms] = useState<AgentATM[]>([])
   const [stats, setStats] = useState<AgentStats>({
     totalATMs: 0,
     totalEarnings: 0,
@@ -76,7 +77,7 @@ export function useAgent() {
 
       const agentAtms = (atmsRes.data ?? []) as AgentATMRow[]
       const approvedAtms = agentAtms.filter((a) => a.status_approval === 'approved')
-      const pendingAtms = agentAtms.filter((a) => a.status_approval === 'pending')
+      const pendingRows = agentAtms.filter((a) => a.status_approval === 'pending')
       const totalEarnings = (earningsRes.data ?? []).reduce((s, e) => s + Number(e.amount_kz), 0)
       const totalViews = earningsRes.data?.length ?? 0
       const totalWithdrawn = (withdrawalsRes.data ?? [])
@@ -84,7 +85,8 @@ export function useAgent() {
         .reduce((s, w) => s + Number(w.amount_kz), 0)
 
       setAtms(approvedAtms)
-      setPendingCount(pendingAtms.length)
+      setPendingAtms(pendingRows)
+      setPendingCount(pendingRows.length)
       setHasApprovedAtm(approvedAtms.length > 0)
       setStats({
         totalATMs: approvedAtms.length,
@@ -173,6 +175,7 @@ export function useAgent() {
 
   return {
     atms,
+    pendingAtms,
     pendingCount,
     hasApprovedAtm,
     stats,

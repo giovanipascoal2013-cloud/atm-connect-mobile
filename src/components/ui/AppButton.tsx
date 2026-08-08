@@ -2,7 +2,7 @@ import React from 'react'
 import { Pressable, Text, ActivityIndicator, type StyleProp, type ViewStyle } from 'react-native'
 import * as Haptics from 'expo-haptics'
 import { AppIcon, type AppIconName } from './AppIcon'
-import { colors, shadows } from '@/theme/tokens'
+import { colors } from '@/theme/tokens'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'outline'
 export type ButtonSize = 'sm' | 'md' | 'lg'
@@ -18,7 +18,6 @@ interface AppButtonProps {
   iconRight?: AppIconName
   haptic?: boolean
   fullWidth?: boolean
-  shadow?: boolean
   style?: StyleProp<ViewStyle>
 }
 
@@ -48,7 +47,6 @@ export function AppButton({
   iconRight,
   haptic,
   fullWidth,
-  shadow = true,
   style,
 }: AppButtonProps) {
   const v = VARIANT_STYLES[variant]
@@ -83,7 +81,6 @@ export function AppButton({
           opacity: isDisabled ? 0.55 : pressed ? 0.85 : 1,
           transform: [{ scale: pressed ? 0.98 : 1 }],
           ...(fullWidth ? { width: '100%' } : {}),
-          ...(shadow && variant === 'primary' ? shadows.raised : {}),
         },
         style,
       ]}

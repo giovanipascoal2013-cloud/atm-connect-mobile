@@ -225,7 +225,6 @@ export function ATMDetailSheet({
               onPress={onLogin}
               fullWidth
               size="lg"
-              shadow={false}
               style={{ backgroundColor: colors.brand[600] }}
               icon="log-in-outline"
               haptic
@@ -236,7 +235,6 @@ export function ATMDetailSheet({
               onPress={onUnlock}
               fullWidth
               size="lg"
-              shadow={false}
               style={{ backgroundColor: colors.brand[600] }}
               loading={unlocking}
               icon="eye-outline"
@@ -248,7 +246,6 @@ export function ATMDetailSheet({
               onPress={onUnlock}
               fullWidth
               size="lg"
-              shadow={false}
               style={{ backgroundColor: colors.brand[600] }}
               loading={unlocking}
               icon="lock-open-outline"

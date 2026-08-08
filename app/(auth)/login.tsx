@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { View, Text, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView, Linking } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView, Linking, Image } from 'react-native'
 import { useRouter, Link, useLocalSearchParams } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useAuth } from '../../src/hooks/useAuth'
@@ -83,7 +83,10 @@ export default function LoginScreen() {
                 marginBottom: 14,
               }}
             >
-              <AppIcon name="cash-outline" size={34} color="#fff" />
+              <Image
+                source={require('../../assets/icon.png')}
+                style={{ width: 46, height: 46, resizeMode: 'contain' }}
+              />
             </View>
             <Text style={{ fontSize: 28, fontWeight: '800', color: '#fff', letterSpacing: -0.4 }}>
               ATM Connect
