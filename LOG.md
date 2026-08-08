@@ -2,6 +2,16 @@
 
 ## Estado Actual
 
+### Fix botões invisíveis no iOS (Expo Go / New Architecture) (2026-08-08) ✅ (tsc + lint OK)
+
+Novo reporte do utilizador: **todos os `AppButton`** (Criar Conta, Entrar, Registar ATM, Desbloquear, compra de view, CTA do welcome) estavam invisíveis mas clicáveis no iOS (Expo Go). A teoria anterior (`boxShadow` no `AppButton`, commit `3ea52ec`) estava errada — remover o sombreado do botão não resolveu.
+
+- **Causa raiz**: `AppButton` usava `Pressable` + style-callback + `transform: [{scale}]` + `gap` + `borderCurve: 'continuous'`. No New Architecture do RN 0.81 (iOS) esta combinação é conhecida por falhar a pintura do fundo/conteúdo (ver issues RN #54556, #52413) — conteúdo invisível mas ainda a receber toques.
+- **`src/components/ui/AppButton.tsx`** (reescrito, API idêntica): `Pressable` → `TouchableOpacity`; removidos `transform`, `gap` (usado `margin` nos ícones) e `borderCurve`; style plano com `backgroundColor`/cor de texto explícitas. Mantidos variant/size/icon/iconRight/haptic/loading/disabled/fullWidth/style.
+- **`src/theme/tokens.ts`**: `shadows.card/raised/floating` deixaram de usar `boxShadow` → props clássicas (`shadowColor`/`shadowOffset`/`shadowOpacity`/`shadowRadius` + `elevation`), eliminando o risco de overlay translúcido no iOS em `AppCard`, `SegmentedControl`, `WithdrawalModal` e `MapFilters`.
+- **Verificação**: `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas); grep confirma 0 ocorrências de `boxShadow`.
+- **Pendente (utilizador)**: teste visual em iOS (Expo Go) — todos os botões devem aparecer.
+
 ### Transformação Freemium: Anúncios + Premium — Investigação e Plano (2026-08-08) 🚧
 
 Novo modelo de negócio: **1 anúncio rewarded = 1 ATM por 24h (sem limite diário)**; subscrição premium **cancela anúncios** (acesso ilimitado). Substitui o modelo "3 views/dia".

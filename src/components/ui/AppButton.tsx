@@ -1,5 +1,5 @@
 import React from 'react'
-import { Pressable, Text, ActivityIndicator, type StyleProp, type ViewStyle } from 'react-native'
+import { TouchableOpacity, Text, ActivityIndicator, type StyleProp, type ViewStyle } from 'react-native'
 import * as Haptics from 'expo-haptics'
 import { AppIcon, type AppIconName } from './AppIcon'
 import { colors } from '@/theme/tokens'
@@ -62,24 +62,22 @@ export function AppButton({
   }
 
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={handlePress}
       disabled={isDisabled}
-      style={({ pressed }) => [
+      activeOpacity={0.85}
+      style={[
         {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 8,
           borderRadius: s.radius,
-          borderCurve: 'continuous',
           paddingVertical: s.py,
           paddingHorizontal: s.px,
           backgroundColor: v.bg,
           borderWidth: v.border ? 1 : 0,
           borderColor: v.border,
-          opacity: isDisabled ? 0.55 : pressed ? 0.85 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
+          opacity: isDisabled ? 0.55 : 1,
           ...(fullWidth ? { width: '100%' } : {}),
         },
         style,
@@ -89,11 +87,11 @@ export function AppButton({
         <ActivityIndicator size="small" color={v.fg} />
       ) : (
         <>
-          {icon && <AppIcon name={icon} size={s.iconSize} color={v.fg} />}
+          {icon && <AppIcon name={icon} size={s.iconSize} color={v.fg} style={{ marginRight: 6 }} />}
           <Text style={{ fontSize: s.fontSize, fontWeight: '600', color: v.fg }}>{label}</Text>
-          {iconRight && <AppIcon name={iconRight} size={s.iconSize} color={v.fg} />}
+          {iconRight && <AppIcon name={iconRight} size={s.iconSize} color={v.fg} style={{ marginLeft: 6 }} />}
         </>
       )}
-    </Pressable>
+    </TouchableOpacity>
   )
 }

@@ -48,12 +48,26 @@ export const radius = {
 
 export const shadows = {
   none: {},
-  card: { boxShadow: '0 1px 2px rgba(16,24,40,0.05)' },
+  card: {
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
   raised: {
-    boxShadow: '0 4px 16px rgba(16,24,40,0.10), 0 2px 6px rgba(16,24,40,0.06)',
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 4,
   },
   floating: {
-    boxShadow: '0 8px 24px rgba(16,24,40,0.12), 0 2px 8px rgba(16,24,40,0.08)',
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 8,
   },
 } as const
 
