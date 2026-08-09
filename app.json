@@ -48,7 +48,8 @@
         {
           "cameraPermission": "Permitir acesso à câmara para fotografar ATMs que submeter."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
