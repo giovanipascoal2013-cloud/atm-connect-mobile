@@ -7,8 +7,7 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "autoIncrement": true,
-      "installCommand": "npm install"
+      "autoIncrement": true
     },
     "preview": {
       "distribution": "internal",

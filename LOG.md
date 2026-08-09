@@ -2,7 +2,7 @@
 
 ## Estado Actual
 
-### Development Build EAS — fix do `npm ci` + lockfile (2026-08-09) 🚧 (branch `fix/lockfile-dev-build`)
+### Development Build EAS — fix do `npm ci` + lockfile (2026-08-09) ✅ (branch `fix/lockfile-dev-build`)
 
 **Problema:** `eas build` falhava no `npm ci` com "Missing X from lock file" (`@expo/vector-icons`, `expo-font`, `expo-blur`, `expo-haptics`, `expo-linear-gradient`, `@emnapi/core@1.11.3`, `@emnapi/runtime@1.11.3`).
 
@@ -12,15 +12,15 @@
 - Conflito `expo-font`: `@expo/vector-icons@15.1.1` resolvia `expo-font@>=14.0.4` para `57.0.1` (SDK 57) vs `expo@54` (SDK 54) exigir `~14.0.12`.
 - Os `@emnapi/*` são deps/peers de packages opcionais de outras plataformas (`@unrs/resolver-binding-wasm32-wasi` → `@napi-rs/wasm-runtime@1.2.2` com peers `@emnapi/core/runtime@^1.7.1 || ^2.0.0-alpha.3` → `1.11.3`). O npm do Windows não os resolve no lock; o `npm ci` do EAS (Linux) exige-os.
 
-**Alterações (commit `d7309ee` + actual):**
+**Alterações (commits `d7309ee` + `406770a` + actual):**
 - `package.json`: adicionado `expo-font@~14.0.12` como dep directa (SDK 54) e `@emnapi/core@^1.10.0` / `@emnapi/runtime@^1.10.0` em `devDependencies` para forçar o registo no `package-lock.json` mesmo no Windows.
 - `app.json`: adicionado plugin `expo-font`.
 - `package-lock.json`: regenerado com sucesso (`npm install --package-lock=true`), incluindo `@emnapi/core` (1.11.3 / 1.10.0) e `@emnapi/runtime` em `node_modules`.
+- `eas.json`: removido `installCommand: "npm install"` temporário do perfil `development` (fix já não necessário).
 
-**Pendente (utilizador):** 
-1. Fazer commit: `git add package.json LOG.md package-lock.json` && `git commit -m "fix(deps): add emnapi core and runtime to lockfile for EAS build"`
-2. Executar `eas build --platform android --profile development`
-3. Executar `npx expo start --dev-client` após instalar no dispositivo.
+**Resultado:** ✅ `eas build --platform android --profile development` correu sem erros; APK instalado e `npx expo start --dev-client` funciona (dev client carregou o bundle correctamente).
+
+**Ficheiros scratch ignorados no commit:** `DEV_BUILD_FIX_PROMPT.md`, `errr.md`, `prompt_analise_ia.md`, `scratch_debug.mjs`.
 
 ### Preparação Development Build Android (EAS) (2026-08-09) 🚧
 
