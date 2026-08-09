@@ -49,9 +49,9 @@ export function useAgent() {
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (opts?: { silent?: boolean }) => {
     if (!user) return
-    setLoading(true)
+    if (!opts?.silent) setLoading(true)
     try {
       const [atmsRes, earningsRes, withdrawalsRes, ratingRes, commissionRes] = await Promise.all([
         supabase
@@ -114,13 +114,15 @@ export function useAgent() {
     } catch (err) {
       console.error('Error fetching agent data:', err)
     } finally {
-      setLoading(false)
+      if (!opts?.silent) setLoading(false)
     }
   }, [user, profile?.agent_balance_kz])
 
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  const refetchSilent = useCallback(() => fetchData({ silent: true }), [fetchData])
 
   const updateATM = useCallback(async (atmId: string, updates: Partial<AgentATM>) => {
     setUpdating(atmId)
@@ -185,6 +187,7 @@ export function useAgent() {
     loading,
     updating,
     refetch: fetchData,
+    refetchSilent,
     toggleCash,
     togglePaper,
     setFila,

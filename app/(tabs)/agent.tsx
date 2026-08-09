@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { View, Text, ScrollView, ActivityIndicator, RefreshControl } from 'react-native'
-import { useRouter } from 'expo-router'
+import { useState, useEffect, useCallback } from 'react'
+import { View, Text, ScrollView, ActivityIndicator, RefreshControl, AppState } from 'react-native'
+import { useRouter, useFocusEffect } from 'expo-router'
 import { useAgent } from '../../src/hooks/useAgent'
 import { useAgentOnboarding } from '../../src/hooks/useAgentOnboarding'
 import { useAuth } from '../../src/hooks/useAuth'
@@ -41,6 +41,7 @@ export default function AgentScreen() {
     loading,
     updating,
     refetch,
+    refetchSilent,
     toggleCash,
     togglePaper,
     setFila,
@@ -56,6 +57,19 @@ export default function AgentScreen() {
       router.replace('/agent/onboarding')
     }
   }, [onboarding, onboardingLoading, loading, pendingCount, hasApprovedAtm, router])
+
+  useFocusEffect(
+    useCallback(() => {
+      refetchSilent()
+    }, [refetchSilent])
+  )
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refetchSilent()
+    })
+    return () => sub.remove()
+  }, [refetchSilent])
 
   if (!isAgent) {
     return (

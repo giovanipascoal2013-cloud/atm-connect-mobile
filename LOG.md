@@ -2,6 +2,20 @@
 
 ## Estado Actual
 
+### Fix painel de agente não desbloqueava após aprovação — refetch no foco/foreground (2026-08-09) ✅ (tsc + lint OK)
+
+Reporte do utilizador: submeteu um ATM pelo mobile, aprovou no web admin, mas o painel de agente continuava "Regista o teu primeiro ATM".
+
+**Diagnóstico** (staging read-only + revisão de código):
+- BD correcta: ATM aprovado com `agent_id` do utilizador; a query exacta do agente devolve os ATMs; RLS OK (o mapa mostra ATMs com sessão).
+- Causa raiz: o ecrã de Agente **nunca refazia o fetch** ao voltar ao tab (após `router.back()` do submit) nem ao trazer a app ao primeiro plano — só no mount inicial e no pull-to-refresh. Por isso o estado "ATM em análise" nunca aparecia e o painel ficava stale mesmo após aprovação no web.
+
+**Alterações:**
+- **`src/hooks/useAgent.ts`**: `fetchData` aceita `{ silent }` (não liga o loading); exposto `refetchSilent`.
+- **`app/(tabs)/agent.tsx`**: `useFocusEffect` (de `expo-router`) → `refetchSilent()` ao ganhar foco; `useEffect` com `AppState.addEventListener('change', ...)` → `refetchSilent()` quando a app volta a `active` (apanha aprovações feitas no web com a app em segundo plano).
+- **Verificação**: `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+- **Pendente (utilizador)**: teste manual — submeter → voltar ao painel deve mostrar "ATM em análise"; aprovar no web → voltar à app deve desbloquear. Se mesmo num arranque a frio/pull-to-refresh continuar vazio, é questão de conta (sessão ≠ conta que submeteu).
+
 ### Logo do login circular + lista de secções do perfil agrupada (2026-08-09) ✅ (tsc + lint OK)
 
 Pedidos do utilizador (brainstorming com visual companion):
