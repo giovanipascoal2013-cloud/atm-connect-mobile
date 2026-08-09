@@ -2,6 +2,24 @@
 
 ## Estado Actual
 
+### Development Build EAS — fix do `npm ci` + lockfile (2026-08-09) 🚧 (branch `fix/lockfile-dev-build`)
+
+**Problema:** `eas build` falhava no `npm ci` com "Missing X from lock file" (`@expo/vector-icons`, `expo-font`, `expo-blur`, `expo-haptics`, `expo-linear-gradient`, `@emnapi/core@1.11.3`, `@emnapi/runtime@1.11.3`).
+
+**Causas confirmadas:**
+- `package-lock.json` stale (último update em `7801fb5`): faltavam 4 deps directas + transitivas (`expo-font`, `@emnapi/*`).
+- `~/.npmrc` global do utilizador tem `package-lock=false` → o `npm install` local nunca escrevia o lock.
+- Conflito `expo-font`: `@expo/vector-icons@15.1.1` resolvia `expo-font@>=14.0.4` para `57.0.1` (SDK 57) vs `expo@54` (SDK 54) exigir `~14.0.12`.
+- Os `@emnapi/*` são deps/peers de packages opcionais de outras plataformas (`@unrs/resolver-binding-wasm32-wasi` → `@napi-rs/wasm-runtime@1.2.2` com peers `@emnapi/core/runtime@^1.7.1 || ^2.0.0-alpha.3` → `1.11.3`). O npm do Windows não os resolve no lock; o `npm ci` do EAS (Linux) exige-os.
+
+**Alterações (commit `d7309ee`):**
+- `package.json`: adicionado `expo-font@~14.0.12` como dep directa (SDK 54) — resolve o conflito (`@expo/vector-icons` + `expo@54` passam a usar `14.0.12`).
+- `app.json`: adicionado plugin `expo-font`.
+- `package-lock.json`: regenerado (`npm install --package-lock=true`, ultrapassa o `package-lock=false` do `.npmrc`) — 30/30 deps presentes, `expo-font@14.0.12`. (Nota: continua sem entradas `@emnapi` por serem deps de packages opcionais não-Windows.)
+- `eas.json` (perfil `development`): `"installCommand": "npm install"` — o EAS deixa de usar `npm ci` (estrito) e reconcilia no servidor Linux, resolvendo os `@emnapi` na hora.
+
+**Pendente (utilizador):** `eas build --platform android --profile development` e depois `npx expo start --dev-client`.
+
 ### Preparação Development Build Android (EAS) (2026-08-09) 🚧
 
 - Commit `1ee6fcd` (fix painel de agente). Working tree limpo (só ficam untracked de scratch: `errr.md`, `prompt_analise_ia.md`, `scratch_debug.mjs`).
