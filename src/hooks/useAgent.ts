@@ -48,6 +48,7 @@ export function useAgent() {
   const [hasApprovedAtm, setHasApprovedAtm] = useState(false)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
+  const [atmsError, setAtmsError] = useState<string | null>(null)
 
   const fetchData = useCallback(async (opts?: { silent?: boolean }) => {
     if (!user) return
@@ -56,7 +57,7 @@ export function useAgent() {
       const [atmsRes, earningsRes, withdrawalsRes, ratingRes, commissionRes] = await Promise.all([
         supabase
           .from('atms')
-          .select('id, bank_name, address, has_cash, has_paper, fila, status, obs, last_updated, agent_id')
+          .select('id, bank_name, address, has_cash, has_paper, fila, status, obs, last_updated, agent_id, status_approval')
           .eq('agent_id', user.id)
           .in('status_approval', ['approved', 'pending']),
         supabase
@@ -74,6 +75,8 @@ export function useAgent() {
           .eq('key', 'referral_commission_pct')
           .maybeSingle(),
       ])
+
+      setAtmsError(atmsRes.error ? `status=${atmsRes.status} ${atmsRes.error.message}` : null)
 
       const agentAtms = (atmsRes.data ?? []) as AgentATMRow[]
       const approvedAtms = agentAtms.filter((a) => a.status_approval === 'approved')
@@ -186,6 +189,7 @@ export function useAgent() {
     referralCode: profile?.referral_code ?? null,
     loading,
     updating,
+    atmsError,
     refetch: fetchData,
     refetchSilent,
     toggleCash,

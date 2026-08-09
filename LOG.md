@@ -2,6 +2,19 @@
 
 ## Estado Actual
 
+### Fix painel de agente não desbloqueava — coluna `status_approval` em falta no `.select()` (2026-08-09) ✅
+
+**Diagnóstico Final & Causa Raiz:**
+- A consulta à BD no `useAgent.ts` executava `.select('id, bank_name, address, has_cash, has_paper, fila, status, obs, last_updated, agent_id')`.
+- O PostgREST devolvia os registos correctamente (HTTP 200), mas como a coluna **`status_approval` não estava na string do `.select(...)`**, o objeto retornado em JS tinha `status_approval = undefined`.
+- Na linha seguinte, o hook fazia `.filter((a) => a.status_approval === 'approved')`. Como `undefined === 'approved'` é `false`, **todos os ATMs eram descartados silenciosamente**, definindo `approvedAtms` para `[]` e `hasApprovedAtm` para `false`.
+
+**Alterações:**
+- **`src/hooks/useAgent.ts`**: Adicionado `status_approval` à string do `.select(...)`.
+- **`app/(tabs)/agent.tsx`**: Removido bloco de debug temporário.
+
+---
+
 ### Fix painel de agente não desbloqueava após aprovação — refetch no foco/foreground (2026-08-09) ✅ (tsc + lint OK)
 
 Reporte do utilizador: submeteu um ATM pelo mobile, aprovou no web admin, mas o painel de agente continuava "Regista o teu primeiro ATM".

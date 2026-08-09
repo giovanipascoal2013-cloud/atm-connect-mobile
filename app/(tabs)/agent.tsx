@@ -28,7 +28,7 @@ function StatCard({ label, value, icon, color, onPress }: { label: string; value
 
 export default function AgentScreen() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const {
     atms,
     pendingAtms,
@@ -40,6 +40,7 @@ export default function AgentScreen() {
     referralCode,
     loading,
     updating,
+    atmsError,
     refetch,
     refetchSilent,
     toggleCash,
@@ -100,6 +101,7 @@ export default function AgentScreen() {
         contentContainerStyle={{ padding: 24 }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} tintColor={colors.brand[500]} />}
       >
+
         <EmptyState
           icon={pending ? 'hourglass-outline' : 'location-outline'}
           title={pending ? 'ATM em análise' : 'Regista o teu primeiro ATM'}
