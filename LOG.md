@@ -2,6 +2,16 @@
 
 ## Estado Actual
 
+### Logo do login circular + lista de secções do perfil agrupada (2026-08-09) ✅ (tsc + lint OK)
+
+Pedidos do utilizador (brainstorming com visual companion):
+
+- **`app/(auth)/login.tsx`** — o logo (`icon.png`) estava quadrado (46×46, `contain`) dentro de um balão circular 68×68. Agora a `<Image>` preenche o balão todo com `resizeMode: 'cover'` e o balão tem `overflow: 'hidden'` → logo recortado em círculo, preenchendo a forma redonda.
+- **`app/(tabs)/profile.tsx`** — a listagem de secções (As minhas views, Upgrade Premium, Ranking, Referências, Apoio) passou de 5 `SectionLink` separados (cada um com borda + sombra) + card colapsável "Como usar o app" para **um único card agrupado estilo Settings**: linhas com ícone em círculo azul (`brand[50]`) + label + chevron, separadas por divisórias finas `colors.border`; "Como usar o app" expande inline. "Terminar sessão" mantém-se no fim.
+- **Spec**: `docs/superpowers/specs/2026-08-09-login-logo-profile-sections-design.md`.
+- **Verificação**: `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+- **Pendente (utilizador)**: teste visual em Expo Go.
+
 ### Pill compacta de desbloqueios no topo do mapa (2026-08-08) ✅ (tsc + lint OK)
 
 O `viewsBadge` do mapa (antes com label longo "2 desbloqueios disponíveis") estava grande e quebrava a estética ao lado do SegmentedControl.

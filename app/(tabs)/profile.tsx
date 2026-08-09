@@ -265,13 +265,15 @@ export default function ProfileScreen() {
           </AppCard>
         )}
 
-        <SectionLink icon="eye-outline" label="As minhas views" onPress={() => router.push('/my-views')} />
-        <SectionLink icon="diamond-outline" label={isPremium ? 'Premium activo' : 'Upgrade Premium'} onPress={() => setPremiumVisible(true)} />
-        <SectionLink icon="trophy-outline" label="Ranking de Agentes" onPress={() => router.push('/ranking')} />
-        <SectionLink icon="link-outline" label="Referências" onPress={() => router.push('/referrals')} />
-        <SectionLink icon="logo-whatsapp" label="Apoio ao Cliente" onPress={() => Linking.openURL(supportWhatsAppUrl())} />
+        <AppCard padded={false} style={{ marginBottom: 10, overflow: 'hidden' }}>
+          <SettingsRow icon="eye-outline" label="As minhas views" onPress={() => router.push('/my-views')} first />
+          <SettingsRow icon="diamond-outline" label={isPremium ? 'Premium activo' : 'Upgrade Premium'} onPress={() => setPremiumVisible(true)} />
+          <SettingsRow icon="trophy-outline" label="Ranking de Agentes" onPress={() => router.push('/ranking')} />
+          <SettingsRow icon="link-outline" label="Referências" onPress={() => router.push('/referrals')} />
+          <SettingsRow icon="logo-whatsapp" label="Apoio ao Cliente" onPress={() => Linking.openURL(supportWhatsAppUrl())} />
 
-        <HelpSection isAgent={isAgent} />
+          <HelpRow isAgent={isAgent} />
+        </AppCard>
 
         <AppButton
           label="Terminar sessão"
@@ -377,21 +379,79 @@ const AGENT_STEPS = [
   'Mantém os dados do ATM actualizados para receber boas avaliações.',
 ]
 
-function HelpSection({ isAgent }: { isAgent: boolean }) {
+function SettingsRow({ icon, label, onPress, first }: { icon: AppIconName; label: string; onPress: () => void; first?: boolean }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.7}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        borderTopWidth: first ? 0 : 1,
+        borderTopColor: colors.border,
+      }}
+    >
+      <View
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: 17,
+          backgroundColor: colors.brand[50],
+          borderWidth: 1,
+          borderColor: colors.brand[100],
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <AppIcon name={icon} size={17} color={colors.brand[500]} />
+      </View>
+      <Text style={{ fontSize: 14.5, fontWeight: '600', color: colors.text.primary, flex: 1 }}>{label}</Text>
+      <AppIcon name="chevron-forward" size={16} color={colors.text.tertiary} />
+    </TouchableOpacity>
+  )
+}
+
+function HelpRow({ isAgent }: { isAgent: boolean }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <AppCard onPress={() => setOpen((v) => !v)} style={{ marginBottom: 10 }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <AppIcon name="book-outline" size={18} color={colors.brand[500]} />
-          <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.primary }}>Como usar o app</Text>
+    <>
+      <TouchableOpacity
+        onPress={() => setOpen((v) => !v)}
+        activeOpacity={0.7}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          paddingHorizontal: 16,
+          paddingVertical: 14,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+        }}
+      >
+        <View
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 17,
+            backgroundColor: colors.brand[50],
+            borderWidth: 1,
+            borderColor: colors.brand[100],
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <AppIcon name="book-outline" size={17} color={colors.brand[500]} />
         </View>
+        <Text style={{ fontSize: 14.5, fontWeight: '600', color: colors.text.primary, flex: 1 }}>Como usar o app</Text>
         <AppIcon name={open ? 'chevron-up' : 'chevron-down'} size={16} color={colors.text.tertiary} />
-      </View>
+      </TouchableOpacity>
 
       {open && (
-        <View style={{ marginTop: 12 }}>
+        <View style={{ paddingHorizontal: 16, paddingBottom: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border }}>
           <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text.secondary, marginBottom: 8, textTransform: 'uppercase' }}>
             Para utilizadores
           </Text>
@@ -417,31 +477,6 @@ function HelpSection({ isAgent }: { isAgent: boolean }) {
           )}
         </View>
       )}
-    </AppCard>
-  )
-}
-
-function SectionLink({ icon, label, onPress }: { icon: AppIconName; label: string; onPress: () => void }) {
-  return (
-    <AppCard onPress={onPress} style={{ marginBottom: 10 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <View
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 17,
-            backgroundColor: colors.brand[50],
-            borderWidth: 1,
-            borderColor: colors.brand[100],
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <AppIcon name={icon} size={17} color={colors.brand[500]} />
-        </View>
-        <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.primary, flex: 1 }}>{label}</Text>
-        <AppIcon name="chevron-forward" size={16} color={colors.text.tertiary} />
-      </View>
-    </AppCard>
+    </>
   )
 }

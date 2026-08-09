@@ -78,14 +78,13 @@ export default function LoginScreen() {
                 height: 68,
                 borderRadius: 34,
                 backgroundColor: 'rgba(255,255,255,0.2)',
-                alignItems: 'center',
-                justifyContent: 'center',
+                overflow: 'hidden',
                 marginBottom: 14,
               }}
             >
               <Image
                 source={require('../../assets/icon.png')}
-                style={{ width: 46, height: 46, resizeMode: 'contain' }}
+                style={{ width: 68, height: 68, resizeMode: 'cover' }}
               />
             </View>
             <Text style={{ fontSize: 28, fontWeight: '800', color: '#fff', letterSpacing: -0.4 }}>

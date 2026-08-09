@@ -26,6 +26,7 @@ web-build/
 errr.txt
 .tmp-*
 .opencode/
+.superpowers/
 
 # eas
 .eas-build/
