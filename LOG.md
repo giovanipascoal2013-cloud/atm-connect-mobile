@@ -2,6 +2,15 @@
 
 ## Estado Actual
 
+### Preparação Development Build Android (EAS) (2026-08-09) 🚧
+
+- Commit `1ee6fcd` (fix painel de agente). Working tree limpo (só ficam untracked de scratch: `errr.md`, `prompt_analise_ia.md`, `scratch_debug.mjs`).
+- Tudo pronto para o dev build: `expo-dev-client@~6.0.21` instalado, `eas.json` com perfil `development` (`developmentClient: true`), `app.json` com `projectId` + `owner: giopilav`, EAS CLI v21.0.2 global, sessão Expo activa.
+- `.env` staging não está no `.easignore` → incluído no build (credenciais staging embutidas, correcto para dev).
+- Diagnóstico de BD do agente confirmado (utilizador `...88008`): `user_roles: ['agent']`, 2 ATMs `approved` + 1 `rejected` — BD correcta; o fix é do lado do cliente.
+- **Pendente (utilizador)**: `eas build --platform android --profile development` e depois `npx expo start --dev-client`.
+
+
 ### Fix painel de agente não desbloqueava — coluna `status_approval` em falta no `.select()` (2026-08-09) ✅
 
 **Diagnóstico Final & Causa Raiz:**
