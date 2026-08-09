@@ -12,13 +12,15 @@
 - Conflito `expo-font`: `@expo/vector-icons@15.1.1` resolvia `expo-font@>=14.0.4` para `57.0.1` (SDK 57) vs `expo@54` (SDK 54) exigir `~14.0.12`.
 - Os `@emnapi/*` são deps/peers de packages opcionais de outras plataformas (`@unrs/resolver-binding-wasm32-wasi` → `@napi-rs/wasm-runtime@1.2.2` com peers `@emnapi/core/runtime@^1.7.1 || ^2.0.0-alpha.3` → `1.11.3`). O npm do Windows não os resolve no lock; o `npm ci` do EAS (Linux) exige-os.
 
-**Alterações (commit `d7309ee`):**
-- `package.json`: adicionado `expo-font@~14.0.12` como dep directa (SDK 54) — resolve o conflito (`@expo/vector-icons` + `expo@54` passam a usar `14.0.12`).
+**Alterações (commit `d7309ee` + actual):**
+- `package.json`: adicionado `expo-font@~14.0.12` como dep directa (SDK 54) e `@emnapi/core@^1.10.0` / `@emnapi/runtime@^1.10.0` em `devDependencies` para forçar o registo no `package-lock.json` mesmo no Windows.
 - `app.json`: adicionado plugin `expo-font`.
-- `package-lock.json`: regenerado (`npm install --package-lock=true`, ultrapassa o `package-lock=false` do `.npmrc`) — 30/30 deps presentes, `expo-font@14.0.12`. (Nota: continua sem entradas `@emnapi` por serem deps de packages opcionais não-Windows.)
-- `eas.json` (perfil `development`): `"installCommand": "npm install"` — o EAS deixa de usar `npm ci` (estrito) e reconcilia no servidor Linux, resolvendo os `@emnapi` na hora.
+- `package-lock.json`: regenerado com sucesso (`npm install --package-lock=true`), incluindo `@emnapi/core` (1.11.3 / 1.10.0) e `@emnapi/runtime` em `node_modules`.
 
-**Pendente (utilizador):** `eas build --platform android --profile development` e depois `npx expo start --dev-client`.
+**Pendente (utilizador):** 
+1. Fazer commit: `git add package.json LOG.md package-lock.json` && `git commit -m "fix(deps): add emnapi core and runtime to lockfile for EAS build"`
+2. Executar `eas build --platform android --profile development`
+3. Executar `npx expo start --dev-client` após instalar no dispositivo.
 
 ### Preparação Development Build Android (EAS) (2026-08-09) 🚧
 
