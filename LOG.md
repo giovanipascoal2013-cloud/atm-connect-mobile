@@ -2,6 +2,17 @@
 
 ## Estado Actual
 
+### Fix dashboard do agente — cards invisíveis + hint levantamento (2026-08-11) ✅ (tsc + lint OK)
+
+Implementado conforme `docs/superpowers/specs/2026-08-11-notifications-favorites-agentcards-design.md`.
+
+- **`src/components/ui/AppCard.tsx`:** branch com `onPress` deixou de usar `Pressable` + style-callback + `transform: [{scale}]` + `borderCurve` (padrão que causava o fundo não-pintado no iOS/New Architecture, RN #54556/#52413) → agora `TouchableOpacity` com estilo plano (espelha o fix do `AppButton` 2026-08-08). Variante sem `onPress` (View) mantém `borderCurve`. O mesmo fix resolve automaticamente ATMList:43 e supervisor:55/70 (usam `AppCard` com `onPress`).
+- **`app/(tabs)/agent.tsx` — `StatCard`:** valor monetário com `numberOfLines={1}` + `adjustsFontSizeToFit` (evita overflow, ex. "30,000 Kz"); novo prop `hint?: string`.
+- **Card "Disponível":** com `availableBalance > 0` mostra `hint="Toca aqui para fazer levantamento"`; `onPress` mantém (abre `WithdrawalModal`).
+- **Verificação:** `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+
+---
+
 ### Fix comissão 0.15 Kz não refletia no painel do agente (2026-08-11) ✅ (tsc + lint OK)
 
 Reporte do utilizador: visualizou um ATM com uma conta de utilizador e, na conta do agente, a view incrementava mas "Total ganho" e "Disponível" ficavam a 0.

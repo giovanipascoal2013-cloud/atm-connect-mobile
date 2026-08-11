@@ -1,8 +1,8 @@
 import React from 'react'
-import { View, Pressable, type ViewStyle, type StyleProp, type ViewProps } from 'react-native'
+import { View, TouchableOpacity, type ViewStyle, type StyleProp, type TouchableOpacityProps } from 'react-native'
 import { colors, radius, shadows } from '@/theme/tokens'
 
-interface AppCardProps extends ViewProps {
+interface AppCardProps extends TouchableOpacityProps {
   onPress?: () => void
   style?: StyleProp<ViewStyle>
   raised?: boolean
@@ -13,7 +13,6 @@ export function AppCard({ onPress, raised, padded = true, style, children, ...re
   const base = {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
-    borderCurve: 'continuous' as const,
     borderWidth: 1,
     borderColor: colors.border,
     padding: padded ? 16 : 0,
@@ -22,22 +21,19 @@ export function AppCard({ onPress, raised, padded = true, style, children, ...re
 
   if (onPress) {
     return (
-      <Pressable
+      <TouchableOpacity
         onPress={onPress}
-        style={({ pressed }) => [
-          base,
-          { opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.99 : 1 }] },
-          style,
-        ]}
+        activeOpacity={0.85}
+        style={[base, style]}
         {...rest}
       >
         {children}
-      </Pressable>
+      </TouchableOpacity>
     )
   }
 
   return (
-    <View style={[base, style]} {...rest}>
+    <View style={[base, { borderCurve: 'continuous' as const }, style]} {...rest}>
       {children}
     </View>
   )

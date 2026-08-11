@@ -15,14 +15,40 @@ import { AppIcon, type AppIconName } from '../../src/components/ui/AppIcon'
 import { colors } from '../../src/theme/tokens'
 import { formatKz } from '../../src/lib/format'
 
-function StatCard({ label, value, icon, color, onPress }: { label: string; value: string | number; icon: AppIconName; color: string; onPress?: () => void }) {
+function StatCard({
+  label,
+  value,
+  icon,
+  color,
+  onPress,
+  hint,
+}: {
+  label: string
+  value: string | number
+  icon: AppIconName
+  color: string
+  onPress?: () => void
+  hint?: string
+}) {
   return (
     <AppCard onPress={onPress} style={{ flex: 1 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 }}>
         <AppIcon name={icon} size={13} color={colors.text.tertiary} />
         <Text style={{ fontSize: 12, color: colors.text.tertiary }}>{label}</Text>
       </View>
-      <Text style={{ fontSize: 18, fontWeight: '700', color, fontVariant: ['tabular-nums'] }}>{value}</Text>
+      <Text
+        style={{ fontSize: 18, fontWeight: '700', color, fontVariant: ['tabular-nums'] }}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
+        {value}
+      </Text>
+      {hint ? (
+        <Text style={{ fontSize: 11, color: colors.text.tertiary, marginTop: 3 }} numberOfLines={1}>
+          {hint}
+        </Text>
+      ) : null}
     </AppCard>
   )
 }
@@ -189,6 +215,7 @@ export default function AgentScreen() {
           icon="wallet-outline"
           color={colors.warning}
           onPress={stats.availableBalance > 0 ? () => setShowWithdrawal(true) : undefined}
+          hint={stats.availableBalance > 0 ? 'Toca aqui para fazer levantamento' : undefined}
         />
       </View>
 
