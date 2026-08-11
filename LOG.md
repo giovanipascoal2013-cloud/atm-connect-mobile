@@ -2,6 +2,22 @@
 
 ## Estado Actual
 
+### Push remoto — `useNotifications` reescrito + plugin app.json (2026-08-11) 🚧 (tsc/lint OK; aguarda instalação de deps)
+
+Fase 5 do design (`docs/superpowers/specs/2026-08-11-notifications-favorites-agentcards-design.md`).
+
+- **`src/hooks/useNotifications.ts` reescrito:** pede permissão só com sessão; `getExpoPushTokenAsync({ projectId })` com projectId a partir de `Constants` (`extra.eas.projectId`); upsert em `push_tokens` (`onConflict: 'user_id'`); lazy-require de `expo-notifications`/`expo-device` (degrade silencioso se não instalados / Expo Go / web). Canal Android "default" (`setNotificationChannelAsync`).
+  - Listener de resposta (toque) → deep-link por tipo (mapa TYPE_HREF idêntico ao ecrã `/notifications`).
+  - **Cold start:** `getLastNotificationResponseAsync()` no arranque aplica o mesmo deep-link.
+- **`src/lib/supabase-types.ts`:** tabela `push_tokens` (Row/Insert/Update + FK `user_id`→`profiles.user_id`).
+- **`app.json`:** plugin `expo-notifications` (ícone `./assets/icon.png`, cor `#2F7BF0`).
+- **Pendente (utilizador):**
+  1. `npx expo install expo-notifications expo-device`
+  2. Rebuild do dev client (EAS) para testar push (Expo Go não suporta push remoto).
+- **Verificação:** `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+
+---
+
 ### Notificações in-app (2026-08-11) ✅ (tsc + lint OK)
 
 Fase 4 do design (`docs/superpowers/specs/2026-08-11-notifications-favorites-agentcards-design.md`).
