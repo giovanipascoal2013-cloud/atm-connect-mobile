@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react'
 import { View, ActivityIndicator, Text, Keyboard, TouchableWithoutFeedback, TouchableOpacity } from 'react-native'
-import { useRouter } from 'expo-router'
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router'
 import { useAuth } from '../../src/hooks/useAuth'
 import { useLocation } from '../../src/hooks/useLocation'
 import { useATMs, type ATMWithDistance, type ATMStatus, type SortMode } from '../../src/hooks/useATMs'
 import { useViews } from '../../src/hooks/useViews'
+import { useFavorites } from '../../src/hooks/useFavorites'
 import { supabase } from '../../src/lib/supabase'
 import { ATMMapView } from '../../src/components/map/ATMMapView'
 import { MapFilters } from '../../src/components/map/MapFilters'
@@ -21,9 +22,11 @@ type ViewMode = 'map' | 'list'
 
 export default function MapScreen() {
   const router = useRouter()
+  const params = useLocalSearchParams<{ openAtm?: string }>()
   const { user } = useAuth()
   const { location, permission, loading: locationLoading, requestAgain } = useLocation()
   const { balance, consumeView } = useViews()
+  const { favoriteAtms, isFavorite, toggleFavorite } = useFavorites()
   const [viewMode, setViewMode] = useState<ViewMode>('map')
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<ATMStatus | 'all'>('all')
@@ -66,6 +69,18 @@ export default function MapScreen() {
     setUnlocked(unlockedIds.has(atm.id))
     fetchRating(atm)
   }, [unlockedIds, fetchRating])
+
+  useFocusEffect(
+    useCallback(() => {
+      const openAtm = params.openAtm
+      if (!openAtm) return
+      const target = atms.find((a) => a.id === openAtm)
+      if (target) {
+        handleATMPress(target)
+        router.setParams({ openAtm: undefined })
+      }
+    }, [params.openAtm, atms, handleATMPress, router])
+  )
 
   const handleUnlock = useCallback(async () => {
     if (!selectedATM) return
@@ -215,6 +230,8 @@ export default function MapScreen() {
             lockedIds={unlockedIds}
             isPremium={balance.isPremium}
             isLoggedIn={!!user}
+            favoriteIds={new Set(favoriteAtms.map((a) => a.id))}
+            onToggleFavorite={(atmId) => { void toggleFavorite(atmId) }}
           />
         )}
 
@@ -255,6 +272,8 @@ export default function MapScreen() {
         remainingViews={balance.remaining}
         userVote={userVote}
         agentRating={agentRating}
+        isFavorite={selectedATM ? isFavorite(selectedATM.id) : false}
+        onToggleFavorite={() => { if (selectedATM) void toggleFavorite(selectedATM.id) }}
         onVote={handleVote}
         onClose={handleCloseSheet}
         onUnlock={handleUnlock}

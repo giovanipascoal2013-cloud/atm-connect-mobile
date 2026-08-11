@@ -2,6 +2,22 @@
 
 ## Estado Actual
 
+### Favoritos de ATM (2026-08-11) ✅ (tsc + lint OK)
+
+Fase 3 do design (`docs/superpowers/specs/2026-08-11-notifications-favorites-agentcards-design.md`).
+
+- **`src/lib/supabase-types.ts`:** tabela `atm_favorites` (Row/Insert/Update + FKs para `atms.id` e `profiles.user_id`).
+- **Novo `src/hooks/useFavorites.ts`:** `favoriteAtms` (join `atm_favorites` + `atms`, só `status_approval='approved'` e sem `deleted_at`), `isFavorite(atmId)`, `toggleFavorite` (optimistic insert/delete), `refetch`. Carrega ao login/montar.
+- **Heart no `ATMDetailSheet`:** header (estados bloqueado e desbloqueado), preenchido se favorito (`#EA4335`). Só visível para logados.
+- **Heart no `ATMList`:** botão absoluto no canto do card (com `onStartShouldSetResponder` para não propagar o tap ao card) + mini heart junto ao nome.
+- **Estrela no header do mapa** (`app/(tabs)/_layout.tsx`): quando logado, `star-outline` branco → `/favorites` (o botão "Entrar" mantém-se para anónimos).
+- **Novo ecrã `app/favorites/`** (`_layout.tsx` + `index.tsx`): reutiliza `ATMList`; empty state para anónimos ("Inicia sessão"); toque → `router.push({ pathname: '/(tabs)/map', params: { openAtm } })`.
+- **`app/(tabs)/map.tsx`:** liga `useFavorites`; `useFocusEffect` abre o sheet do ATM quando chega `?openAtm=...` e limpa o param (`router.setParams`).
+- **`.expo/types/router.d.ts`** (gitignored/gerado): adicionadas `/favorites` e `/notifications` manualmente para o tsc passar antes do dev server regenerar.
+- **Verificação:** `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+
+---
+
 ### Fix dashboard do agente — cards invisíveis + hint levantamento (2026-08-11) ✅ (tsc + lint OK)
 
 Implementado conforme `docs/superpowers/specs/2026-08-11-notifications-favorites-agentcards-design.md`.

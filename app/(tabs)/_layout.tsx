@@ -1,5 +1,5 @@
 import { Tabs, useRouter } from 'expo-router'
-import { Text, TouchableOpacity } from 'react-native'
+import { View, Text, TouchableOpacity } from 'react-native'
 import { useAuth } from '../../src/hooks/useAuth'
 import { AppIcon, type AppIconName } from '../../src/components/ui/AppIcon'
 import { colors } from '../../src/theme/tokens'
@@ -54,11 +54,17 @@ export default function TabLayout() {
           },
           tabBarIcon: ({ focused }) => tabIcon(focused, 'map-outline', 'map'),
           headerRight: () =>
-            !user ? (
+            user ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 }}>
+                <TouchableOpacity onPress={() => router.push('/favorites')} style={{ padding: 4 }} hitSlop={8}>
+                  <AppIcon name="star-outline" size={22} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+            ) : (
               <TouchableOpacity onPress={() => router.push('/(auth)/login')} style={{ paddingHorizontal: 16 }}>
                 <Text style={{ color: '#FFFFFF', fontWeight: '700' }}>Entrar</Text>
               </TouchableOpacity>
-            ) : undefined,
+            ),
         }}
       />
       <Tabs.Screen

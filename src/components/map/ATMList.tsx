@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react'
-import { View, Text, FlatList, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native'
+import { View, Text, FlatList, ActivityIndicator, RefreshControl, StyleSheet, Pressable } from 'react-native'
 import type { ATMWithDistance } from '../../hooks/useATMs'
 import { getATMStatus, getATMColor, getATMStatusLabel } from '../../hooks/useATMs'
 import { timeSince } from '../../lib/time'
@@ -20,16 +20,22 @@ interface ATMListProps {
   lockedIds?: Set<string>
   isPremium?: boolean
   isLoggedIn?: boolean
+  favoriteIds?: Set<string>
+  onToggleFavorite?: (atmId: string) => void
 }
 
 const ATMListRow = React.memo(function ATMListRow({
   item,
   onPress,
   locked,
+  isFavorite,
+  onToggleFavorite,
 }: {
   item: ATMWithDistance
   onPress: (atm: ATMWithDistance) => void
   locked: boolean
+  isFavorite?: boolean
+  onToggleFavorite?: (atmId: string) => void
 }) {
   const status = locked ? 'locked' : getATMStatus(item)
   const color = locked ? colors.brand[500] : getATMColor(status)
@@ -41,12 +47,30 @@ const ATMListRow = React.memo(function ATMListRow({
 
   return (
     <AppCard onPress={() => onPress(item)} style={styles.card}>
+      {onToggleFavorite && (
+        <Pressable
+          onPress={() => onToggleFavorite(item.id)}
+          hitSlop={10}
+          onStartShouldSetResponder={() => true}
+          style={({ pressed }) => [
+            styles.favButton,
+            { opacity: pressed ? 0.6 : 1 },
+          ]}
+        >
+          <AppIcon name={isFavorite ? 'heart' : 'heart-outline'} size={20} color={isFavorite ? '#EA4335' : colors.text.tertiary} />
+        </Pressable>
+      )}
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
         <View style={[styles.statusDot, { backgroundColor: color }]} />
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text.primary }}>
-            {item.bank_name}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginRight: 24 }}>
+            {isFavorite && (
+              <AppIcon name="heart" size={12} color="#EA4335" />
+            )}
+            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text.primary, flex: 1 }} numberOfLines={1}>
+              {item.bank_name}
+            </Text>
+          </View>
           <Text style={{ fontSize: 13, color: colors.money, marginTop: 2 }}>{item.address}</Text>
           {(item.cidade || item.provincia) && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
@@ -121,6 +145,8 @@ export function ATMList({
   lockedIds,
   isPremium,
   isLoggedIn,
+  favoriteIds,
+  onToggleFavorite,
 }: ATMListProps) {
   const isLocked = useCallback(
     (atm: ATMWithDistance) => {
@@ -132,9 +158,15 @@ export function ATMList({
 
   const renderItem = useCallback(
     ({ item }: { item: ATMWithDistance }) => (
-      <ATMListRow item={item} onPress={onPress} locked={isLocked(item)} />
+      <ATMListRow
+        item={item}
+        onPress={onPress}
+        locked={isLocked(item)}
+        isFavorite={favoriteIds?.has(item.id)}
+        onToggleFavorite={onToggleFavorite}
+      />
     ),
-    [onPress, isLocked]
+    [onPress, isLocked, favoriteIds, onToggleFavorite]
   )
 
   const listContentStyle = useMemo(() => ({ padding: 16, paddingBottom: 140, gap: 10 }), [])
@@ -194,6 +226,12 @@ export function ATMList({
 const styles = StyleSheet.create({
   card: {
     marginBottom: 2,
+  },
+  favButton: {
+    position: 'absolute',
+    top: 12,
+    right: 14,
+    zIndex: 10,
   },
   statusDot: {
     width: 10,

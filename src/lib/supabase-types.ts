@@ -202,6 +202,42 @@ export type Database = {
           },
         ]
       }
+      atm_favorites: {
+        Row: {
+          atm_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          atm_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          atm_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atm_favorites_atm_id_fkey"
+            columns: ["atm_id"]
+            isOneToOne: false
+            referencedRelation: "atms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atm_favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       referral_earnings: {
         Row: {
           agent_id: string

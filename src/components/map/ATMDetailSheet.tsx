@@ -18,6 +18,8 @@ interface ATMDetailSheetProps {
   remainingViews: number
   userVote?: 'like' | 'dislike' | null
   agentRating?: { likes: number; dislikes: number } | null
+  isFavorite?: boolean
+  onToggleFavorite?: () => void
   onVote?: (value: 'like' | 'dislike') => void
   onClose: () => void
   onUnlock: () => void
@@ -35,6 +37,8 @@ export function ATMDetailSheet({
   remainingViews,
   userVote,
   agentRating,
+  isFavorite,
+  onToggleFavorite,
   onVote,
   onClose,
   onUnlock,
@@ -102,10 +106,21 @@ export function ATMDetailSheet({
                 <Text style={{ fontSize: 14, color: colors.text.secondary, flex: 1 }}>{atm.address}</Text>
               </View>
             </View>
-            <Badge
-              variant={status === 'cash' ? 'success' : status === 'no_cash' ? 'danger' : 'neutral'}
-              label={statusLabel}
-            />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              {isLoggedIn && onToggleFavorite && (
+                <TouchableOpacity
+                  onPress={onToggleFavorite}
+                  hitSlop={10}
+                  style={{ padding: 2 }}
+                >
+                  <AppIcon name={isFavorite ? 'heart' : 'heart-outline'} size={22} color={isFavorite ? '#EA4335' : colors.text.secondary} />
+                </TouchableOpacity>
+              )}
+              <Badge
+                variant={status === 'cash' ? 'success' : status === 'no_cash' ? 'danger' : 'neutral'}
+                label={statusLabel}
+              />
+            </View>
           </View>
 
           {(atm.cidade || atm.provincia) && (
@@ -217,6 +232,15 @@ export function ATMDetailSheet({
                 </Text>
               )}
             </View>
+            {isLoggedIn && onToggleFavorite && (
+              <TouchableOpacity
+                onPress={onToggleFavorite}
+                hitSlop={10}
+                style={{ padding: 2 }}
+              >
+                <AppIcon name={isFavorite ? 'heart' : 'heart-outline'} size={22} color={isFavorite ? '#EA4335' : colors.text.secondary} />
+              </TouchableOpacity>
+            )}
           </View>
 
           {!isLoggedIn ? (
