@@ -2,6 +2,12 @@
 
 ## Estado Actual
 
+### Merge do fix do dev build EAS na main + limpeza de scratch (2026-08-11) ✅
+
+- Merged `fix/lockfile-dev-build` → `main` (fast-forward, 4 commits: `d7309ee`, `c964b05`, `406770a`, `933bc30`).
+- Adicionados ao `.gitignore` (secção `# Agent work files`): `DEV_BUILD_FIX_PROMPT.md`, `errr.md`, `prompt_analise_ia.md`, `scratch_debug.mjs` (scratch preservados em disco, working tree limpo).
+- Branch `fix/lockfile-dev-build` eliminado (local + remoto).
+
 ### Development Build EAS — fix do `npm ci` + lockfile (2026-08-09) ✅ (branch `fix/lockfile-dev-build`)
 
 **Problema:** `eas build` falhava no `npm ci` com "Missing X from lock file" (`@expo/vector-icons`, `expo-font`, `expo-blur`, `expo-haptics`, `expo-linear-gradient`, `@emnapi/core@1.11.3`, `@emnapi/runtime@1.11.3`).

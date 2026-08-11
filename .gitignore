@@ -24,6 +24,10 @@ web-build/
 
 # Agent work files
 errr.txt
+errr.md
+prompt_analise_ia.md
+scratch_debug.mjs
+DEV_BUILD_FIX_PROMPT.md
 .tmp-*
 .opencode/
 .superpowers/
