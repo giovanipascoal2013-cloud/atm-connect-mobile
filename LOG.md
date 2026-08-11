@@ -2,6 +2,25 @@
 
 ## Estado Actual
 
+### Migração SQL Fase 6 — notificações push + favoritos + realtime (2026-08-11) 🚧 (aguarda execução no staging)
+
+Fase 6 do design (`docs/superpowers/specs/2026-08-11-notifications-favorites-agentcards-design.md`).
+
+- **Novo `20260811000003_notifications_favorites_push.sql`** (idempotente): aplica o backend completo de notificações/favoritos no staging. **Pendente (utilizador):** executar no SQL editor do Supabase staging (`ndvjitfovhfngrzwtytd`) com role postgres.
+- **Verificação:** SQL revisto contra `src/lib/supabase-types.ts` — todas as tabelas/colunas referenciadas (atms, subscriptions, withdrawals, atm_views, agent_ratings, profiles, forum_comments/posts, notifications) existem no schema. Sem UI novo nesta fase.
+- **Conteúdo do ficheiro:**
+  1. Extensões `pg_net` + `pgcrypto` (grant usage do schema net).
+  2. `push_tokens` (PK `user_id` → `profiles`, RLS select/insert/update/delete own).
+  3. `atm_favorites` (FK user+atm, unique (user_id, atm_id), índice, RLS own).
+  4. RLS em `notifications` (select/update own) — a tabela já existia, faltavam policies.
+  5. `push_log` (debug de envios).
+  6. `send_expo_push(user_id, title, message, type)` — SECURITY DEFINER, `pg_net.http_post` para exp.host, token opcional do Vault (`EXPO_ACCESS_TOKEN`). Executável só por postgres/service_role.
+  7. `create_notification(user_id, title, message, type, push)` — helper SECURITY DEFINER que insere na tabela + dispara push quando `push=true`.
+  8. Triggers: `atm_status` (aprovado/rejeitado → push), `subscription_status` (push), `withdrawal_status` (push), `view_commission` (in-app), `atm_rating` (in-app), `referral_new` (in-app), `forum_reply` (in-app).
+  9. **Realtime** — `alter publication supabase_realtime add table public.notifications` + `public.atm_favorites` (liga o badge/sino e os favoritos em tempo real).
+
+---
+
 ### Push remoto — `useNotifications` reescrito + plugin app.json (2026-08-11) 🚧 (tsc/lint OK; aguarda instalação de deps)
 
 Fase 5 do design (`docs/superpowers/specs/2026-08-11-notifications-favorites-agentcards-design.md`).
@@ -113,7 +132,7 @@ _Actualizado: 2026-08-11 (leitura com service_role)_
 
 **`app_settings`:** `agent_commission_free_view_kz=0.15`, `daily_free_views_limit=3`, `min_withdrawal_amount=500`, `referral_commission_pct=20`, preços premium `290/700/1500` (quarterly aplicado 08-08), Monetag zones.
 
-**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`). **Pendentes:** `20260811000001` e `20260811000002`.
+**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`). **Pendentes:** `20260811000001`, `20260811000002` e `20260811000003` (notificações push + favoritos + realtime).
 
 ### Merge do fix do dev build EAS na main + limpeza de scratch (2026-08-11) ✅
 
