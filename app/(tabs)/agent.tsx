@@ -146,7 +146,7 @@ export default function AgentScreen() {
           <AppCard style={{ marginBottom: 16 }}>
             <Text style={{ fontSize: 13, fontWeight: '600', color: colors.brand[500], marginBottom: 6 }}>Próximos passos</Text>
             <Text style={{ fontSize: 13, color: '#374151', lineHeight: 20 }}>
-              1. Aguarda a aprovação (normalmente demora pouco tempo).{'\n'}2. Depois de aprovado, ganhas 50 Kz por cada visualização do teu ATM.{'\n'}3. Podes submeter mais ATMs para ganhar ainda mais.
+              1. Aguarda a aprovação (normalmente demora pouco tempo).{'\n'}2. Depois de aprovado, ganhas 0.15 Kz por cada visualização do teu ATM.{'\n'}3. Podes submeter mais ATMs para ganhar ainda mais.
             </Text>
           </AppCard>
         )}

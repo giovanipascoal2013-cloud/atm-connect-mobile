@@ -2,6 +2,45 @@
 
 ## Estado Actual
 
+### Verificação views→Kz + preparação AdMob (2026-08-11) 🚧 (tsc/lint OK)
+
+Verificação do sistema de consumo de views → atribuição de Kzs aos agentes com **leitura directa do staging** (service_role). Dev build EAS e dev client **confirmados a funcionar** (APK instalado, `expo start --dev-client` OK).
+
+**Resultado da verificação — o fluxo funciona (dados reais):**
+- `consume_atm_view` (freemium) cria `atm_views` + `agent_earnings` + incrementa `profiles.agent_balance_kz` + regista `balance_transactions`, tudo atómico.
+- `daily_view_usage` regista o limite (3/dia) — ex.: user `778f337f` com `view_count: 3`.
+- Ex.: agente `55875658` (António Liberal) com 3 views → `agent_earnings` 0.15×3 → `agent_balance_kz: 0.60`. Coerente.
+
+**Problemas encontrados e acções:**
+- 🔴 **Copy "50 Kz por view" vs BD paga 0.15 Kz** — corrigidos 4 ficheiros para `0.15 Kz` (`agent.tsx`, `profile.tsx`, `welcome.tsx`, `onboarding.tsx`). Decisão do utilizador: manter 0.15 Kz na BD.
+- 🟠 **Bug latente re-view após 24h** — índice único parcial `(user_id, atm_id) WHERE is_active=true` + 12 views expiradas com `is_active=true` → rever o mesmo ATM após 24h daria 23505. Migração `20260811000001_fix_consume_atm_view_is_active.sql` criada (limpa `is_active` nas expiradas antes do INSERT). Decisão: corrigir no SQL.
+- 🟠 **Premium nunca activa** — todas as `subscriptions` em `pending` (aprovadas por admin manualmente), policy de INSERT era admin-only. Migração `20260811000002_subscriptions_quarterly_policy_insert.sql` criada (CHECK quarterly + policy INSERT para o próprio user). Decisão: user cria `pending`, admin aprova.
+- 🟡 **`profiles.role` não reflecte roles de agente** — roles reais em `user_roles`; `useAuth`/`useAgent` já usam `user_roles`, sem alteração necessária.
+
+**Pendente (utilizador):** aplicar as 2 migrações SQL no Supabase staging e testar no dev client (re-view após 24h, criar sub `pending` + aprovação admin).
+
+---
+
+## Relatório do Estado da BD — Staging (`ndvjitfovhfngrzwtytd`)
+
+> **Regra (AGENTS.md)**: após qualquer tarefa que opere a BD, actualizar este relatório no `LOG.md`.
+
+_Actualizado: 2026-08-11 (leitura com service_role)_
+
+| Tabela | Estado | Detalhes |
+|---|---|---|
+| `atm_views` | 12 rows | 12 expiradas com `is_active=true` (bug por corrigir) |
+| `agent_earnings` | ~12 rows | `amount_kz = 0.15` (comissão actual) |
+| `daily_view_usage` | 6 rows | limite 3/dia; ex. user `778f337f` = 3 (18-07 e 06-08) |
+| `profiles.agent_balance_kz` | 20+ agentes | ex. `855987c4`=200.15, `55875658`=0.60, `7b9e265a`=0.30 |
+| `balance_transactions` | credits 0.15/view + adjustments demo (30000, 29450, 28200) | flow de earnings OK |
+| `subscriptions` | 4 rows, **todas `pending`** | plan_type `monthly`, `price_kz=1500` (antigo), nunca aprovadas |
+| `withdrawals` | 2 rows | 1 pending, 1 completed |
+
+**`app_settings`:** `agent_commission_free_view_kz=0.15`, `daily_free_views_limit=3`, `min_withdrawal_amount=500`, `referral_commission_pct=20`, preços premium `290/700/1500` (quarterly aplicado 08-08), Monetag zones.
+
+**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`). **Pendentes:** `20260811000001` e `20260811000002`.
+
 ### Merge do fix do dev build EAS na main + limpeza de scratch (2026-08-11) ✅
 
 - Merged `fix/lockfile-dev-build` → `main` (fast-forward, 4 commits: `d7309ee`, `c964b05`, `406770a`, `933bc30`).

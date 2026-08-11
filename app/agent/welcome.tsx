@@ -84,7 +84,7 @@ export default function AgentWelcomeScreen() {
 
         <View style={{ backgroundColor: colors.brand[50], borderRadius: radius.md, padding: 14, marginTop: 4 }}>
           <Text style={{ fontSize: 13, color: colors.brand[700], lineHeight: 19 }}>
-            Após submeter, o ATM fica em análise. Assim que for aprovado, o teu painel de agente desbloqueia e podes começar a ganhar 50 Kz por view.
+            Após submeter, o ATM fica em análise. Assim que for aprovado, o teu painel de agente desbloqueia e podes começar a ganhar 0.15 Kz por view.
           </Text>
         </View>
       </ScrollView>

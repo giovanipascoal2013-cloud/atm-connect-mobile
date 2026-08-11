@@ -373,7 +373,7 @@ const USER_STEPS = [
 const AGENT_STEPS = [
   'Regista ATMs submetendo foto tirada no local (galeria não é aceite).',
   'O teu painel desbloqueia quando tiveres pelo menos 1 ATM aprovado.',
-  'Ganhas 50 Kz por cada view consumida num ATM teu.',
+  'Ganhas 0.15 Kz por cada view consumida num ATM teu.',
   'Ganhas 20% da primeira subscrição de quem usar o teu código de convite.',
   'Quando o saldo atingir 500 Kz, pede o levantamento no painel.',
   'Mantém os dados do ATM actualizados para receber boas avaliações.',

@@ -22,7 +22,7 @@ const SECTIONS: { icon: AppIconName; title: string; points: string[] }[] = [
     icon: 'cash',
     title: 'Como ganha dinheiro',
     points: [
-      'Recebe 50 KZ por cada view consumida num ATM submetido por si.',
+      'Recebe 0.15 KZ por cada view consumida num ATM submetido por si.',
       'Quanto mais ATMs activos tiver, mais ganha.',
       'Ganha também 20% da primeira subscrição de quem usar o seu código de convite.',
     ],

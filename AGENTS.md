@@ -8,6 +8,8 @@
 4. **Actualizar `LOG.md`** com o que foi feito
 5. **Fazer commit** com mensagem descritiva (conventional commit)
 
+> **Regra do relatório da BD**: qualquer tarefa que opere ou altere a base de dados (migrações SQL, RPCs, policies, dados) deve actualizar a secção **"Relatório do Estado da BD"** no `LOG.md` (contagens, valores, estado de migrações). Consultar antes de operar a BD e actualizar depois.
+
 ## Ambiente
 
 > **ATENÇÃO**: Este projecto usa **Supabase Staging** para desenvolvimento, NÃO produção.
