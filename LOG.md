@@ -2,6 +2,19 @@
 
 ## Estado Actual
 
+### Notificações in-app (2026-08-11) ✅ (tsc + lint OK)
+
+Fase 4 do design (`docs/superpowers/specs/2026-08-11-notifications-favorites-agentcards-design.md`).
+
+- **Novo `src/hooks/useInAppNotifications.ts`:** lista do próprio user (`notifications`, order `created_at desc`, limit 100), `unreadCount`, `markRead(id)`, `markAllRead()`, `refetch`. Realtime `postgres_changes` (INSERT na tabela `notifications` filtrado por `user_id`) para o badge quando a tabela estiver na realtime publication (migração na Fase 6).
+- **Novo ecrã `app/notifications/`** (`_layout.tsx` + `index.tsx`): lista de cards com ícone por tipo, ponto de não lida, tempo relativo (`timeSince`), toque → `markRead` + deep-link por tipo. Cabeçalho "Marcar tudo como lido" quando há não lidas. Empty states (anónimos → "Inicia sessão"; sem notificações).
+- **Sino no header do mapa** (`app/(tabs)/_layout.tsx`): `notifications-outline` branco + badge vermelho com `unreadCount` (9+ acima de 9) → `/notifications`. Junto com a estrela dos favoritos; botão "Entrar" mantém-se para anónimos.
+- **Deep-links por tipo:** `atm_approved/atm_rejected/withdrawal_approved/withdrawal_rejected/view_commission` → `/(tabs)/agent`; `subscription_approved/subscription_rejected` → `/(tabs)/profile`; `atm_rating` → `/(tabs)/map`; `referral_new` → `/referrals`; `forum_reply` → `/(tabs)/forum`.
+- **`.expo/types/router.d.ts`:** rota `/notifications` já adicionada manualmente (fase 3).
+- **Verificação:** `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+
+---
+
 ### Favoritos de ATM (2026-08-11) ✅ (tsc + lint OK)
 
 Fase 3 do design (`docs/superpowers/specs/2026-08-11-notifications-favorites-agentcards-design.md`).

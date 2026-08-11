@@ -1,11 +1,13 @@
 import { Tabs, useRouter } from 'expo-router'
 import { View, Text, TouchableOpacity } from 'react-native'
 import { useAuth } from '../../src/hooks/useAuth'
+import { useInAppNotifications } from '../../src/hooks/useInAppNotifications'
 import { AppIcon, type AppIconName } from '../../src/components/ui/AppIcon'
 import { colors } from '../../src/theme/tokens'
 
 export default function TabLayout() {
   const { user, isAgent, isSupervisor } = useAuth()
+  const { unreadCount } = useInAppNotifications()
   const router = useRouter()
 
   const tabIcon = (focused: boolean, outline: AppIconName, filled: AppIconName) => (
@@ -58,6 +60,31 @@ export default function TabLayout() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 }}>
                 <TouchableOpacity onPress={() => router.push('/favorites')} style={{ padding: 4 }} hitSlop={8}>
                   <AppIcon name="star-outline" size={22} color="#FFFFFF" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => router.push('/notifications')} style={{ padding: 4 }} hitSlop={8}>
+                  <View>
+                    <AppIcon name="notifications-outline" size={22} color="#FFFFFF" />
+                    {unreadCount > 0 && (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          top: -4,
+                          right: -6,
+                          minWidth: 16,
+                          height: 16,
+                          borderRadius: 8,
+                          backgroundColor: colors.danger,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          paddingHorizontal: 4,
+                        }}
+                      >
+                        <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                 </TouchableOpacity>
               </View>
             ) : (
