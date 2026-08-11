@@ -54,7 +54,7 @@ export function useAgent() {
     if (!user) return
     if (!opts?.silent) setLoading(true)
     try {
-      const [atmsRes, earningsRes, withdrawalsRes, ratingRes, commissionRes] = await Promise.all([
+      const [atmsRes, earningsRes, withdrawalsRes, ratingRes, commissionRes, profileRes] = await Promise.all([
         supabase
           .from('atms')
           .select('id, bank_name, address, has_cash, has_paper, fila, status, obs, last_updated, agent_id, status_approval')
@@ -73,6 +73,11 @@ export function useAgent() {
           .from('app_settings')
           .select('value')
           .eq('key', 'referral_commission_pct')
+          .maybeSingle(),
+        supabase
+          .from('profiles')
+          .select('agent_balance_kz')
+          .eq('user_id', user.id)
           .maybeSingle(),
       ])
 
@@ -96,7 +101,7 @@ export function useAgent() {
         totalEarnings,
         totalViews,
         totalWithdrawn,
-        availableBalance: Math.max(0, (profile?.agent_balance_kz ?? 0)),
+        availableBalance: Math.max(0, Number(profileRes.data?.agent_balance_kz ?? profile?.agent_balance_kz ?? 0)),
       })
 
       if (ratingRes.data) {

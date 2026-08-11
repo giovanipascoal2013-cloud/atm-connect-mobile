@@ -7,6 +7,7 @@ import { AppButton } from '../ui/AppButton'
 import { AppIcon } from '../ui/AppIcon'
 import { SegmentedControl } from '../ui/SegmentedControl'
 import { colors, radius, shadows } from '../../theme/tokens'
+import { formatKz } from '../../lib/format'
 
 interface WithdrawalModalProps {
   visible: boolean
@@ -161,7 +162,7 @@ export function WithdrawalModal({ visible, onClose, availableBalance, onSuccess 
               <View style={{ backgroundColor: colors.accent[50], borderRadius: radius.md, padding: 16, alignItems: 'center', marginBottom: 12, borderWidth: 1, borderColor: colors.accent[200] }}>
                 <Text style={{ fontSize: 12, color: colors.accent[700] }}>Saldo disponível</Text>
                 <Text style={{ fontSize: 24, fontWeight: '700', color: colors.money, marginTop: 2, fontVariant: ['tabular-nums'] }}>
-                  {Math.round(availableBalance).toLocaleString()} Kz
+                  {formatKz(availableBalance)} Kz
                 </Text>
               </View>
 

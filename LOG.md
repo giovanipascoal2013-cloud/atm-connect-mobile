@@ -2,6 +2,24 @@
 
 ## Estado Actual
 
+### Fix comissão 0.15 Kz não refletia no painel do agente (2026-08-11) ✅ (tsc + lint OK)
+
+Reporte do utilizador: visualizou um ATM com uma conta de utilizador e, na conta do agente, a view incrementava mas "Total ganho" e "Disponível" ficavam a 0.
+
+**Diagnóstico (leitura directa do staging, service_role):** o dinheiro estava correctamente na BD — o RPC `consume_atm_view` criou `agent_earnings` (0.15×3) + `balance_transactions` (credit 0.15) + `profiles.agent_balance_kz = 0.45` no agente testado (`cddcca6d`, Mingo Lopes). O bug era **de exibição**: `Math.round(0.45) = 0` truncava valores < 0.5 para 0.
+
+**Alterações:**
+- Novo `src/lib/format.ts` — `formatKz(n)` preserva decimais (`0.45`, `200.15`, `200`, `30,000`).
+- Substituídos 7 `Math.round` monetários por `formatKz`: `agent.tsx` (Total ganho, Disponível, Já levantado), `ReferralCard.tsx`, `referrals/index.tsx` (total + badge), `WithdrawalModal.tsx` (saldo).
+- Fix freshness do "Disponível": `useAgent.fetchData` passa a buscar `agent_balance_kz` fresco de `profiles` (antes lia o `profile` cacheado de `useAuth`).
+- Lint cleanup em `agent.tsx`: removidos `profile` e `atmsError` não usados.
+- **Verificação:** `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+- **Pendente (utilizador):** teste em Expo Go — visualizar ATM → painel do agente deve mostrar `0.15 Kz` / `0.45 Kz`.
+
+**Observação (decisão):** agente ao visualizar o próprio ATM gera comissão para si (confirmado no teste 18:09). Decidido manter por agora; guarda SQL no RPC (não creditar quando `auth.uid() = atms.agent_id`) fica como follow-up antes da produção/AdMob real.
+
+---
+
 ### Verificação views→Kz + preparação AdMob (2026-08-11) 🚧 (tsc/lint OK)
 
 Verificação do sistema de consumo de views → atribuição de Kzs aos agentes com **leitura directa do staging** (service_role). Dev build EAS e dev client **confirmados a funcionar** (APK instalado, `expo start --dev-client` OK).
@@ -29,10 +47,10 @@ _Actualizado: 2026-08-11 (leitura com service_role)_
 
 | Tabela | Estado | Detalhes |
 |---|---|---|
-| `atm_views` | 12 rows | 12 expiradas com `is_active=true` (bug por corrigir) |
-| `agent_earnings` | ~12 rows | `amount_kz = 0.15` (comissão actual) |
-| `daily_view_usage` | 6 rows | limite 3/dia; ex. user `778f337f` = 3 (18-07 e 06-08) |
-| `profiles.agent_balance_kz` | 20+ agentes | ex. `855987c4`=200.15, `55875658`=0.60, `7b9e265a`=0.30 |
+| `atm_views` | 15 rows | 15 expiradas com `is_active=true` (bug por corrigir); +3 views 11-08 (Atm Teste 2) |
+| `agent_earnings` | 15 rows | `amount_kz = 0.15` (comissão actual) |
+| `daily_view_usage` | 9 rows | limite 3/dia; ex. user `778f337f` = 3 (18-07 e 06-08) |
+| `profiles.agent_balance_kz` | 20+ agentes | ex. `855987c4`=200.15, `55875658`=0.60, `7b9e265a`=0.30, `cddcca6d`=0.45 |
 | `balance_transactions` | credits 0.15/view + adjustments demo (30000, 29450, 28200) | flow de earnings OK |
 | `subscriptions` | 4 rows, **todas `pending`** | plan_type `monthly`, `price_kz=1500` (antigo), nunca aprovadas |
 | `withdrawals` | 2 rows | 1 pending, 1 completed |

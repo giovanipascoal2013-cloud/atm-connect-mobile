@@ -3,6 +3,7 @@ import { View, Text, ScrollView, RefreshControl, ActivityIndicator, Alert, Share
 import { supabase } from '../../src/lib/supabase'
 import { useAuth } from '../../src/hooks/useAuth'
 import { timeSince } from '../../src/lib/time'
+import { formatKz } from '../../src/lib/format'
 import { AppCard } from '../../src/components/ui/AppCard'
 import { AppButton } from '../../src/components/ui/AppButton'
 import { AppIcon } from '../../src/components/ui/AppIcon'
@@ -144,7 +145,7 @@ export default function ReferralsScreen() {
             <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Ganhos totais</Text>
           </View>
           <Text style={[typography.title, { color: colors.money, fontVariant: ['tabular-nums'] }]}>
-            {Math.round(stats.total_earnings).toLocaleString()} Kz
+            {formatKz(stats.total_earnings)} Kz
           </Text>
         </AppCard>
       </View>
@@ -167,7 +168,7 @@ export default function ReferralsScreen() {
               {r.referred_phone && <Text style={{ fontSize: 12, color: colors.text.tertiary, marginTop: 2 }}>{r.referred_phone}</Text>}
             </View>
             <View style={{ alignItems: 'flex-end' }}>
-              <Badge variant="success" label={`+${Math.round(r.amount_kz).toLocaleString()} Kz`} />
+              <Badge variant="success" label={`+${formatKz(r.amount_kz)} Kz`} />
               <Text style={{ fontSize: 11, color: colors.text.tertiary, marginTop: 4 }}>{timeSince(r.created_at)}</Text>
             </View>
           </AppCard>

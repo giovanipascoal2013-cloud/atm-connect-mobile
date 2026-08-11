@@ -13,6 +13,7 @@ import { EmptyState } from '../../src/components/ui/EmptyState'
 import { Badge } from '../../src/components/ui/Badge'
 import { AppIcon, type AppIconName } from '../../src/components/ui/AppIcon'
 import { colors } from '../../src/theme/tokens'
+import { formatKz } from '../../src/lib/format'
 
 function StatCard({ label, value, icon, color, onPress }: { label: string; value: string | number; icon: AppIconName; color: string; onPress?: () => void }) {
   return (
@@ -28,7 +29,7 @@ function StatCard({ label, value, icon, color, onPress }: { label: string; value
 
 export default function AgentScreen() {
   const router = useRouter()
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const {
     atms,
     pendingAtms,
@@ -40,7 +41,6 @@ export default function AgentScreen() {
     referralCode,
     loading,
     updating,
-    atmsError,
     refetch,
     refetchSilent,
     toggleCash,
@@ -182,10 +182,10 @@ export default function AgentScreen() {
       </View>
 
       <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-        <StatCard label="Total ganho" value={`${Math.round(stats.totalEarnings).toLocaleString()} Kz`} icon="cash-outline" color="#399256" />
+        <StatCard label="Total ganho" value={`${formatKz(stats.totalEarnings)} Kz`} icon="cash-outline" color="#399256" />
         <StatCard
           label="Disponível"
-          value={`${Math.round(stats.availableBalance).toLocaleString()} Kz`}
+          value={`${formatKz(stats.availableBalance)} Kz`}
           icon="wallet-outline"
           color={colors.warning}
           onPress={stats.availableBalance > 0 ? () => setShowWithdrawal(true) : undefined}
@@ -228,7 +228,7 @@ export default function AgentScreen() {
         <AppCard style={{ marginBottom: 16 }}>
           <Text style={{ fontSize: 13, color: colors.text.secondary }}>Já levantado</Text>
           <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary, marginTop: 2, fontVariant: ['tabular-nums'] }}>
-            {Math.round(stats.totalWithdrawn).toLocaleString()} Kz
+            {formatKz(stats.totalWithdrawn)} Kz
           </Text>
           <Text style={{ fontSize: 11, color: colors.text.tertiary, marginTop: 4 }}>
             Comissão por view de utilizadores free

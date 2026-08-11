@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { AppIcon } from '../ui/AppIcon'
 import { AppCard } from '../ui/AppCard'
 import { colors } from '@/theme/tokens'
+import { formatKz } from '../../lib/format'
 
 interface ReferralStats {
   total_referred: number
@@ -101,7 +102,7 @@ export function ReferralCard({ referralCode, userId, commissionPct = 20 }: Refer
             </View>
             <View style={{ flex: 1, backgroundColor: colors.accent[50], borderRadius: 10, padding: 12, alignItems: 'center' }}>
               <Text style={{ fontSize: 20, fontWeight: '700', color: colors.money, fontVariant: ['tabular-nums'] }}>
-                {Math.round(referralStats.total_earnings).toLocaleString()} Kz
+                {formatKz(referralStats.total_earnings)} Kz
               </Text>
               <Text style={{ fontSize: 11, color: colors.text.secondary, marginTop: 2 }}>Ganhos com referrals</Text>
             </View>
