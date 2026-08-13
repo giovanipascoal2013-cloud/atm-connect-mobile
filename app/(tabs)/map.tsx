@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react'
-import { View, ActivityIndicator, Text, Keyboard, TouchableWithoutFeedback } from 'react-native'
+import { View, ActivityIndicator, Text, Keyboard, TouchableWithoutFeedback, Alert } from 'react-native'
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router'
 import { useAuth } from '../../src/hooks/useAuth'
 import { useLocation } from '../../src/hooks/useLocation'
@@ -12,7 +12,6 @@ import { ATMMapView } from '../../src/components/map/ATMMapView'
 import { MapFilters } from '../../src/components/map/MapFilters'
 import { ATMList } from '../../src/components/map/ATMList'
 import { ATMDetailSheet } from '../../src/components/map/ATMDetailSheet'
-import { PremiumModal } from '../../src/components/premium/PremiumModal'
 import { LogoPin } from '../../src/components/ui/LogoPin'
 import { SegmentedControl } from '../../src/components/ui/SegmentedControl'
 import { AppButton } from '../../src/components/ui/AppButton'
@@ -37,7 +36,6 @@ export default function MapScreen() {
   const [sheetVisible, setSheetVisible] = useState(false)
   const [unlocked, setUnlocked] = useState(false)
   const [unlocking, setUnlocking] = useState(false)
-  const [premiumVisible, setPremiumVisible] = useState(false)
   const [agentRating, setAgentRating] = useState<{ likes: number; dislikes: number } | null>(null)
   const [userVote, setUserVote] = useState<'like' | 'dislike' | null>(null)
 
@@ -110,6 +108,11 @@ export default function MapScreen() {
         const success = await createUnlock(selectedATM.id)
         if (success) {
           setUnlocked(true)
+        } else {
+          Alert.alert(
+            'Não foi possível desbloquear',
+            'Viste o anúncio, mas ocorreu um erro ao aplicar o desbloqueio. Tenta de novo.'
+          )
         }
       }
     } catch (e) {
@@ -276,10 +279,7 @@ export default function MapScreen() {
         onWatchAd={handleWatchAd}
         adLoading={adLoading}
         onLogin={() => router.push('/(auth)/login')}
-        onOpenPremium={() => { setSheetVisible(false); setPremiumVisible(true) }}
       />
-
-      <PremiumModal visible={premiumVisible} onClose={() => setPremiumVisible(false)} />
       </View>
     </TouchableWithoutFeedback>
   )

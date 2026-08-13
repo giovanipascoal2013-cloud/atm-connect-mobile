@@ -23,7 +23,6 @@ interface ATMDetailSheetProps {
   onWatchAd: () => void
   adLoading?: boolean
   onLogin: () => void
-  onOpenPremium: () => void
 }
 
 export function ATMDetailSheet({
@@ -41,7 +40,6 @@ export function ATMDetailSheet({
   onWatchAd,
   adLoading = false,
   onLogin,
-  onOpenPremium,
 }: ATMDetailSheetProps) {
   if (!visible || !atm) return null
 
