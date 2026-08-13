@@ -51,6 +51,7 @@ const TYPE_HREF: Record<string, Href> = {
   withdrawal_approved: '/(tabs)/agent',
   withdrawal_rejected: '/(tabs)/agent',
   view_commission: '/(tabs)/agent',
+  ad_commission: '/(tabs)/agent',
   atm_rating: '/(tabs)/map',
   referral_new: '/referrals',
   forum_reply: '/(tabs)/forum',

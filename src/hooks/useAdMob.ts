@@ -9,6 +9,8 @@ const AD_UNIT_ID = Platform.select({
 })
 
 let AdMobModule: any = null
+let adsInitialized: Promise<void> | null = null
+
 function getAdMob(): any | null {
   if (Platform.OS === 'web') return null
   if (AdMobModule !== null) return AdMobModule
@@ -20,6 +22,19 @@ function getAdMob(): any | null {
     AdMobModule = false
     return null
   }
+}
+
+function initAds(AdMob: any): Promise<void> {
+  if (!AdMob?.MobileAds?.initialize) return Promise.resolve()
+  if (adsInitialized) return adsInitialized
+  const p: Promise<void> = AdMob.MobileAds.initialize()
+    .then(() => undefined)
+    .catch((e: any) => {
+      console.warn('AdMob initialize error:', e)
+      adsInitialized = null
+    })
+  adsInitialized = p
+  return p
 }
 
 export interface UseAdMobResult {
@@ -37,7 +52,7 @@ export function useAdMob(): UseAdMobResult {
 
   const loadRewarded = useCallback(() => {
     const AdMob = getAdMob()
-    if (!AdMob || !AdMob.RewardedAd || !AdMob.TestIds) {
+    if (!AdMob || !AdMob.RewardedAd) {
       return
     }
 
@@ -86,8 +101,16 @@ export function useAdMob(): UseAdMobResult {
   }, [loadRewarded])
 
   useEffect(() => {
-    loadRewardedRef.current()
+    let active = true
+    const boot = async () => {
+      const AdMob = getAdMob()
+      if (!AdMob) return
+      await initAds(AdMob)
+      if (active) loadRewardedRef.current()
+    }
+    void boot()
     return () => {
+      active = false
       unsubscribeLoadedRef.current?.()
     }
   }, [])
@@ -102,6 +125,7 @@ export function useAdMob(): UseAdMobResult {
     return new Promise<boolean>((resolve) => {
       const RewardedAdEventType = AdMob.RewardedAdEventType
       let rewardEarned = false
+      let settled = false
 
       const unsubEarned = rewardedRef.current.addAdEventListener(
         RewardedAdEventType.EARNED_REWARD,
@@ -115,28 +139,38 @@ export function useAdMob(): UseAdMobResult {
 
       const unsubClosed = rewardedRef.current.addAdEventListener(
         AdMob.AdEventType.CLOSED,
-        () => {
-          unsubEarned()
-          unsubClosed()
-          setIsLoaded(false)
-          rewardedRef.current = null
-          // Pré-carrega o próximo anúncio em background
-          setTimeout(() => {
-            loadRewarded()
-          }, 1000)
-          resolve(rewardEarned)
-        }
+        () => settle(rewardEarned)
       )
+
+      const unsubShowError = rewardedRef.current.addAdEventListener(
+        AdMob.AdEventType.ERROR,
+        () => settle(false)
+      )
+
+      const cleanupAndReset = () => {
+        unsubEarned()
+        unsubClosed()
+        unsubShowError()
+        setIsLoaded(false)
+        rewardedRef.current = null
+      }
+
+      const settle = (earned: boolean) => {
+        if (settled) return
+        settled = true
+        cleanupAndReset()
+        // Pré-carrega o próximo anúncio em background
+        setTimeout(() => {
+          loadRewarded()
+        }, 1000)
+        resolve(earned)
+      }
 
       try {
         rewardedRef.current.show()
       } catch (e) {
         console.warn('AdMob show error:', e)
-        unsubEarned()
-        unsubClosed()
-        setIsLoaded(false)
-        rewardedRef.current = null
-        resolve(false)
+        settle(false)
       }
     })
   }, [isLoaded, loadRewarded])

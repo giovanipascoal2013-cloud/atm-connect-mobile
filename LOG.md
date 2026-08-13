@@ -2,6 +2,16 @@
 
 ## Estado Actual
 
+### Sistema de anúncios — correcção faseada (2026-08-13) 🔧 (Fase 1 feita; Fases 2-3 em curso)
+
+Correcções sobre o sistema AdMob/ad_unlocks (bugs B1-B10 do inventário). **Fase 1 (cliente, sem BD)** — ver `docs/superpowers/specs/2026-08-13-admob-rewarded-ads-design.md`.
+
+- **B1 — `showRewarded` preso se ad falhar:** a Promise só resolvia em `CLOSED`; em `AdEventType.ERROR` durante o show ficava pendente → botão "Ver anúncio" preso em loading. Agora `settle()` resolve em CLOSED ou ERROR (unsub + reset + reload em 1s), com guarda anti-dupla-resolução.
+- **B2 — `MobileAds.initialize()` em falta:** SDK não era inicializado antes do load. `initAds()` (guard por módulo) chamado no mount antes do primeiro `loadRewarded`.
+- **B3 — notificação `ad_commission` não mapeada:** adicionada a `TYPE_HREF` (`useNotifications.ts` → `/(tabs)/agent`) e a `TYPE_META` (`notifications/index.tsx` → ícone `cash`, rota agent). Antes navegava para o mapa.
+- **B10 — check morto removido:** `useAdMob` já não exige `AdMob.TestIds` (nunca era usado).
+- **Verificação:** `npx tsc --noEmit` OK + `npx expo lint` OK.
+
 ### Fix erros de runtime no dev client (2026-08-13) ✅ (tsc + lint OK)
 
 Correcção dos 5 erros do log `errr.md` (`npx expo start --dev-client`). Nenhuma alteração de BD.

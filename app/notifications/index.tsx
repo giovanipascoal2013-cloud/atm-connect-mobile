@@ -21,6 +21,7 @@ const TYPE_META: Record<string, { icon: AppIconName; color: string; href: Href }
   withdrawal_approved: { icon: 'cash', color: colors.money, href: '/(tabs)/agent' },
   withdrawal_rejected: { icon: 'close-circle', color: colors.danger, href: '/(tabs)/agent' },
   view_commission: { icon: 'pricetag', color: colors.money, href: '/(tabs)/agent' },
+  ad_commission: { icon: 'cash', color: colors.money, href: '/(tabs)/agent' },
   atm_rating: { icon: 'star', color: '#F59E0B', href: '/(tabs)/map' },
   referral_new: { icon: 'person-add', color: colors.brand[500], href: '/referrals' },
   forum_reply: { icon: 'chatbubbles', color: colors.brand[500], href: '/(tabs)/forum' },
