@@ -2,7 +2,7 @@
 
 ## Estado Actual
 
-### AdMob Rewarded Ads — integração completa + decisão do trigger (2026-08-13) 🚧 (tsc + lint OK; aguarda deps + SQL no staging + dev build)
+### AdMob Rewarded Ads — integração completa + decisão do trigger + BD aplicada (2026-08-13) ✅ (tsc + lint OK; migração no staging; aguarda dev build + teste device)
 
 Spec `docs/superpowers/specs/2026-08-13-admob-rewarded-ads-design.md`. Substitui o modelo "3 views/dia" por **1 rewarded ad = 1 ATM desbloqueado 24h** (sem limite diário). Premium continua sem anúncios.
 
@@ -13,7 +13,9 @@ Spec `docs/superpowers/specs/2026-08-13-admob-rewarded-ads-design.md`. Substitui
 - **Limpeza:** `src/hooks/useViews.ts` eliminado (código morto — sem usos) e tipos legados removidos de `src/lib/supabase-types.ts` (`atm_views`, `daily_view_usage`, `consume_atm_view`). Backend SQL legado mantém-se para histórico/analytics (spec §1).
 - **Config:** `app.json` com plugin `react-native-google-mobile-ads` (App IDs oficiais de teste); `.env.example` com test IDs rewarded (`EXPO_PUBLIC_ADMOB_REWARDED_ANDROID/IOS`).
 - **Verificação:** `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
-- **Pendente (utilizador):** `npm install` (lockfile sem `react-native-google-mobile-ads`); aplicar SQL no staging (depende de `20260811000003_notifications_favorites_push.sql` para `create_notification`); `eas build --platform android --profile development` + testar rewarded ads no dev client.
+- **Deps corrigidas (utilizador):** `npx expo install expo-notifications expo-device` (rebaixadas de 57.x → versões SDK 54) + `npx expo install react-native-google-mobile-ads` + `npm install --package-lock=true` (lockfile do `.npmrc` global tinha `package-lock=false`).
+- **BD staging aplicada e verificada (13-08):** `20260813000001_ad_unlocks.sql` executada; trigger confirmado em `AFTER INSERT OR UPDATE` + guarda anti-duplicação, RLS own, realtime, `agent_earnings` com `source`/`user_id`. As migrações `0001`/`0002`/`0003` também confirmadas aplicadas. Ver relatório da BD abaixo.
+- **Pendente (utilizador):** `eas build --platform android --profile development` + testar rewarded ads no dev client (checklist no spec §7.2).
 
 ---
 
@@ -133,21 +135,24 @@ Verificação do sistema de consumo de views → atribuição de Kzs aos agentes
 
 > **Regra (AGENTS.md)**: após qualquer tarefa que opere a BD, actualizar este relatório no `LOG.md`.
 
-_Actualizado: 2026-08-11 (leitura com service_role)_
+_Actualizado: 2026-08-13 (verificação só-leitura: REST service_role + Management API PAT)_
 
 | Tabela | Estado | Detalhes |
 |---|---|---|
-| `atm_views` | 15 rows | 15 expiradas com `is_active=true` (bug por corrigir); +3 views 11-08 (Atm Teste 2) |
-| `agent_earnings` | 15 rows | `amount_kz = 0.15` (comissão actual) |
-| `daily_view_usage` | 9 rows | limite 3/dia; ex. user `778f337f` = 3 (18-07 e 06-08) |
+| `atm_views` | 17 rows | **todas expiradas com `is_active=true`** (bug legado; fix da migração `20260811000001` aplica-se ao INSERT, não retroativamente) |
+| `agent_earnings` | 17 rows | `amount_kz = 0.15`; colunas `user_id`/`source` **presentes mas NULL** nas linhas legadas (aditadas pela migração AdMob) |
+| `daily_view_usage` | 11 rows | limite 3/dia (sistema legado, já não usado pelo app — agora ads) |
 | `profiles.agent_balance_kz` | 20+ agentes | ex. `855987c4`=200.15, `55875658`=0.60, `7b9e265a`=0.30, `cddcca6d`=0.45 |
 | `balance_transactions` | credits 0.15/view + adjustments demo (30000, 29450, 28200) | flow de earnings OK |
 | `subscriptions` | 4 rows, **todas `pending`** | plan_type `monthly`, `price_kz=1500` (antigo), nunca aprovadas |
 | `withdrawals` | 2 rows | 1 pending, 1 completed |
+| **`ad_unlocks`** | **0 rows** (nova) | RLS 4 policies own (select/insert/update/delete) + `relrowsecurity=true`; realtime na publication; trigger `trg_ad_commission` **AFTER INSERT OR UPDATE** com guarda anti-duplicação (`TG_OP='UPDATE' and new.expires_at <= old.expires_at` → return) — verificado via `pg_get_triggerdef`/`pg_get_functiondef` |
 
 **`app_settings`:** `agent_commission_free_view_kz=0.15`, `daily_free_views_limit=3`, `min_withdrawal_amount=500`, `referral_commission_pct=20`, preços premium `290/700/1500` (quarterly aplicado 08-08), Monetag zones.
 
-**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`). **Pendentes:** `20260811000001`, `20260811000002` e `20260811000003` (notificações push + favoritos + realtime) e `20260813000001` (**AdMob `ad_unlocks`** — após aplicar, verificar trigger `trg_ad_commission` em `after insert or update`, RLS own, realtime; `agent_earnings` com `source='ad_view'`).
+**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`), **`20260811000001`** (fix `consume_atm_view` is_active — corpo §5.5 confirmado), **`20260811000002`** (subscriptions quarterly — CHECK com `quarterly` + policies insert own confirmadas), **`20260811000003`** (Fase 6 push/favoritos — `atm_favorites`=1, `push_tokens`=1, `push_log`=0, RPCs `create_notification`/`send_expo_push` presentes), **`20260813000001`** (AdMob `ad_unlocks` — aplicada e verificada). **Sem pendências de BD.**
+
+> **Nota de segurança (registada sem token):** verificação de BD feita com a service role (REST) e um Personal Access Token da conta Supabase (Management API, queries de leitura apenas). Nenhuma credencial foi gravada no repo.
 
 ### Merge do fix do dev build EAS na main + limpeza de scratch (2026-08-11) ✅
 
