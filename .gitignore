@@ -31,6 +31,10 @@ DEV_BUILD_FIX_PROMPT.md
 .tmp-*
 .opencode/
 .superpowers/
+.agents/
+.claude/
+skills-lock.json
+PLANO_ANIMACAO_ABERTURA.md
 
 # eas
 .eas-build/
