@@ -2,22 +2,22 @@
 
 ## Estado Actual
 
-### Migração SQL Fase 6 — notificações push + favoritos + realtime (2026-08-11) 🚧 (aguarda execução no staging)
+### Migração SQL Fase 6 — notificações push + favoritos + realtime (2026-08-11) ✅ (executada no staging)
 
 Fase 6 do design (`docs/superpowers/specs/2026-08-11-notifications-favorites-agentcards-design.md`).
 
-- **Novo `20260811000003_notifications_favorites_push.sql`** (idempotente): aplica o backend completo de notificações/favoritos no staging. **Pendente (utilizador):** executar no SQL editor do Supabase staging (`ndvjitfovhfngrzwtytd`) com role postgres.
-- **Verificação:** SQL revisto contra `src/lib/supabase-types.ts` — todas as tabelas/colunas referenciadas (atms, subscriptions, withdrawals, atm_views, agent_ratings, profiles, forum_comments/posts, notifications) existem no schema. Sem UI novo nesta fase.
+- **`20260811000003_notifications_favorites_push.sql`** (idempotente): executado com sucesso no SQL editor do Supabase staging (`ndvjitfovhfngrzwtytd`). Backend completo de notificações in-app + push + favoritos + realtime ativo na base de dados.
+- **Revisão e Correção de Erros (2026-08-12):** auditados e corrigidos 7 problemas no SQL (crash no trigger de referral com `NULL`, overflow `to_char` em valores ≥ 1M Kz, isolamento de exceções no `net.http_post` para não abortar transações de BD, consulta dinâmica do Vault `decrypted_secrets`, RLS em `push_log`, idempotência do `alter publication supabase_realtime`).
 - **Conteúdo do ficheiro:**
   1. Extensões `pg_net` + `pgcrypto` (grant usage do schema net).
-  2. `push_tokens` (PK `user_id` → `profiles`, RLS select/insert/update/delete own).
+  2. `push_tokens` (PK `user_id` → `profiles`, RLS select/insert/update/delete own com check).
   3. `atm_favorites` (FK user+atm, unique (user_id, atm_id), índice, RLS own).
   4. RLS em `notifications` (select/update own) — a tabela já existia, faltavam policies.
-  5. `push_log` (debug de envios).
-  6. `send_expo_push(user_id, title, message, type)` — SECURITY DEFINER, `pg_net.http_post` para exp.host, token opcional do Vault (`EXPO_ACCESS_TOKEN`). Executável só por postgres/service_role.
+  5. `push_log` (debug de envios com RLS ativado).
+  6. `send_expo_push(user_id, title, message, type)` — SECURITY DEFINER, `pg_net.http_post` isolado contra excepções, token do Vault dinâmico.
   7. `create_notification(user_id, title, message, type, push)` — helper SECURITY DEFINER que insere na tabela + dispara push quando `push=true`.
-  8. Triggers: `atm_status` (aprovado/rejeitado → push), `subscription_status` (push), `withdrawal_status` (push), `view_commission` (in-app), `atm_rating` (in-app), `referral_new` (in-app), `forum_reply` (in-app).
-  9. **Realtime** — `alter publication supabase_realtime add table public.notifications` + `public.atm_favorites` (liga o badge/sino e os favoritos em tempo real).
+  8. Triggers: `atm_status` (aprovado/rejeitado → push), `subscription_status` (push), `withdrawal_status` (push com formatação corrigida), `view_commission` (in-app sem auto-notificação), `atm_rating` (in-app), `referral_new` (in-app com fallback para `NULL`), `forum_reply` (in-app).
+  9. **Realtime** — `alter publication supabase_realtime add table` com verificação idempotente (`DO $$`).
 
 ---
 

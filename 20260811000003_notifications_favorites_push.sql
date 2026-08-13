@@ -39,7 +39,8 @@ create policy "push_tokens_insert_own"
 drop policy if exists "push_tokens_update_own" on public.push_tokens;
 create policy "push_tokens_update_own"
   on public.push_tokens for update
-  using (auth.uid() = user_id);
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 drop policy if exists "push_tokens_delete_own" on public.push_tokens;
 create policy "push_tokens_delete_own"
@@ -104,6 +105,8 @@ create table if not exists public.push_log (
   created_at timestamptz default now()
 );
 
+alter table public.push_log enable row level security;
+
 -- ------------------------------------------------------------
 -- 6. send_expo_push(user_id, title, message, type)
 --    SECURITY DEFINER: lê tokens do user, POST via pg_net.
@@ -145,28 +148,32 @@ begin
     'data', jsonb_build_object('type', p_type)
   );
 
-  -- token opcional do Vault (se presente)
+  -- token opcional do Vault (SQL dinâmico para não falhar a compilação se a extensão vault não existir)
   begin
-    select decrypted_secret into v_access_token
-    from vault.decrypted_secrets
-    where name = 'EXPO_ACCESS_TOKEN'
-    limit 1;
-    exception when others then
-      v_access_token := null;
+    execute 'select decrypted_secret from vault.decrypted_secrets where name = ''EXPO_ACCESS_TOKEN'' limit 1' into v_access_token;
+  exception when others then
+    v_access_token := null;
   end;
 
   if v_access_token is not null and v_access_token <> '' then
     v_headers := v_headers || jsonb_build_object('Authorization', 'Bearer ' || v_access_token);
   end if;
 
-  perform net.http_post(
-    url := v_url,
-    headers := v_headers,
-    body := v_body
-  );
+  -- Chamada pg_net isolada em bloco exception para falhas HTTP/rede não abortarem transacções de BD (ex: aprovações)
+  begin
+    perform net.http_post(
+      url := v_url,
+      headers := v_headers,
+      body := v_body
+    );
+  exception when others then
+    insert into public.push_log (user_id, type, payload, response_status)
+    values (p_user_id, p_type, v_body, -1);
+    return;
+  end;
 
   insert into public.push_log (user_id, type, payload, response_status)
-  values (p_user_id, p_type, v_body, null);
+  values (p_user_id, p_type, v_body, 200);
 end;
 $$;
 
@@ -290,7 +297,7 @@ begin
     perform public.create_notification(
       new.agent_id,
       'Levantamento aprovado',
-      'Recebeste ' || to_char(new.amount_kz, 'FM999G999') || ' Kz.',
+      'Recebeste ' || to_char(new.amount_kz, 'FM999G999G999') || ' Kz.',
       'withdrawal_approved',
       true
     );
@@ -327,7 +334,7 @@ begin
   from public.atms at
   where at.id = new.atm_id;
 
-  if v_agent_id is not null then
+  if v_agent_id is not null and v_agent_id <> new.user_id then
     perform public.create_notification(
       v_agent_id,
       'Ganhaste 0,15 Kz',
@@ -388,7 +395,7 @@ declare
   v_nome text;
 begin
   if new.invited_by is not null then
-    v_nome := coalesce(new.nome, new.telefone);
+    v_nome := coalesce(new.nome, new.telefone, 'Um novo utilizador');
     perform public.create_notification(
       new.invited_by,
       'Novo convidado',
@@ -446,8 +453,22 @@ create trigger trg_forum_reply
 -- ------------------------------------------------------------
 -- 9. Realtime publication (badge in-app + favoritos)
 -- ------------------------------------------------------------
-alter publication supabase_realtime add table public.notifications;
-alter publication supabase_realtime add table public.atm_favorites;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables 
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'notifications'
+  ) then
+    alter publication supabase_realtime add table public.notifications;
+  end if;
+
+  if not exists (
+    select 1 from pg_publication_tables 
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'atm_favorites'
+  ) then
+    alter publication supabase_realtime add table public.atm_favorites;
+  end if;
+end $$;
 
 -- ============================================================
 -- FIM. Verificar com:
