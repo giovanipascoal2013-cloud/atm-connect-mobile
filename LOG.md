@@ -2,6 +2,26 @@
 
 ## Estado Actual
 
+### Fix erros de runtime no dev client (2026-08-13) ✅ (tsc + lint OK)
+
+Correcção dos 5 erros do log `errr.md` (`npx expo start --dev-client`). Nenhuma alteração de BD.
+
+- **AdMob — `'type' expected a valid event type value`:** em `react-native-google-mobile-ads@16.3.4` o enum `RewardedAdEventType` só tem `LOADED`/`EARNED_REWARD`. `src/hooks/useAdMob.ts` usava `RewardedAdEventType.ERROR`/`CLOSED` (undefined) → erro ao registar listeners. Trocado para `AdEventType.ERROR`/`AdEventType.CLOSED` (confirmado em `AdEventType.d.ts`). **Corrige a nota anterior** (Kotlin entry) de que "a API é idêntica em 16.3.4" — não era, este era o bug.
+- **Supabase Realtime — `cannot add 'postgres_changes' callbacks ... after 'subscribe()'`:** `RealtimeClient.channel(topic)` devolve o canal existente se o topic já existir (`realtime-js@2.112.2`). `useAdUnlocks` (map+profile) e `useInAppNotifications` (`(tabs)/_layout` + `notifications/index`) montam múltiplas instâncias do mesmo hook → 2ª instância faz `.on()` num canal já subscrito. Novo helper **`src/lib/realtime-channel.ts`** (singleton por `key` com refcount + tópico aleatório por criação, imune ao StrictMode) usado por ambos os hooks.
+- **expo-notifications — `N.removeNotificationSubscription is not a function`:** API removida em `expo-notifications@0.32`; o listener devolve `EventSubscription` com `.remove()`. `src/hooks/useNotifications.ts` passou a usar `.remove()`.
+- **`Attempted to navigate before mounting the Root Layout`:** `router.push` de notificações disparava antes do navigator estar pronto. `useNotifications` agora guarda a rota em `pendingRouteRef` e só navega quando `useRootNavigationState().key` está definido.
+- **API deprecated:** cold-start passou de `getLastNotificationResponseAsync()` para `getLastNotificationResponse()` (síncrono, não-deprecated).
+- **Verificação:** `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+- **Pendente (utilizador):** testar no dev client (rewarded ad, notificações, notificações in-app) — checklist no spec §7.2.
+
+### Fix dev build EAS — Kotlin metadata 2.3.0 vs 2.1.0 (AdMob) (2026-08-13) 🚧 (aguarda `npm install` + rebuild)
+
+`eas build --platform android --profile development` falhava no Gradle (`:react-native-google-mobile-ads:compileDebugKotlin FAILED`): o `play-services-ads 25.4.0` arrastado pelo `react-native-google-mobile-ads@16.4.0` foi compilado com **Kotlin 2.3.0** (metadata 2.3.0), mas o Expo SDK 54 fixa **Kotlin 2.1.20** — compilador não lê metadata mais nova.
+
+- **Fix aplicado:** `package.json` pin **exacto** `react-native-google-mobile-ads@16.3.4` (sem `^`). Esta versão usa `play-services-ads 25.0.0` (min Kotlin 2.1.0 — compatível). Bug conhecido, confirmado pelo maintainer (invertase/react-native-google-mobile-ads#863). Alternativa (bump Kotlin 2.3.0 via `expo-build-properties`) rejeitada por breaking changes noutras libs.
+- **Sem alterações de código:** `src/hooks/useAdMob.ts` usa API idêntica em 16.3.4.
+- **Pendente (utilizador):** `npm install --package-lock=true` + `eas build --platform android --profile development`.
+
 ### AdMob Rewarded Ads — integração completa + decisão do trigger + BD aplicada (2026-08-13) ✅ (tsc + lint OK; migração no staging; aguarda dev build + teste device)
 
 Spec `docs/superpowers/specs/2026-08-13-admob-rewarded-ads-design.md`. Substitui o modelo "3 views/dia" por **1 rewarded ad = 1 ATM desbloqueado 24h** (sem limite diário). Premium continua sem anúncios.

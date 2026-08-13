@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { subscribePostgresChanges } from '../lib/realtime-channel'
 import { useAuth } from './useAuth'
 import type { Database } from '../lib/supabase-types'
 
@@ -36,20 +37,15 @@ export function useInAppNotifications() {
   useEffect(() => {
     if (!user) return
 
-    const channel = supabase
-      .channel('in-app-notifications')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        () => {
-          void fetchNotifications()
-        }
-      )
-      .subscribe()
-
-    return () => {
-      void supabase.removeChannel(channel)
-    }
+    return subscribePostgresChanges({
+      key: 'in-app-notifications',
+      table: 'notifications',
+      event: 'INSERT',
+      filter: `user_id=eq.${user.id}`,
+      onChange: () => {
+        void fetchNotifications()
+      },
+    })
   }, [user, fetchNotifications])
 
   const unreadCount = notifications.filter((n) => !n.read).length

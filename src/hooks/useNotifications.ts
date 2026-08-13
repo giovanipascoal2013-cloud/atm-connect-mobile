@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { useRouter } from 'expo-router'
+import { useCallback, useEffect, useRef } from 'react'
+import { useRouter, useRootNavigationState } from 'expo-router'
 import Constants from 'expo-constants'
 import { useAuth } from './useAuth'
 import { supabase } from '../lib/supabase'
@@ -74,7 +74,30 @@ async function upsertPushToken(userId: string, token: string, platform: string |
 export function useNotifications() {
   const { user } = useAuth()
   const router = useRouter()
+  const rootNavigationState = useRootNavigationState()
   const responseListener = useRef<any>(null)
+  const pendingRouteRef = useRef<Href | null>(null)
+  const navigationReadyRef = useRef(false)
+
+  useEffect(() => {
+    navigationReadyRef.current = rootNavigationState?.key != null
+  }, [rootNavigationState?.key])
+
+  const navigate = useCallback((route: Href) => {
+    if (navigationReadyRef.current) {
+      router.push(route)
+    } else {
+      pendingRouteRef.current = route
+    }
+  }, [router])
+
+  useEffect(() => {
+    if (navigationReadyRef.current && pendingRouteRef.current) {
+      const route = pendingRouteRef.current
+      pendingRouteRef.current = null
+      router.push(route)
+    }
+  }, [rootNavigationState?.key, router])
 
   useEffect(() => {
     if (!user) return
@@ -106,15 +129,15 @@ export function useNotifications() {
 
       if (!responseListener.current) {
         responseListener.current = Notifications.addNotificationResponseReceivedListener((response: any) => {
-          router.push(routeForNotification(response))
+          navigate(routeForNotification(response))
         })
       }
 
       // Cold start (app morto + toque na notificação)
       try {
-        const last = await Notifications.getLastNotificationResponseAsync()
+        const last = Notifications.getLastNotificationResponse?.() ?? null
         if (last) {
-          router.push(routeForNotification(last))
+          navigate(routeForNotification(last))
         }
       } catch {
         // ignore
@@ -124,13 +147,12 @@ export function useNotifications() {
     setup()
 
     return () => {
-      const N = getNotifications()
-      if (responseListener.current && N) {
-        N.removeNotificationSubscription(responseListener.current)
+      if (responseListener.current) {
+        responseListener.current.remove()
         responseListener.current = null
       }
     }
-  }, [user, router])
+  }, [user, router, navigate])
 
   return null
 }

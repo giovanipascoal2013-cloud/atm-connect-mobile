@@ -60,7 +60,7 @@ export function useAdMob(): UseAdMobResult {
         setLoading(false)
       })
 
-      const unsubError = rewarded.addAdEventListener(RewardedAdEventType.ERROR, (error: any) => {
+      const unsubError = rewarded.addAdEventListener(AdMob.AdEventType.ERROR, (error: any) => {
         console.warn('AdMob Rewarded Load Error:', error)
         setIsLoaded(false)
         setLoading(false)
@@ -114,7 +114,7 @@ export function useAdMob(): UseAdMobResult {
       )
 
       const unsubClosed = rewardedRef.current.addAdEventListener(
-        RewardedAdEventType.CLOSED,
+        AdMob.AdEventType.CLOSED,
         () => {
           unsubEarned()
           unsubClosed()

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { subscribePostgresChanges } from '../lib/realtime-channel'
 import { useAuth } from './useAuth'
 
 export interface UseAdUnlocksResult {
@@ -50,29 +51,19 @@ export function useAdUnlocks(): UseAdUnlocksResult {
     fetchUnlocks()
   }, [fetchUnlocks])
 
-  // Realtime subscription
+  // Realtime subscription (canal partilhado — evita colisões com várias instâncias)
   useEffect(() => {
     if (!user) return
 
-    const channel = supabase
-      .channel('ad-unlocks-sync')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'ad_unlocks',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          fetchUnlocks()
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return subscribePostgresChanges({
+      key: 'ad-unlocks-sync',
+      table: 'ad_unlocks',
+      event: '*',
+      filter: `user_id=eq.${user.id}`,
+      onChange: () => {
+        void fetchUnlocks()
+      },
+    })
   }, [user, fetchUnlocks])
 
   const hasValidUnlock = useCallback(
