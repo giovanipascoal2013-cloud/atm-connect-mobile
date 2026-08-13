@@ -1081,6 +1081,7 @@ export type Database = {
         }
         Returns: string
       }
+      create_ad_unlock: { Args: { p_atm_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "supervisor" | "agent" | "user" | "financeiro"

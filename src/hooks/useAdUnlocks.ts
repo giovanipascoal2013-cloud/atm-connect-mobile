@@ -81,17 +81,12 @@ export function useAdUnlocks(): UseAdUnlocksResult {
 
       try {
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-        const { error } = await supabase.from('ad_unlocks').upsert(
-          {
-            user_id: user.id,
-            atm_id: atmId,
-            expires_at: expiresAt,
-          },
-          { onConflict: 'user_id,atm_id' }
-        )
+        const { data, error } = await supabase.rpc('create_ad_unlock', {
+          p_atm_id: atmId,
+        })
 
-        if (error) {
-          console.error('Error creating ad_unlock:', error.message)
+        if (error || data !== true) {
+          console.error('Error creating ad_unlock:', error?.message ?? 'RPC returned false')
           return false
         }
 

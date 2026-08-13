@@ -2,15 +2,23 @@
 
 ## Estado Actual
 
-### Sistema de anúncios — correcção faseada (2026-08-13) 🔧 (Fase 1 feita; Fases 2-3 em curso)
+### Sistema de anúncios — correcção faseada (2026-08-13) 🔧 (Fases 1-2 feitas; Fase 3 em curso)
 
-Correcções sobre o sistema AdMob/ad_unlocks (bugs B1-B10 do inventário). **Fase 1 (cliente, sem BD)** — ver `docs/superpowers/specs/2026-08-13-admob-rewarded-ads-design.md`.
+Correcções sobre o sistema AdMob/ad_unlocks (bugs B1-B10 do inventário). Ver `docs/superpowers/specs/2026-08-13-admob-rewarded-ads-design.md`.
+
+**Fase 1 (cliente, sem BD) ✅ commit `74293ba`** (tsc + lint OK):
 
 - **B1 — `showRewarded` preso se ad falhar:** a Promise só resolvia em `CLOSED`; em `AdEventType.ERROR` durante o show ficava pendente → botão "Ver anúncio" preso em loading. Agora `settle()` resolve em CLOSED ou ERROR (unsub + reset + reload em 1s), com guarda anti-dupla-resolução.
 - **B2 — `MobileAds.initialize()` em falta:** SDK não era inicializado antes do load. `initAds()` (guard por módulo) chamado no mount antes do primeiro `loadRewarded`.
 - **B3 — notificação `ad_commission` não mapeada:** adicionada a `TYPE_HREF` (`useNotifications.ts` → `/(tabs)/agent`) e a `TYPE_META` (`notifications/index.tsx` → ícone `cash`, rota agent). Antes navegava para o mapa.
 - **B10 — check morto removido:** `useAdMob` já não exige `AdMob.TestIds` (nunca era usado).
-- **Verificação:** `npx tsc --noEmit` OK + `npx expo lint` OK.
+
+**Fase 2 (BD + contrato app) ✅ commit `?`** (tsc + lint OK):
+
+- **B4 — mensagem dinâmica:** notificação usa `to_char(v_commission_kz,'FM0.00')` em vez do literal `"0,15 Kz"`.
+- **B6 — guarda do setting:** valor vazio/não-numérico de `agent_commission_free_view_kz` faz fallback a 0.15 (regex `^[0-9]+(\.[0-9]+)?$`) — antes `::numeric` partia o trigger.
+- **B5 — segurança:** novo RPC `create_ad_unlock(p_atm_id uuid)` (SECURITY DEFINER, upsert 24h, `grant execute` só a `authenticated`); revogado o INSERT directo (policy `ad_unlocks_insert_own` removida). App passou a chamar `supabase.rpc('create_ad_unlock', { p_atm_id })`.
+- **Ficheiro:** `20260813000002_ad_unlocks_fix.sql` — **⚠️ AGUARDA APLICAÇÃO MANUAL no staging (SQL editor, role postgres) ANTES de rebuildar o app** (sem o RPC, `createUnlock` falha).
 
 ### Fix erros de runtime no dev client (2026-08-13) ✅ (tsc + lint OK)
 
@@ -176,11 +184,11 @@ _Actualizado: 2026-08-13 (verificação só-leitura: REST service_role + Managem
 | `balance_transactions` | credits 0.15/view + adjustments demo (30000, 29450, 28200) | flow de earnings OK |
 | `subscriptions` | 4 rows, **todas `pending`** | plan_type `monthly`, `price_kz=1500` (antigo), nunca aprovadas |
 | `withdrawals` | 2 rows | 1 pending, 1 completed |
-| **`ad_unlocks`** | **0 rows** (nova) | RLS 4 policies own (select/insert/update/delete) + `relrowsecurity=true`; realtime na publication; trigger `trg_ad_commission` **AFTER INSERT OR UPDATE** com guarda anti-duplicação (`TG_OP='UPDATE' and new.expires_at <= old.expires_at` → return) — verificado via `pg_get_triggerdef`/`pg_get_functiondef` |
+| **`ad_unlocks`** | **0 rows** (nova) | RLS `relrowsecurity=true`; policies own mantidas para **select/update/delete**; **INSERT revogado** (policy `ad_unlocks_insert_own` removida — criação só via RPC `create_ad_unlock`); realtime na publication; trigger `trg_ad_commission` **AFTER INSERT OR UPDATE** com guarda anti-duplicação (`TG_OP='UPDATE' and new.expires_at <= old.expires_at` → return) e **mensagem dinâmica** com `to_char` + fallback 0.15 para `agent_commission_free_view_kz` inválido — verificado via `pg_get_triggerdef`/`pg_get_functiondef` |
 
 **`app_settings`:** `agent_commission_free_view_kz=0.15`, `daily_free_views_limit=3`, `min_withdrawal_amount=500`, `referral_commission_pct=20`, preços premium `290/700/1500` (quarterly aplicado 08-08), Monetag zones.
 
-**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`), **`20260811000001`** (fix `consume_atm_view` is_active — corpo §5.5 confirmado), **`20260811000002`** (subscriptions quarterly — CHECK com `quarterly` + policies insert own confirmadas), **`20260811000003`** (Fase 6 push/favoritos — `atm_favorites`=1, `push_tokens`=1, `push_log`=0, RPCs `create_notification`/`send_expo_push` presentes), **`20260813000001`** (AdMob `ad_unlocks` — aplicada e verificada). **Sem pendências de BD.**
+**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`), **`20260811000001`** (fix `consume_atm_view` is_active — corpo §5.5 confirmado), **`20260811000002`** (subscriptions quarterly — CHECK com `quarterly` + policies insert own confirmadas), **`20260811000003`** (Fase 6 push/favoritos — `atm_favorites`=1, `push_tokens`=1, `push_log`=0, RPCs `create_notification`/`send_expo_push` presentes), **`20260813000001`** (AdMob `ad_unlocks` — aplicada e verificada). **PENDENTE (aguarda aplicação manual):** **`20260813000002_ad_unlocks_fix.sql`** (B4/B5/B6 — RPC `create_ad_unlock`, revogar INSERT, trigger dinâmico). Sem outras pendências de BD.
 
 > **Nota de segurança (registada sem token):** verificação de BD feita com a service role (REST) e um Personal Access Token da conta Supabase (Management API, queries de leitura apenas). Nenhuma credencial foi gravada no repo.
 
