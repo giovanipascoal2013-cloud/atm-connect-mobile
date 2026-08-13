@@ -51,6 +51,8 @@ eas build --platform ios --profile preview
 npx expo lint
 ```
 
+> **Checklist pré-build EAS**: (1) `npx tsc --noEmit` OK; (2) `npx expo lint` OK; (3) `git status` limpo (nada de ficheiros untracked relevantes); (4) **`.easignore` cobre `.agents/`, `.claude/` e qualquer symlink/dir novo** — o `.easignore` tem precedência sobre o `.gitignore` no EAS; sem isso o archive falha com `EPERM` (symlinks no Windows). Manter `.easignore` e `.gitignore` em sincronia.
+
 ## Skills por Contexto
 
 | Contexto / Tarefa | Skill a Carregar |

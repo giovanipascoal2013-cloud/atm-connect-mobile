@@ -2,3 +2,26 @@
 node_modules
 .easignore
 .expo
+
+# Agent work files (espelho do .gitignore — o .easignore tem precedência sobre o .gitignore no EAS)
+.agents
+.claude
+skills-lock.json
+PLANO_ANIMACAO_ABERTURA.md
+errr.md
+prompt_analise_ia.md
+scratch_debug.mjs
+DEV_BUILD_FIX_PROMPT.md
+.tmp-*
+.opencode/
+.superpowers/
+
+# Segredos / credenciais (não devem subir para os servidores do EAS)
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.env.local
+.env.production
+# NOTA: .env mantém-se incluído de propósito — os EXPO_PUBLIC_* são inlined no bundle no EAS.

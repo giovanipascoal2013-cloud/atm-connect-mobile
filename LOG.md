@@ -2,6 +2,19 @@
 
 ## Estado Actual
 
+### Fix do EAS build — `.easignore` com symlinks (2026-08-13) ✅
+
+**Problema:** `eas build --profile development` falhava na compressão do archive com `EPERM: operation not permitted, symlink '.agents\skills\code-review-expert' -> '...\.claude\skills\code-review-expert'`.
+
+**Causa raiz:** `.easignore` existe no projecto e **tem precedência sobre o `.gitignore`** no EAS. Só ignorava `.git`/`node_modules`/`.easignore`/`.expo` → os diretórios `.agents/` e `.claude/` (criados a 13/08 19:44, contêm symlinks cruzados) entravam no archive e o Windows recusava criar symlink sem permissões de admin. Builds anteriores funcionavam porque esses dirs ainda não existiam.
+
+**Fix (`1770b88` + `?`):**
+- `.gitignore`: `.agents/`, `.claude/`, `skills-lock.json`, `PLANO_ANIMACAO_ABERTURA.md`.
+- `.easignore`: espelho do `.gitignore` (`.agents`, `.claude`, `skills-lock.json`, `PLANO_ANIMACAO_ABERTURA.md`, scratch `errr.md`/`prompt_analise_ia.md`/etc.) + **segredos** (`*.jks`, `*.p8`, `*.p12`, `*.key`, `*.mobileprovision`, `.env.local`, `.env.production`) que não subiam antes. `.env` **mantém-se incluído** (necessário para `EXPO_PUBLIC_*` no bundle).
+- `AGENTS.md`: checklist pré-build (tsc + lint + `git status` limpo + `.easignore` cobre `.agents`/`.claude`).
+
+**Lição:** quando existe `.easignore`, o `.gitignore` é irrelevante para o EAS — manter os dois em sincronia.
+
 ### Sistema de anúncios — correcção faseada (2026-08-13) 🔧 (Fases 1-4 feitas ✅)
 
 Correcções sobre o sistema AdMob/ad_unlocks (bugs B1-B10 do inventário + revisão pós-fix B11-B14). Ver `docs/superpowers/specs/2026-08-13-admob-rewarded-ads-design.md`.
