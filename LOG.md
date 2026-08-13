@@ -8,7 +8,7 @@
 
 **Causa raiz:** `.easignore` existe no projecto e **tem precedência sobre o `.gitignore`** no EAS. Só ignorava `.git`/`node_modules`/`.easignore`/`.expo` → os diretórios `.agents/` e `.claude/` (criados a 13/08 19:44, contêm symlinks cruzados) entravam no archive e o Windows recusava criar symlink sem permissões de admin. Builds anteriores funcionavam porque esses dirs ainda não existiam.
 
-**Fix (`1770b88` + `?`):**
+**Fix (`1770b88` + `25dfa6d`):**
 - `.gitignore`: `.agents/`, `.claude/`, `skills-lock.json`, `PLANO_ANIMACAO_ABERTURA.md`.
 - `.easignore`: espelho do `.gitignore` (`.agents`, `.claude`, `skills-lock.json`, `PLANO_ANIMACAO_ABERTURA.md`, scratch `errr.md`/`prompt_analise_ia.md`/etc.) + **segredos** (`*.jks`, `*.p8`, `*.p12`, `*.key`, `*.mobileprovision`, `.env.local`, `.env.production`) que não subiam antes. `.env` **mantém-se incluído** (necessário para `EXPO_PUBLIC_*` no bundle).
 - `AGENTS.md`: checklist pré-build (tsc + lint + `git status` limpo + `.easignore` cobre `.agents`/`.claude`).
