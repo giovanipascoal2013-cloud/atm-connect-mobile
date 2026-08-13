@@ -20,7 +20,7 @@ Correcções sobre o sistema AdMob/ad_unlocks (bugs B1-B10 do inventário). Ver 
 - **B5 — segurança:** novo RPC `create_ad_unlock(p_atm_id uuid)` (SECURITY DEFINER, upsert 24h, `grant execute` só a `authenticated`); revogado o INSERT directo (policy `ad_unlocks_insert_own` removida). App passou a chamar `supabase.rpc('create_ad_unlock', { p_atm_id })`.
 - **Ficheiro:** `20260813000002_ad_unlocks_fix.sql` — **⚠️ AGUARDA APLICAÇÃO MANUAL no staging (SQL editor, role postgres) ANTES de rebuildar o app** (sem o RPC, `createUnlock` falha).
 
-**Fase 3 (UX/polimento) ✅ commit `?`** (tsc + lint OK):
+**Fase 3 (UX/polimento) ✅ commit `e21893c`** (tsc + lint OK):
 
 - **B7 — feedback + retry:** botão mostra "A carregar anúncio..." (`adLoading` de `useAdMob`) e desactiva-se durante o load; `handleWatchAd` em `map.tsx` (re)carrega o anúncio se ainda não estiver pronto em vez de falhar em silêncio; `useAdMob` ganhou **retry limitado** (3 tentativas, 2s) no ERROR de load.
 - **B8 — favoritos com locks reais:** `favorites/index.tsx` passava `lockedIds={new Set()}` (tudo bloqueado); agora usa `hasValidUnlock()` do `useAdUnlocks`.
