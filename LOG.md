@@ -26,7 +26,7 @@ Correcções sobre o sistema AdMob/ad_unlocks (bugs B1-B10 do inventário + revi
 - **B8 — favoritos com locks reais:** `favorites/index.tsx` passava `lockedIds={new Set()}` (tudo bloqueado); agora usa `hasValidUnlock()` do `useAdUnlocks`.
 - **B9 — dead code removido:** ramo inalcançável `isPremium || unlocked` ("Ver Detalhes") eliminado do `ATMDetailSheet`; props `onUnlock` e `isPremium` removidas (interface + `map.tsx`).
 
-**Fase 4 (segurança + limpeza + feedback) ✅ commit `?`** (tsc + lint OK):
+**Fase 4 (segurança + limpeza + feedback) ✅ commits `c9b797a` + `29094c0`** (tsc + lint OK):
 
 - **B11 (segurança, BD) — comissão infinita sem anúncios:** a Fase 2 revogou o INSERT, mas ficou a policy `ad_unlocks_update_own`: qualquer utilizador podia fazer UPDATE à própria linha estendendo `expires_at` para o futuro, e o trigger `trg_ad_commission` pagava comissão ao agente (`new.expires_at > old.expires_at`) — repetidamente, sem ver anúncio. **Fix:** nova migração **`20260813000003_ad_unlocks_sec.sql`** → `drop policy "ad_unlocks_update_own"`. A renovação legítima continua via RPC `create_ad_unlock` (SECURITY DEFINER contorna RLS). DELETE own mantém-se. **⚠️ AGUARDA APLICAÇÃO MANUAL no staging (SQL editor, role postgres).**
 - **B12 — dead props removidas:** `onOpenPremium` do `ATMDetailSheet` (interface + destructure + `map.tsx`); como era o único que abria o `PremiumModal`, o estado `premiumVisible` e o modal foram removidos do mapa (eram inalcançáveis).
