@@ -2,6 +2,7 @@ import { View, Text, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useFavorites } from '../../src/hooks/useFavorites'
 import { useAuth } from '../../src/hooks/useAuth'
+import { useAdUnlocks } from '../../src/hooks/useAdUnlocks'
 import { ATMList } from '../../src/components/map/ATMList'
 import { EmptyState } from '../../src/components/ui/EmptyState'
 import { AppButton } from '../../src/components/ui/AppButton'
@@ -11,6 +12,9 @@ export default function FavoritesScreen() {
   const router = useRouter()
   const { user, isPremium } = useAuth()
   const { favoriteAtms, loading, toggleFavorite, refetch } = useFavorites()
+  const { hasValidUnlock } = useAdUnlocks()
+
+  const unlockedIds = new Set(favoriteAtms.filter((a) => hasValidUnlock(a.id)).map((a) => a.id))
 
   if (loading) {
     return (
@@ -41,7 +45,7 @@ export default function FavoritesScreen() {
       loading={false}
       onRefresh={refetch}
       refreshing={loading}
-      lockedIds={new Set()}
+      lockedIds={unlockedIds}
       isPremium={isPremium}
       isLoggedIn={!!user}
       favoriteIds={new Set(favoriteAtms.map((a) => a.id))}

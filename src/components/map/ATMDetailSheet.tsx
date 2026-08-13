@@ -13,7 +13,6 @@ interface ATMDetailSheetProps {
   visible: boolean
   unlocked: boolean
   unlocking: boolean
-  isPremium: boolean
   isLoggedIn: boolean
   userVote?: 'like' | 'dislike' | null
   agentRating?: { likes: number; dislikes: number } | null
@@ -21,8 +20,8 @@ interface ATMDetailSheetProps {
   onToggleFavorite?: () => void
   onVote?: (value: 'like' | 'dislike') => void
   onClose: () => void
-  onUnlock: () => void
   onWatchAd: () => void
+  adLoading?: boolean
   onLogin: () => void
   onOpenPremium: () => void
 }
@@ -32,7 +31,6 @@ export function ATMDetailSheet({
   visible,
   unlocked,
   unlocking,
-  isPremium,
   isLoggedIn,
   userVote,
   agentRating,
@@ -40,8 +38,8 @@ export function ATMDetailSheet({
   onToggleFavorite,
   onVote,
   onClose,
-  onUnlock,
   onWatchAd,
+  adLoading = false,
   onLogin,
   onOpenPremium,
 }: ATMDetailSheetProps) {
@@ -253,25 +251,15 @@ export function ATMDetailSheet({
               icon="log-in-outline"
               haptic
             />
-          ) : isPremium || unlocked ? (
-            <AppButton
-              label="Ver Detalhes"
-              onPress={onUnlock}
-              fullWidth
-              size="lg"
-              style={{ backgroundColor: colors.brand[600] }}
-              loading={unlocking}
-              icon="eye-outline"
-              haptic
-            />
           ) : (
             <AppButton
-              label="Ver anúncio para desbloquear"
+              label={adLoading ? 'A carregar anúncio...' : 'Ver anúncio para desbloquear'}
               onPress={onWatchAd}
               fullWidth
               size="lg"
               style={{ backgroundColor: colors.brand[600] }}
-              loading={unlocking}
+              loading={unlocking || adLoading}
+              disabled={adLoading}
               icon="play-circle-outline"
               haptic
             />

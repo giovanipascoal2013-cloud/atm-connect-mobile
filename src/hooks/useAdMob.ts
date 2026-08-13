@@ -49,6 +49,8 @@ export function useAdMob(): UseAdMobResult {
   const [loading, setLoading] = useState(false)
   const rewardedRef = useRef<any>(null)
   const unsubscribeLoadedRef = useRef<(() => void) | null>(null)
+  const retryCountRef = useRef(0)
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const loadRewarded = useCallback(() => {
     const AdMob = getAdMob()
@@ -71,6 +73,7 @@ export function useAdMob(): UseAdMobResult {
       unsubscribeLoadedRef.current?.()
 
       const unsubLoaded = rewarded.addAdEventListener(RewardedAdEventType.LOADED, () => {
+        retryCountRef.current = 0
         setIsLoaded(true)
         setLoading(false)
       })
@@ -79,6 +82,14 @@ export function useAdMob(): UseAdMobResult {
         console.warn('AdMob Rewarded Load Error:', error)
         setIsLoaded(false)
         setLoading(false)
+        // Retry limitado (3 tentativas, 2s de intervalo) para loads falhados
+        retryCountRef.current += 1
+        if (retryCountRef.current < 3) {
+          if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
+          retryTimerRef.current = setTimeout(() => {
+            loadRewarded()
+          }, 2000)
+        }
       })
 
       unsubscribeLoadedRef.current = () => {
@@ -111,6 +122,8 @@ export function useAdMob(): UseAdMobResult {
     void boot()
     return () => {
       active = false
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
+      retryTimerRef.current = null
       unsubscribeLoadedRef.current?.()
     }
   }, [])
@@ -151,6 +164,9 @@ export function useAdMob(): UseAdMobResult {
         unsubEarned()
         unsubClosed()
         unsubShowError()
+        retryCountRef.current = 0
+        if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
+        retryTimerRef.current = null
         setIsLoaded(false)
         rewardedRef.current = null
       }

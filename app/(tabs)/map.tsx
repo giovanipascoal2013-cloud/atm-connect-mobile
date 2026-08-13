@@ -25,7 +25,7 @@ export default function MapScreen() {
   const params = useLocalSearchParams<{ openAtm?: string }>()
   const { user, isPremium } = useAuth()
   const { location, permission, loading: locationLoading, requestAgain } = useLocation()
-  const { showRewarded } = useAdMob()
+  const { showRewarded, isLoaded, loading: adLoading, loadRewarded } = useAdMob()
   const { unlocks, hasValidUnlock, createUnlock } = useAdUnlocks()
   const { favoriteAtms, isFavorite, toggleFavorite } = useFavorites()
   const [viewMode, setViewMode] = useState<ViewMode>('map')
@@ -97,6 +97,12 @@ export default function MapScreen() {
       return
     }
     if (unlocking) return
+    if (adLoading) return
+    if (!isLoaded) {
+      // Anúncio ainda não carregado: (re)carrega e dá feedback no botão
+      loadRewarded()
+      return
+    }
     setUnlocking(true)
     try {
       const watched = await showRewarded()
@@ -111,7 +117,7 @@ export default function MapScreen() {
     } finally {
       setUnlocking(false)
     }
-  }, [selectedATM, user, unlocking, showRewarded, createUnlock, router])
+  }, [selectedATM, user, unlocking, adLoading, isLoaded, showRewarded, createUnlock, loadRewarded, router])
 
   const handleVote = useCallback(async (value: 'like' | 'dislike') => {
     if (!selectedATM) return
@@ -260,7 +266,6 @@ export default function MapScreen() {
         visible={sheetVisible}
         unlocked={unlocked || isPremium || (selectedATM ? hasValidUnlock(selectedATM.id) : false)}
         unlocking={unlocking}
-        isPremium={isPremium}
         isLoggedIn={!!user}
         userVote={userVote}
         agentRating={agentRating}
@@ -268,8 +273,8 @@ export default function MapScreen() {
         onToggleFavorite={() => { if (selectedATM) void toggleFavorite(selectedATM.id) }}
         onVote={handleVote}
         onClose={handleCloseSheet}
-        onUnlock={handleWatchAd}
         onWatchAd={handleWatchAd}
+        adLoading={adLoading}
         onLogin={() => router.push('/(auth)/login')}
         onOpenPremium={() => { setSheetVisible(false); setPremiumVisible(true) }}
       />

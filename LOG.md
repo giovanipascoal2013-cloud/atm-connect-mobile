@@ -2,7 +2,7 @@
 
 ## Estado Actual
 
-### Sistema de anúncios — correcção faseada (2026-08-13) 🔧 (Fases 1-2 feitas; Fase 3 em curso)
+### Sistema de anúncios — correcção faseada (2026-08-13) 🔧 (Fases 1-3 feitas ✅)
 
 Correcções sobre o sistema AdMob/ad_unlocks (bugs B1-B10 do inventário). Ver `docs/superpowers/specs/2026-08-13-admob-rewarded-ads-design.md`.
 
@@ -13,12 +13,18 @@ Correcções sobre o sistema AdMob/ad_unlocks (bugs B1-B10 do inventário). Ver 
 - **B3 — notificação `ad_commission` não mapeada:** adicionada a `TYPE_HREF` (`useNotifications.ts` → `/(tabs)/agent`) e a `TYPE_META` (`notifications/index.tsx` → ícone `cash`, rota agent). Antes navegava para o mapa.
 - **B10 — check morto removido:** `useAdMob` já não exige `AdMob.TestIds` (nunca era usado).
 
-**Fase 2 (BD + contrato app) ✅ commit `?`** (tsc + lint OK):
+**Fase 2 (BD + contrato app) ✅ commit `a093ca4`** (tsc + lint OK):
 
 - **B4 — mensagem dinâmica:** notificação usa `to_char(v_commission_kz,'FM0.00')` em vez do literal `"0,15 Kz"`.
 - **B6 — guarda do setting:** valor vazio/não-numérico de `agent_commission_free_view_kz` faz fallback a 0.15 (regex `^[0-9]+(\.[0-9]+)?$`) — antes `::numeric` partia o trigger.
 - **B5 — segurança:** novo RPC `create_ad_unlock(p_atm_id uuid)` (SECURITY DEFINER, upsert 24h, `grant execute` só a `authenticated`); revogado o INSERT directo (policy `ad_unlocks_insert_own` removida). App passou a chamar `supabase.rpc('create_ad_unlock', { p_atm_id })`.
 - **Ficheiro:** `20260813000002_ad_unlocks_fix.sql` — **⚠️ AGUARDA APLICAÇÃO MANUAL no staging (SQL editor, role postgres) ANTES de rebuildar o app** (sem o RPC, `createUnlock` falha).
+
+**Fase 3 (UX/polimento) ✅ commit `?`** (tsc + lint OK):
+
+- **B7 — feedback + retry:** botão mostra "A carregar anúncio..." (`adLoading` de `useAdMob`) e desactiva-se durante o load; `handleWatchAd` em `map.tsx` (re)carrega o anúncio se ainda não estiver pronto em vez de falhar em silêncio; `useAdMob` ganhou **retry limitado** (3 tentativas, 2s) no ERROR de load.
+- **B8 — favoritos com locks reais:** `favorites/index.tsx` passava `lockedIds={new Set()}` (tudo bloqueado); agora usa `hasValidUnlock()` do `useAdUnlocks`.
+- **B9 — dead code removido:** ramo inalcançável `isPremium || unlocked` ("Ver Detalhes") eliminado do `ATMDetailSheet`; props `onUnlock` e `isPremium` removidas (interface + `map.tsx`).
 
 ### Fix erros de runtime no dev client (2026-08-13) ✅ (tsc + lint OK)
 
