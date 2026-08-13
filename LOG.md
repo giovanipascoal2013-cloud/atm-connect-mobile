@@ -2,6 +2,21 @@
 
 ## Estado Actual
 
+### AdMob Rewarded Ads — integração completa + decisão do trigger (2026-08-13) 🚧 (tsc + lint OK; aguarda deps + SQL no staging + dev build)
+
+Spec `docs/superpowers/specs/2026-08-13-admob-rewarded-ads-design.md`. Substitui o modelo "3 views/dia" por **1 rewarded ad = 1 ATM desbloqueado 24h** (sem limite diário). Premium continua sem anúncios.
+
+- **Migração `20260813000001_ad_unlocks.sql`** (idempotente, raiz do repo — convenção): tabela `ad_unlocks` (unique `(user_id, atm_id)`, RLS select/insert/update/delete own), realtime publication, adaptação `agent_earnings` (`view_id` drop NOT NULL + colunas `user_id`/`source`), trigger `trg_ad_commission` que replica o pagamento do RPC legado (agent_earnings + balance_transactions + `agent_balance_kz` + notificação `ad_commission`, 0.15 Kz via `app_settings.agent_commission_free_view_kz`). Corrigida contra o schema real do staging (sem `metadata` em balance_transactions; usa `reference_id`/`reference_type`).
+- **Decisão A (trigger):** `trg_ad_commission` passou a **`after insert or update`** com guarda anti-duplicação (em UPDATE só paga se `expires_at` renovado) — o agente recebe comissão em cada ad view, incluindo re-watch do mesmo ATM após expirar.
+- **Novos hooks:** `src/hooks/useAdMob.ts` (load/show rewarded, degrade silencioso se não instalado/Expo Go/web) e `src/hooks/useAdUnlocks.ts` (Map atmId→expiresAt, hidratação no mount, realtime `postgres_changes`, `createUnlock` upsert 24h).
+- **Ecrãs migrados de `useViews` → `useAdUnlocks`/`useAdMob`:** `map.tsx` (pill de views removida, `handleWatchAd`), `ATMDetailSheet.tsx` (CTA "Ver anúncio para desbloquear"), `my-views/index.tsx` (query `ad_unlocks`, "Os teus desbloqueios activos"), `profile.tsx` (card "Desbloqueios activos"; "Ilimitado" se premium), `favorites/index.tsx`.
+- **Limpeza:** `src/hooks/useViews.ts` eliminado (código morto — sem usos) e tipos legados removidos de `src/lib/supabase-types.ts` (`atm_views`, `daily_view_usage`, `consume_atm_view`). Backend SQL legado mantém-se para histórico/analytics (spec §1).
+- **Config:** `app.json` com plugin `react-native-google-mobile-ads` (App IDs oficiais de teste); `.env.example` com test IDs rewarded (`EXPO_PUBLIC_ADMOB_REWARDED_ANDROID/IOS`).
+- **Verificação:** `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+- **Pendente (utilizador):** `npm install` (lockfile sem `react-native-google-mobile-ads`); aplicar SQL no staging (depende de `20260811000003_notifications_favorites_push.sql` para `create_notification`); `eas build --platform android --profile development` + testar rewarded ads no dev client.
+
+---
+
 ### Migração SQL Fase 6 — notificações push + favoritos + realtime (2026-08-11) ✅ (executada no staging)
 
 Fase 6 do design (`docs/superpowers/specs/2026-08-11-notifications-favorites-agentcards-design.md`).
@@ -132,7 +147,7 @@ _Actualizado: 2026-08-11 (leitura com service_role)_
 
 **`app_settings`:** `agent_commission_free_view_kz=0.15`, `daily_free_views_limit=3`, `min_withdrawal_amount=500`, `referral_commission_pct=20`, preços premium `290/700/1500` (quarterly aplicado 08-08), Monetag zones.
 
-**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`). **Pendentes:** `20260811000001`, `20260811000002` e `20260811000003` (notificações push + favoritos + realtime).
+**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`). **Pendentes:** `20260811000001`, `20260811000002` e `20260811000003` (notificações push + favoritos + realtime) e `20260813000001` (**AdMob `ad_unlocks`** — após aplicar, verificar trigger `trg_ad_commission` em `after insert or update`, RLS own, realtime; `agent_earnings` com `source='ad_view'`).
 
 ### Merge do fix do dev build EAS na main + limpeza de scratch (2026-08-11) ✅
 

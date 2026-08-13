@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { View, Text, ScrollView, RefreshControl, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useAuth } from '../../src/hooks/useAuth'
-import { useViews } from '../../src/hooks/useViews'
 import { supabase } from '../../src/lib/supabase'
 import { timeSince, timeUntil } from '../../src/lib/time'
 import { AppButton } from '../../src/components/ui/AppButton'
@@ -29,8 +28,7 @@ interface ActiveView {
 }
 
 export default function MyViewsScreen() {
-  const { user } = useAuth()
-  const { balance, loading: viewsLoading } = useViews()
+  const { user, isPremium } = useAuth()
   const router = useRouter()
   const [views, setViews] = useState<ActiveView[]>([])
   const [loading, setLoading] = useState(true)
@@ -40,8 +38,8 @@ export default function MyViewsScreen() {
     setLoading(true)
     try {
       const { data: vws, error: vwsErr } = await supabase
-        .from('atm_views')
-        .select('id, atm_id, granted_at, expires_at')
+        .from('ad_unlocks')
+        .select('id, atm_id, created_at, expires_at')
         .eq('user_id', user.id)
         .gt('expires_at', new Date().toISOString())
         .order('expires_at', { ascending: false })
@@ -59,9 +57,9 @@ export default function MyViewsScreen() {
         ;(atms ?? []).forEach((a) => atmsMap.set(a.id, a as ActiveView['atm']))
       }
 
-      setViews((vws ?? []).map((v) => ({ ...v, atm: atmsMap.get(v.atm_id) ?? null })))
+      setViews((vws ?? []).map((v) => ({ ...v, granted_at: v.created_at, atm: atmsMap.get(v.atm_id) ?? null })))
     } catch (err) {
-      console.error('Error fetching views:', err)
+      console.error('Error fetching ad unlocks:', err)
     } finally {
       setLoading(false)
     }
@@ -77,7 +75,7 @@ export default function MyViewsScreen() {
         <EmptyState
           icon="eye-outline"
           title="Inicia sessão"
-          description="Inicia sessão para ver as tuas views activas."
+          description="Inicia sessão para ver os teus desbloqueios activos."
         />
         <AppButton label="Entrar" onPress={() => router.push('/(auth)/login')} icon="log-in-outline" size="lg" />
       </View>
@@ -92,7 +90,7 @@ export default function MyViewsScreen() {
       refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchViews} tintColor={colors.brand[500]} />}
     >
       <Text style={{ fontSize: 13, color: colors.text.secondary, marginBottom: 12 }}>
-        Os teus desbloqueios de hoje
+        Os teus desbloqueios activos
       </Text>
 
       <AppCard style={{ marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -100,11 +98,9 @@ export default function MyViewsScreen() {
           <AppIcon name="eye" size={22} color={colors.brand[500]} />
         </View>
         <View>
-          <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Desbloqueios hoje</Text>
+          <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Desbloqueios activos</Text>
           <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text.primary }}>
-            {viewsLoading || balance.isPremium
-              ? balance.isPremium ? 'Ilimitado' : '—'
-              : `${balance.remaining} restante${balance.remaining !== 1 ? 's' : ''}`}
+            {isPremium ? 'Ilimitado' : `${views.length} ATM${views.length !== 1 ? 's' : ''}`}
           </Text>
         </View>
       </AppCard>

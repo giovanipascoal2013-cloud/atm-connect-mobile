@@ -86,7 +86,9 @@ export type Database = {
           atm_id: string
           created_at: string
           id: string
-          view_id: string
+          source: string | null
+          user_id: string | null
+          view_id: string | null
         }
         Insert: {
           agent_id: string
@@ -94,7 +96,9 @@ export type Database = {
           atm_id: string
           created_at?: string
           id?: string
-          view_id: string
+          source?: string | null
+          user_id?: string | null
+          view_id?: string | null
         }
         Update: {
           agent_id?: string
@@ -102,7 +106,9 @@ export type Database = {
           atm_id?: string
           created_at?: string
           id?: string
-          view_id?: string
+          source?: string | null
+          user_id?: string | null
+          view_id?: string | null
         }
         Relationships: [
           {
@@ -238,6 +244,45 @@ export type Database = {
           },
         ]
       }
+      ad_unlocks: {
+        Row: {
+          atm_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          atm_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          atm_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_unlocks_atm_id_fkey"
+            columns: ["atm_id"]
+            isOneToOne: false
+            referencedRelation: "atms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_unlocks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       referral_earnings: {
         Row: {
           agent_id: string
@@ -323,36 +368,6 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
-      }
-      atm_views: {
-        Row: {
-          agent_id: string | null
-          atm_id: string
-          expires_at: string
-          granted_at: string
-          id: string
-          is_active: boolean
-          user_id: string
-        }
-        Insert: {
-          agent_id?: string | null
-          atm_id: string
-          expires_at?: string
-          granted_at?: string
-          id?: string
-          is_active?: boolean
-          user_id: string
-        }
-        Update: {
-          agent_id?: string | null
-          atm_id?: string
-          expires_at?: string
-          granted_at?: string
-          id?: string
-          is_active?: boolean
-          user_id?: string
-        }
-        Relationships: []
       }
       atms: {
         Row: {
@@ -972,32 +987,6 @@ export type Database = {
           },
         ]
       }
-      daily_view_usage: {
-        Row: {
-          user_id: string
-          view_count: number
-          view_date: string
-        }
-        Insert: {
-          user_id: string
-          view_count?: number
-          view_date?: string
-        }
-        Update: {
-          user_id?: string
-          view_count?: number
-          view_date?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "daily_view_usage_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -1012,7 +1001,6 @@ export type Database = {
       unban_user: { Args: { _user_id: string }; Returns: undefined }
       is_user_banned: { Args: Record<string, never>; Returns: boolean }
       complete_withdrawal: { Args: { _withdrawal_id: string }; Returns: Json }
-      consume_atm_view: { Args: { _atm_id: string }; Returns: Json }
       has_role: {
         Args: {
           _user_id: string

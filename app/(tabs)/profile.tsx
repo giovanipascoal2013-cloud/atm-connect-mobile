@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react'
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Modal, Alert, ActivityIndicator, Linking } from 'react-native'
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Modal, Alert, Linking } from 'react-native'
 import { useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useAuth } from '../../src/hooks/useAuth'
-import { useViews } from '../../src/hooks/useViews'
+import { useAdUnlocks } from '../../src/hooks/useAdUnlocks'
 import { supabase } from '../../src/lib/supabase'
 import { formatPhone } from '../../src/lib/phone'
 import { supportWhatsAppUrl } from '../../src/lib/support'
@@ -17,7 +17,7 @@ import { colors, brandGradient } from '../../src/theme/tokens'
 
 export default function ProfileScreen() {
   const { user, profile, role, isPremium, isAgent, signOut, refreshProfile } = useAuth()
-  const { balance, loading: viewsLoading } = useViews()
+  const { unlocks } = useAdUnlocks()
   const router = useRouter()
 
   const [editing, setEditing] = useState(false)
@@ -164,17 +164,13 @@ export default function ProfileScreen() {
             </View>
           </AppCard>
           <AppCard style={{ flex: 1 }} raised>
-            <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Desbloqueios hoje</Text>
-            {viewsLoading ? (
-              <ActivityIndicator size="small" color={colors.brand[500]} style={{ marginTop: 8 }} />
-            ) : (
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 6 }}>
-                <AppIcon name="eye" size={15} color={colors.brand[500]} />
-                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text.primary, fontVariant: ['tabular-nums'] }}>
-                  {balance.isPremium ? 'Ilimitado' : `${balance.remaining} restante${balance.remaining !== 1 ? 's' : ''}`}
-                </Text>
-              </View>
-            )}
+            <Text style={{ fontSize: 12, color: colors.text.tertiary }}>Desbloqueios activos</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 6 }}>
+              <AppIcon name="eye" size={15} color={colors.brand[500]} />
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text.primary, fontVariant: ['tabular-nums'] }}>
+                {isPremium ? 'Ilimitado' : `${unlocks.size} ATM${unlocks.size !== 1 ? 's' : ''}`}
+              </Text>
+            </View>
           </AppCard>
         </View>
 

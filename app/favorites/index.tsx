@@ -1,7 +1,6 @@
 import { View, Text, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useFavorites } from '../../src/hooks/useFavorites'
-import { useViews } from '../../src/hooks/useViews'
 import { useAuth } from '../../src/hooks/useAuth'
 import { ATMList } from '../../src/components/map/ATMList'
 import { EmptyState } from '../../src/components/ui/EmptyState'
@@ -10,9 +9,8 @@ import { colors } from '../../src/theme/tokens'
 
 export default function FavoritesScreen() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, isPremium } = useAuth()
   const { favoriteAtms, loading, toggleFavorite, refetch } = useFavorites()
-  const { balance } = useViews()
 
   if (loading) {
     return (
@@ -44,7 +42,7 @@ export default function FavoritesScreen() {
       onRefresh={refetch}
       refreshing={loading}
       lockedIds={new Set()}
-      isPremium={balance.isPremium}
+      isPremium={isPremium}
       isLoggedIn={!!user}
       favoriteIds={new Set(favoriteAtms.map((a) => a.id))}
       onToggleFavorite={(atmId) => { void toggleFavorite(atmId) }}

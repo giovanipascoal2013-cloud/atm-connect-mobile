@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react'
-import { View, ActivityIndicator, Text, Keyboard, TouchableWithoutFeedback, TouchableOpacity } from 'react-native'
+import { useState, useCallback, useMemo } from 'react'
+import { View, ActivityIndicator, Text, Keyboard, TouchableWithoutFeedback } from 'react-native'
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router'
 import { useAuth } from '../../src/hooks/useAuth'
 import { useLocation } from '../../src/hooks/useLocation'
 import { useATMs, type ATMWithDistance, type ATMStatus, type SortMode } from '../../src/hooks/useATMs'
-import { useViews } from '../../src/hooks/useViews'
+import { useAdMob } from '../../src/hooks/useAdMob'
+import { useAdUnlocks } from '../../src/hooks/useAdUnlocks'
 import { useFavorites } from '../../src/hooks/useFavorites'
 import { supabase } from '../../src/lib/supabase'
 import { ATMMapView } from '../../src/components/map/ATMMapView'
@@ -15,7 +16,6 @@ import { PremiumModal } from '../../src/components/premium/PremiumModal'
 import { LogoPin } from '../../src/components/ui/LogoPin'
 import { SegmentedControl } from '../../src/components/ui/SegmentedControl'
 import { AppButton } from '../../src/components/ui/AppButton'
-import { AppIcon } from '../../src/components/ui/AppIcon'
 import { colors, shadows } from '../../src/theme/tokens'
 
 type ViewMode = 'map' | 'list'
@@ -23,9 +23,10 @@ type ViewMode = 'map' | 'list'
 export default function MapScreen() {
   const router = useRouter()
   const params = useLocalSearchParams<{ openAtm?: string }>()
-  const { user } = useAuth()
+  const { user, isPremium } = useAuth()
   const { location, permission, loading: locationLoading, requestAgain } = useLocation()
-  const { balance, consumeView } = useViews()
+  const { showRewarded } = useAdMob()
+  const { unlocks, hasValidUnlock, createUnlock } = useAdUnlocks()
   const { favoriteAtms, isFavorite, toggleFavorite } = useFavorites()
   const [viewMode, setViewMode] = useState<ViewMode>('map')
   const [search, setSearch] = useState('')
@@ -37,7 +38,6 @@ export default function MapScreen() {
   const [unlocked, setUnlocked] = useState(false)
   const [unlocking, setUnlocking] = useState(false)
   const [premiumVisible, setPremiumVisible] = useState(false)
-  const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set())
   const [agentRating, setAgentRating] = useState<{ likes: number; dislikes: number } | null>(null)
   const [userVote, setUserVote] = useState<'like' | 'dislike' | null>(null)
 
@@ -48,6 +48,14 @@ export default function MapScreen() {
     sortMode,
     userLocation: location,
   })
+
+  const unlockedIds = useMemo(() => {
+    const set = new Set<string>()
+    unlocks.forEach((_, atmId) => {
+      if (hasValidUnlock(atmId)) set.add(atmId)
+    })
+    return set
+  }, [unlocks, hasValidUnlock])
 
   const fetchRating = useCallback(async (atm: ATMWithDistance) => {
     setAgentRating(null)
@@ -66,9 +74,9 @@ export default function MapScreen() {
   const handleATMPress = useCallback(async (atm: ATMWithDistance) => {
     setSelectedATM(atm)
     setSheetVisible(true)
-    setUnlocked(unlockedIds.has(atm.id))
+    setUnlocked(hasValidUnlock(atm.id))
     fetchRating(atm)
-  }, [unlockedIds, fetchRating])
+  }, [hasValidUnlock, fetchRating])
 
   useFocusEffect(
     useCallback(() => {
@@ -82,21 +90,28 @@ export default function MapScreen() {
     }, [params.openAtm, atms, handleATMPress, router])
   )
 
-  const handleUnlock = useCallback(async () => {
+  const handleWatchAd = useCallback(async () => {
     if (!selectedATM) return
-    if (unlocking) return
     if (!user) {
       router.push('/(auth)/login')
       return
     }
+    if (unlocking) return
     setUnlocking(true)
-    const result = await consumeView(selectedATM.id)
-    if (result) {
-      setUnlocked(true)
-      setUnlockedIds((prev) => new Set(prev).add(selectedATM.id))
+    try {
+      const watched = await showRewarded()
+      if (watched) {
+        const success = await createUnlock(selectedATM.id)
+        if (success) {
+          setUnlocked(true)
+        }
+      }
+    } catch (e) {
+      console.warn('Watch ad error:', e)
+    } finally {
+      setUnlocking(false)
     }
-    setUnlocking(false)
-  }, [selectedATM, consumeView, user, router, unlocking])
+  }, [selectedATM, user, unlocking, showRewarded, createUnlock, router])
 
   const handleVote = useCallback(async (value: 'like' | 'dislike') => {
     if (!selectedATM) return
@@ -148,32 +163,11 @@ export default function MapScreen() {
     )
   }
 
-  const viewsBadge = user && !balance.isPremium && (
-    <TouchableOpacity
-      onPress={() => router.push('/my-views')}
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        backgroundColor: balance.remaining > 0 ? colors.brand[50] : '#FEF3C7',
-        borderRadius: 999,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-      }}
-    >
-      <AppIcon name="eye" size={13} color={balance.remaining > 0 ? colors.brand[600] : '#B45309'} />
-      <Text style={{ fontSize: 12, fontWeight: '700', color: balance.remaining > 0 ? colors.brand[600] : '#B45309' }}>
-        {balance.remaining}
-      </Text>
-    </TouchableOpacity>
-  )
-
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={{ paddingTop: 12, paddingHorizontal: 12, gap: 8 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ flex: 1 }} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
           <SegmentedControl
             options={[
               { key: 'map', label: 'Mapa' },
@@ -183,7 +177,6 @@ export default function MapScreen() {
             onChange={(m) => setViewMode(m)}
             style={{ width: 180 }}
           />
-          <View style={{ flex: 1, alignItems: 'flex-end' }}>{viewsBadge}</View>
         </View>
 
         <MapFilters
@@ -215,7 +208,7 @@ export default function MapScreen() {
             selectedATMId={selectedATM?.id || null}
             onATMPress={handleATMPress}
             lockedIds={unlockedIds}
-            isPremium={balance.isPremium}
+            isPremium={isPremium}
             isLoggedIn={!!user}
           />
         ) : (
@@ -228,7 +221,7 @@ export default function MapScreen() {
             onRetry={refetch}
             onRefresh={refetch}
             lockedIds={unlockedIds}
-            isPremium={balance.isPremium}
+            isPremium={isPremium}
             isLoggedIn={!!user}
             favoriteIds={new Set(favoriteAtms.map((a) => a.id))}
             onToggleFavorite={(atmId) => { void toggleFavorite(atmId) }}
@@ -265,18 +258,18 @@ export default function MapScreen() {
       <ATMDetailSheet
         atm={selectedATM}
         visible={sheetVisible}
-        unlocked={unlocked || balance.isPremium}
+        unlocked={unlocked || isPremium || (selectedATM ? hasValidUnlock(selectedATM.id) : false)}
         unlocking={unlocking}
-        isPremium={balance.isPremium}
+        isPremium={isPremium}
         isLoggedIn={!!user}
-        remainingViews={balance.remaining}
         userVote={userVote}
         agentRating={agentRating}
         isFavorite={selectedATM ? isFavorite(selectedATM.id) : false}
         onToggleFavorite={() => { if (selectedATM) void toggleFavorite(selectedATM.id) }}
         onVote={handleVote}
         onClose={handleCloseSheet}
-        onUnlock={handleUnlock}
+        onUnlock={handleWatchAd}
+        onWatchAd={handleWatchAd}
         onLogin={() => router.push('/(auth)/login')}
         onOpenPremium={() => { setSheetVisible(false); setPremiumVisible(true) }}
       />

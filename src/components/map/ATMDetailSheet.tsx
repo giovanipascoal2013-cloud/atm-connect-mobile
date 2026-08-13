@@ -15,7 +15,6 @@ interface ATMDetailSheetProps {
   unlocking: boolean
   isPremium: boolean
   isLoggedIn: boolean
-  remainingViews: number
   userVote?: 'like' | 'dislike' | null
   agentRating?: { likes: number; dislikes: number } | null
   isFavorite?: boolean
@@ -23,6 +22,7 @@ interface ATMDetailSheetProps {
   onVote?: (value: 'like' | 'dislike') => void
   onClose: () => void
   onUnlock: () => void
+  onWatchAd: () => void
   onLogin: () => void
   onOpenPremium: () => void
 }
@@ -34,7 +34,6 @@ export function ATMDetailSheet({
   unlocking,
   isPremium,
   isLoggedIn,
-  remainingViews,
   userVote,
   agentRating,
   isFavorite,
@@ -42,6 +41,7 @@ export function ATMDetailSheet({
   onVote,
   onClose,
   onUnlock,
+  onWatchAd,
   onLogin,
   onOpenPremium,
 }: ATMDetailSheetProps) {
@@ -253,7 +253,7 @@ export function ATMDetailSheet({
               icon="log-in-outline"
               haptic
             />
-          ) : isPremium ? (
+          ) : isPremium || unlocked ? (
             <AppButton
               label="Ver Detalhes"
               onPress={onUnlock}
@@ -264,41 +264,17 @@ export function ATMDetailSheet({
               icon="eye-outline"
               haptic
             />
-          ) : remainingViews > 0 ? (
-            <>
-              <AppButton
-                label="Ver disponibilidade de dinheiro"
-                onPress={onUnlock}
-                fullWidth
-                size="lg"
-                style={{ backgroundColor: colors.brand[600] }}
-                loading={unlocking}
-                icon="eye-outline"
-                haptic
-              />
-              <Text style={{ fontSize: 12, color: colors.text.tertiary, textAlign: 'center', marginTop: -4 }}>
-                {remainingViews} desbloqueio{remainingViews !== 1 ? 's' : ''} restante{remainingViews !== 1 ? 's' : ''} hoje
-              </Text>
-            </>
           ) : (
-            <View style={{ gap: 10 }}>
-              <View style={{ backgroundColor: '#FEF3C7', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16 }}>
-                <Text style={{ fontSize: 13, color: '#92400E', textAlign: 'center', fontWeight: '600' }}>
-                  Acabaste os desbloqueios de hoje
-                </Text>
-                <Text style={{ fontSize: 12, color: '#B45309', textAlign: 'center', marginTop: 3 }}>
-                  Volta amanhã para mais
-                </Text>
-              </View>
-              <AppButton
-                label="Upgrade Premium"
-                onPress={onOpenPremium}
-                fullWidth
-                size="lg"
-                icon="diamond"
-                haptic
-              />
-            </View>
+            <AppButton
+              label="Ver anúncio para desbloquear"
+              onPress={onWatchAd}
+              fullWidth
+              size="lg"
+              style={{ backgroundColor: colors.brand[600] }}
+              loading={unlocking}
+              icon="play-circle-outline"
+              haptic
+            />
           )}
         </ScrollView>
       )}
