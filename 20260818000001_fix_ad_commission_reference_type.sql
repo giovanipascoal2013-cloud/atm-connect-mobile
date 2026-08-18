@@ -1,17 +1,15 @@
 -- ============================================================
--- 20260813000002_ad_unlocks_fix.sql
--- Sistema de anúncios — Fase 2 (B4/B5/B6)
+-- 20260818000001_fix_ad_commission_reference_type.sql
+-- Fix: trg_ad_commission inseria reference_type='ad_view' em
+-- balance_transactions, mas o constraint
+-- balance_transactions_reference_type_check só permite
+-- ('withdrawal','earning','adjustment','rejection').
+-- → trigger falhava → create_ad_unlock dava rollback (0 unlocks).
+-- Fix: usar 'earning' (mesmo valor do RPC legado consume_atm_view).
 -- Aplicar no Supabase Staging: https://ndvjitfovhfngrzwtytd.supabase.co
 -- Executar com o role postgres (SQL editor). Idempotente.
---
--- ORDEM OBRIGATÓRIA: aplicar este SQL ANTES de rebuildar o app.
--- O app passa a criar unlocks via RPC (create_ad_unlock) e o INSERT
--- directo é revogado — sem o RPC o createUnlock falha.
 -- ============================================================
 
--- ------------------------------------------------------------
--- 1. B6 + B4 — Trigger com mensagem dinâmica e guarda robusta do setting
--- ------------------------------------------------------------
 create or replace function public.trigger_ad_commission()
 returns trigger
 language plpgsql
@@ -79,39 +77,3 @@ drop trigger if exists trg_ad_commission on public.ad_unlocks;
 create trigger trg_ad_commission
   after insert or update on public.ad_unlocks
   for each row execute function public.trigger_ad_commission();
-
--- ------------------------------------------------------------
--- 2. B5 — RPC create_ad_unlock (criação/renovação 24h via server-side)
---     Fecha o buraco de comissão sem ver anúncio: o cliente deixa de
---     poder inserir ad_unlocks directamente.
--- ------------------------------------------------------------
-create or replace function public.create_ad_unlock(p_atm_id uuid)
-returns boolean
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  v_user_id uuid := auth.uid();
-begin
-  if v_user_id is null or p_atm_id is null then
-    return false;
-  end if;
-
-  insert into public.ad_unlocks (user_id, atm_id, expires_at)
-  values (v_user_id, p_atm_id, now() + interval '24 hours')
-  on conflict (user_id, atm_id)
-  do update set expires_at = excluded.expires_at;
-
-  return true;
-end;
-$$;
-
-revoke all on function public.create_ad_unlock(uuid) from public, anon;
-grant execute on function public.create_ad_unlock(uuid) to authenticated;
-
--- ------------------------------------------------------------
--- 3. B5 — Revogar INSERT directo na tabela (só via RPC)
---     SELECT/UPDATE/DELETE own mantêm-se.
--- ------------------------------------------------------------
-drop policy if exists "ad_unlocks_insert_own" on public.ad_unlocks;

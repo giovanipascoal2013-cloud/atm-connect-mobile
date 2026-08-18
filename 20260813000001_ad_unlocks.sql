@@ -103,9 +103,9 @@ begin
     insert into public.agent_earnings (agent_id, atm_id, user_id, amount_kz, source)
     values (v_agent_id, new.atm_id, new.user_id, v_commission_kz, 'ad_view');
 
-    -- 2. balance_transactions (credit)
+    -- 2. balance_transactions (credit) — reference_type 'earning' (único válido no CHECK)
     insert into public.balance_transactions (agent_id, type, amount_kz, description, reference_id, reference_type)
-    values (v_agent_id, 'credit', v_commission_kz, 'Comissão por anúncio no ATM ' || v_bank_name, new.atm_id, 'ad_view');
+    values (v_agent_id, 'credit', v_commission_kz, 'Comissão por anúncio no ATM ' || v_bank_name, new.atm_id, 'earning');
 
     -- 3. Incrementa profiles.agent_balance_kz
     update public.profiles

@@ -2,6 +2,16 @@
 
 ## Estado Actual
 
+### Fix unlock após ver anúncio — `reference_type='earning'` (2026-08-18) ✅ (BD aplicada; sem rebuild)
+
+**Problema (reportado no dev client, `errr.md`):** ao desbloquear um ATM após ver o rewarded ad, `createUnlock` falhava com `new row for relation "balance_transactions" violates check constraint "balance_transactions_reference_type_check"`.
+
+**Causa raiz (verificada na BD staging via `psql` — pooler `aws-0-eu-west-1`):** o trigger `trg_ad_commission` (migração `20260813000002`) inseria `balance_transactions.reference_type = 'ad_view'`, mas a tabela tem `CHECK (reference_type IN ('withdrawal','earning','adjustment','rejection'))` (definido no web app, `20260501000002_balance_transactions.sql`). O erro no trigger dava **rollback total** do RPC `create_ad_unlock` → `ad_unlocks` ficou com 0 linhas.
+
+**Fix:** migração **`20260818000001_fix_ad_commission_reference_type.sql`** (raiz do repo) → `CREATE OR REPLACE` do `trigger_ad_commission()` com `reference_type = 'earning'` (mesmo valor do RPC legado `consume_atm_view`; sem tocar na tabela/constraint). **Aplicada directamente no staging via `psql` (2026-08-18)** ✅. `agent_earnings.source='ad_view'` mantém-se (sem constraints). `20260813000001`/`20260813000002` sincronizados (`'ad_view'` → `'earning'` na linha do `balance_transactions`) para o repo reflectir a BD.
+
+**Verificação:** function def confirma `'earning'`; teste controlado `BEGIN; INSERT ad_unlocks …; ROLLBACK` executou sem erro (antes rebentava). `ad_unlocks` = 0 (nada persistido). **Sem rebuild do dev client** — alteração só de BD; basta recarregar o app e repetir o fluxo (ver anúncio → desbloquear).
+
 ### Fix do EAS build — `.easignore` com symlinks (2026-08-13) ✅
 
 **Problema:** `eas build --profile development` falhava na compressão do archive com `EPERM: operation not permitted, symlink '.agents\skills\code-review-expert' -> '...\.claude\skills\code-review-expert'`.
@@ -199,7 +209,7 @@ Verificação do sistema de consumo de views → atribuição de Kzs aos agentes
 
 > **Regra (AGENTS.md)**: após qualquer tarefa que opere a BD, actualizar este relatório no `LOG.md`.
 
-_Actualizado: 2026-08-13 (verificação só-leitura: REST service_role + Management API PAT)_
+_Actualizado: 2026-08-18 (verificação só-leitura via `psql` directo — pooler `aws-0-eu-west-1`)_
 
 | Tabela | Estado | Detalhes |
 |---|---|---|
@@ -207,14 +217,14 @@ _Actualizado: 2026-08-13 (verificação só-leitura: REST service_role + Managem
 | `agent_earnings` | 17 rows | `amount_kz = 0.15`; colunas `user_id`/`source` **presentes mas NULL** nas linhas legadas (aditadas pela migração AdMob) |
 | `daily_view_usage` | 11 rows | limite 3/dia (sistema legado, já não usado pelo app — agora ads) |
 | `profiles.agent_balance_kz` | 20+ agentes | ex. `855987c4`=200.15, `55875658`=0.60, `7b9e265a`=0.30, `cddcca6d`=0.45 |
-| `balance_transactions` | credits 0.15/view + adjustments demo (30000, 29450, 28200) | flow de earnings OK |
+| `balance_transactions` | 19 `earning` + 10 `adjustment` + 3 `withdrawal` | constraint real: `reference_type IN ('withdrawal','earning','adjustment','rejection')` (confirmado) — **é por isso que o trigger com `'ad_view'` rebentava** |
 | `subscriptions` | 4 rows, **todas `pending`** | plan_type `monthly`, `price_kz=1500` (antigo), nunca aprovadas |
 | `withdrawals` | 2 rows | 1 pending, 1 completed |
-| **`ad_unlocks`** | **0 rows** (nova) | RLS `relrowsecurity=true`; policies own mantidas apenas para **select/delete**; **INSERT e UPDATE revogados** (policies `ad_unlocks_insert_own` e `ad_unlocks_update_own` removidas — criação/renovação só via RPC `create_ad_unlock`); realtime na publication; trigger `trg_ad_commission` **AFTER INSERT OR UPDATE** com guarda anti-duplicação (`TG_OP='UPDATE' and new.expires_at <= old.expires_at` → return) e **mensagem dinâmica** com `to_char` + fallback 0.15 para `agent_commission_free_view_kz` inválido — verificado via `pg_get_triggerdef`/`pg_get_functiondef` |
+| **`ad_unlocks`** | **0 rows** | RLS `relrowsecurity=true`; policies own mantidas apenas para **select/delete** (INSERT/UPDATE revogados — criação só via RPC `create_ad_unlock`); realtime na publication; trigger `trg_ad_commission` AFTER INSERT OR UPDATE com guarda anti-duplicação + mensagem dinâmica + **`reference_type='earning'`** (fix 18-08) — verificado via `pg_get_functiondef` e teste `BEGIN…ROLLBACK` sem erro |
 
 **`app_settings`:** `agent_commission_free_view_kz=0.15`, `daily_free_views_limit=3`, `min_withdrawal_amount=500`, `referral_commission_pct=20`, preços premium `290/700/1500` (quarterly aplicado 08-08), Monetag zones.
 
-**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`), **`20260811000001`** (fix `consume_atm_view` is_active — corpo §5.5 confirmado), **`20260811000002`** (subscriptions quarterly — CHECK com `quarterly` + policies insert own confirmadas), **`20260811000003`** (Fase 6 push/favoritos — `atm_favorites`=1, `push_tokens`=1, `push_log`=0, RPCs `create_notification`/`send_expo_push` presentes), **`20260813000001`** (AdMob `ad_unlocks` — aplicada e verificada), **`20260813000002_ad_unlocks_fix.sql`** (B4/B5/B6 — RPC `create_ad_unlock`, revogar INSERT, trigger dinâmico — **aplicada pelo utilizador em 2026-08-13** ✅), **`20260813000003_ad_unlocks_sec.sql`** (B11 — revogar policy `ad_unlocks_update_own` — **aplicada pelo utilizador em 2026-08-13** ✅). **Sem pendências de BD.**
+**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`), **`20260811000001`** (fix `consume_atm_view` is_active — corpo §5.5 confirmado), **`20260811000002`** (subscriptions quarterly — CHECK com `quarterly` + policies insert own confirmadas), **`20260811000003`** (Fase 6 push/favoritos — `atm_favorites`=1, `push_tokens`=1, `push_log`=0, RPCs `create_notification`/`send_expo_push` presentes), **`20260813000001`** (AdMob `ad_unlocks` — aplicada e verificada), **`20260813000002_ad_unlocks_fix.sql`** (B4/B5/B6 — RPC `create_ad_unlock`, revogar INSERT, trigger dinâmico — **aplicada pelo utilizador em 2026-08-13** ✅), **`20260813000003_ad_unlocks_sec.sql`** (B11 — revogar policy `ad_unlocks_update_own` — **aplicada pelo utilizador em 2026-08-13** ✅), **`20260818000001_fix_ad_commission_reference_type.sql`** (trigger com `reference_type='earning'` — **aplicada via `psql` em 2026-08-18** ✅). **Sem pendências de BD.**
 
 > **Nota de segurança (registada sem token):** verificação de BD feita com a service role (REST) e um Personal Access Token da conta Supabase (Management API, queries de leitura apenas). Nenhuma credencial foi gravada no repo.
 
