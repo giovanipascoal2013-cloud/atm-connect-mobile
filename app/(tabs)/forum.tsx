@@ -8,6 +8,7 @@ import { useAuth } from '../../src/hooks/useAuth'
 import { AppButton } from '../../src/components/ui/AppButton'
 import { EmptyState } from '../../src/components/ui/EmptyState'
 import { AppIcon } from '../../src/components/ui/AppIcon'
+import { AdBanner } from '../../src/components/ads/AdBanner'
 import { colors } from '../../src/theme/tokens'
 
 export default function ForumScreen() {
@@ -124,6 +125,10 @@ export default function ForumScreen() {
           ))
         )}
       </ScrollView>
+
+      <View style={{ alignItems: 'center', backgroundColor: colors.surface }}>
+        <AdBanner />
+      </View>
 
       <Modal visible={showCreate} transparent animationType="slide" onRequestClose={() => setShowCreate(false)}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>

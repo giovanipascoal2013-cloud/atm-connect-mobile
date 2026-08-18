@@ -2,6 +2,21 @@
 
 ## Estado Actual
 
+### Banners + Interstitial AdMob (2026-08-18) ✅ (tsc + lint OK; sem BD)
+
+Além do rewarded ad (desbloquear ATM), adicionados **banners adaptáveis** (receita passiva) e **interstitial** com frequência controlada. Spec: `docs/superpowers/specs/2026-08-18-admob-banner-interstitial-design.md`.
+
+- **Novos ficheiros:**
+  - `src/lib/ads.ts` — unit IDs por formato+plataforma (env estático `EXPO_PUBLIC_ADMOB_*` + fallback test IDs oficiais).
+  - `src/components/ads/AdBanner.tsx` — wrapper `BannerAd` (`LARGE_ANCHORED_ADAPTIVE_BANNER`, `requestNonPersonalizedAdsOnly`), `null` em web/sem unit, oculto para premium (`useAuth().isPremium`).
+  - `src/hooks/useAdInterstitial.ts` — pré-load, `show()` guardado, **cap 1/sessão** (flag module-level), reload 1s pós-CLOSED, degrada silencioso.
+- **Colocação banners:** fundo do mapa/lista (`map.tsx`), rodapé do sheet de detalhes (`ATMDetailSheet.tsx`), fundo de favoritos e fórum. O sheet cobre o banner do mapa quando aberto — o sheet tem o próprio banner (sem duplicação).
+- **Interstitial:** `map.tsx` conta aberturas de detalhe (`detailOpensRef`) → mostra a **cada 4.º detalhe** (`INTERSTITIAL_EVERY=4`), nunca para premium, nunca durante rewarded.
+- **Env:** `.env`/`.env.example` +4 vars (banner + interstitial, test IDs).
+- **Sem rebuild:** nativo já compilado no dev client (mesma lib) — basta recarregar.
+- **Verificação:** `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+- **Pendente (utilizador):** testar no dev client (banner mapa/detalhes/favoritos/fórum + interstitial no 4.º detalhe; ocultos para premium). Em produção: trocar por IDs reais da conta AdMob + avaliar consentimento (UMP/GDPR).
+
 ### Fix unlock após ver anúncio — `reference_type='earning'` (2026-08-18) ✅ (BD aplicada; sem rebuild)
 
 **Problema (reportado no dev client, `errr.md`):** ao desbloquear um ATM após ver o rewarded ad, `createUnlock` falhava com `new row for relation "balance_transactions" violates check constraint "balance_transactions_reference_type_check"`.

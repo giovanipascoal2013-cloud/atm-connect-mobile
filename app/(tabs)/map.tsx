@@ -1,10 +1,11 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useRef } from 'react'
 import { View, ActivityIndicator, Text, Keyboard, TouchableWithoutFeedback, Alert } from 'react-native'
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router'
 import { useAuth } from '../../src/hooks/useAuth'
 import { useLocation } from '../../src/hooks/useLocation'
 import { useATMs, type ATMWithDistance, type ATMStatus, type SortMode } from '../../src/hooks/useATMs'
 import { useAdMob } from '../../src/hooks/useAdMob'
+import { useAdInterstitial } from '../../src/hooks/useAdInterstitial'
 import { useAdUnlocks } from '../../src/hooks/useAdUnlocks'
 import { useFavorites } from '../../src/hooks/useFavorites'
 import { supabase } from '../../src/lib/supabase'
@@ -12,6 +13,7 @@ import { ATMMapView } from '../../src/components/map/ATMMapView'
 import { MapFilters } from '../../src/components/map/MapFilters'
 import { ATMList } from '../../src/components/map/ATMList'
 import { ATMDetailSheet } from '../../src/components/map/ATMDetailSheet'
+import { AdBanner } from '../../src/components/ads/AdBanner'
 import { LogoPin } from '../../src/components/ui/LogoPin'
 import { SegmentedControl } from '../../src/components/ui/SegmentedControl'
 import { AppButton } from '../../src/components/ui/AppButton'
@@ -19,12 +21,16 @@ import { colors, shadows } from '../../src/theme/tokens'
 
 type ViewMode = 'map' | 'list'
 
+// Interstitial: mostra a cada N aberturas de detalhe (máx 1/sessão — gerido no hook)
+const INTERSTITIAL_EVERY = 4
+
 export default function MapScreen() {
   const router = useRouter()
   const params = useLocalSearchParams<{ openAtm?: string }>()
   const { user, isPremium } = useAuth()
   const { location, permission, loading: locationLoading, requestAgain } = useLocation()
   const { showRewarded, isLoaded, loading: adLoading, loadRewarded } = useAdMob()
+  const { showInterstitial } = useAdInterstitial()
   const { unlocks, hasValidUnlock, createUnlock } = useAdUnlocks()
   const { favoriteAtms, isFavorite, toggleFavorite } = useFavorites()
   const [viewMode, setViewMode] = useState<ViewMode>('map')
@@ -38,6 +44,7 @@ export default function MapScreen() {
   const [unlocking, setUnlocking] = useState(false)
   const [agentRating, setAgentRating] = useState<{ likes: number; dislikes: number } | null>(null)
   const [userVote, setUserVote] = useState<'like' | 'dislike' | null>(null)
+  const detailOpensRef = useRef(0)
 
   const { atms, cities, loading: atmsLoading, error, refetch } = useATMs({
     search,
@@ -74,7 +81,13 @@ export default function MapScreen() {
     setSheetVisible(true)
     setUnlocked(hasValidUnlock(atm.id))
     fetchRating(atm)
-  }, [hasValidUnlock, fetchRating])
+
+    // Interstitial: a cada N aberturas de detalhe (não para premium)
+    detailOpensRef.current += 1
+    if (!isPremium && detailOpensRef.current % INTERSTITIAL_EVERY === 0) {
+      showInterstitial()
+    }
+  }, [hasValidUnlock, fetchRating, isPremium, showInterstitial])
 
   useFocusEffect(
     useCallback(() => {
@@ -280,6 +293,10 @@ export default function MapScreen() {
         adLoading={adLoading}
         onLogin={() => router.push('/(auth)/login')}
       />
+
+      <View style={{ alignItems: 'center', backgroundColor: '#fff' }}>
+        <AdBanner />
+      </View>
       </View>
     </TouchableWithoutFeedback>
   )

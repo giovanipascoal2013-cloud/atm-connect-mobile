@@ -4,6 +4,7 @@ import { useFavorites } from '../../src/hooks/useFavorites'
 import { useAuth } from '../../src/hooks/useAuth'
 import { useAdUnlocks } from '../../src/hooks/useAdUnlocks'
 import { ATMList } from '../../src/components/map/ATMList'
+import { AdBanner } from '../../src/components/ads/AdBanner'
 import { EmptyState } from '../../src/components/ui/EmptyState'
 import { AppButton } from '../../src/components/ui/AppButton'
 import { colors } from '../../src/theme/tokens'
@@ -39,17 +40,22 @@ export default function FavoritesScreen() {
   }
 
   return (
-    <ATMList
-      atms={favoriteAtms}
-      onPress={(atm) => router.push({ pathname: '/(tabs)/map', params: { openAtm: atm.id } })}
-      loading={false}
-      onRefresh={refetch}
-      refreshing={loading}
-      lockedIds={unlockedIds}
-      isPremium={isPremium}
-      isLoggedIn={!!user}
-      favoriteIds={new Set(favoriteAtms.map((a) => a.id))}
-      onToggleFavorite={(atmId) => { void toggleFavorite(atmId) }}
-    />
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
+      <ATMList
+        atms={favoriteAtms}
+        onPress={(atm) => router.push({ pathname: '/(tabs)/map', params: { openAtm: atm.id } })}
+        loading={false}
+        onRefresh={refetch}
+        refreshing={loading}
+        lockedIds={unlockedIds}
+        isPremium={isPremium}
+        isLoggedIn={!!user}
+        favoriteIds={new Set(favoriteAtms.map((a) => a.id))}
+        onToggleFavorite={(atmId) => { void toggleFavorite(atmId) }}
+      />
+      <View style={{ alignItems: 'center', backgroundColor: '#fff' }}>
+        <AdBanner />
+      </View>
+    </View>
   )
 }

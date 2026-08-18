@@ -6,6 +6,7 @@ import { timeSince } from '../../lib/time'
 import { AppIcon } from '../ui/AppIcon'
 import { AppButton } from '../ui/AppButton'
 import { Badge } from '../ui/Badge'
+import { AdBanner } from '../ads/AdBanner'
 import { colors } from '@/theme/tokens'
 
 interface ATMDetailSheetProps {
@@ -264,6 +265,10 @@ export function ATMDetailSheet({
           )}
         </ScrollView>
       )}
+
+      <View style={{ alignItems: 'center', paddingBottom: 8, borderTopWidth: 1, borderTopColor: '#F3F4F6' }}>
+        <AdBanner />
+      </View>
     </View>
   )
 }
