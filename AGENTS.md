@@ -51,7 +51,32 @@ eas build --platform ios --profile preview
 npx expo lint
 ```
 
-> **Checklist pré-build EAS**: (1) `npx tsc --noEmit` OK; (2) `npx expo lint` OK; (3) `git status` limpo (nada de ficheiros untracked relevantes); (4) **`.easignore` cobre `.agents/`, `.claude/` e qualquer symlink/dir novo** — o `.easignore` tem precedência sobre o `.gitignore` no EAS; sem isso o archive falha com `EPERM` (symlinks no Windows). Manter `.easignore` e `.gitignore` em sincronia.
+> **Checklist pré-build EAS**: (1) `npx tsc --noEmit` OK; (2) `npx expo lint` OK; (3) `git status` limpo (nada de ficheiros untracked relevantes); (4) **`.easignore` cobre `.agents/`, `.claude/` e qualquer symlink/dir novo** — o `.easignore` tem precedência sobre o `.gitignore` no EAS; sem isso o archive falha com `EPERM` (symlinks no Windows). Manter `.easignore` e `.gitignore` em sincronia; (5) **`package.json` ↔ `package-lock.json` sincronizados** — se houve mudança de deps, `git status` deve mostrar o lock modificado; senão correr `npm install --package-lock=true` (ver secção abaixo).
+
+### Instalação de Dependências — Gotcha do lock file (IMPORTANTE)
+
+> **Causa raiz conhecida**: o npm do utilizador tem `package-lock = false` no
+> config GLOBAL (`C:\Users\Gio Pilav\.npmrc`). Consequência: `npm install` /
+> `npx expo install` actualizam `node_modules` mas **NUNCA escrevem no
+> `package-lock.json`**. O projecto tem um `.npmrc` próprio (`package-lock=true`)
+> para sobrepor o global — mas o config global pode voltar a apanhar-te (outra
+> máquina, ou correr npm fora da raiz do repo).
+
+**Porque importa**: o EAS corre `npm ci --include=dev`, que falha com `EUSAGE`
+sempre que `package.json` e `package-lock.json` estão dessincronizados. Sintoma:
+
+    npm error Missing: <pacote>@<versão> from lock file
+
+**Workflow obrigatório após QUALQUER mudança de dependência** (instalar, remover, actualizar):
+1. Instalar/remover normalmente (`npx expo install <pkg>`, `npm uninstall <pkg>`);
+2. **Forçar actualização do lock**: `npm install --package-lock=true`;
+3. **Verificar sincronização** (os três):
+   - `git status` mostra `package-lock.json` modificado — se não mostra, o lock NÃO foi actualizado;
+   - grep de `"<pkg>"` em `package-lock.json` devolve o pacote;
+   - `git diff package-lock.json` mostra a entrada nova;
+4. Fazer **commit de `package.json` + `package-lock.json` SEMPRE juntos** — nunca um sem o outro.
+
+**Nunca** apagar `package-lock.json` manualmente — o EAS depende dele para `npm ci`.
 
 ## Skills por Contexto
 

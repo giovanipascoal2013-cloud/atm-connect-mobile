@@ -2,6 +2,19 @@
 
 ## Estado Actual
 
+### Fix EAS build — lock file des-sincronizado com `lottie-react-native` (2026-08-19) ✅ (lock sincronizado; aguarda rebuild)
+
+**Problema:** o build EAS (`npm ci --include=dev`) falhava com `EUSAGE` → `Missing: lottie-react-native@7.3.8 from lock file` (ver `errr.md`).
+
+**Causa raiz:** `lottie-react-native` foi adicionado ao `package.json` (splash Lottie) mas **`package-lock.json` nunca foi actualizado** — o npm do utilizador tem `package-lock = false` no config GLOBAL (`C:\Users\Gio Pilav\.npmrc`), logo `npm install`/`npx expo install` nunca escrevem no lock.
+
+**Fix (estrutural + documentação):**
+- **`.npmrc`** (novo, raiz do repo) com `package-lock=true` — sobrepõe o config global **só neste projecto**, garantindo que futuras mudanças de deps actualizam o lock.
+- **`package-lock.json`**: sincronizado via `npm install --package-lock=true` (entrada `lottie-react-native@7.3.8` presente).
+- **`AGENTS.md`**: nova secção "Instalação de Dependências — Gotcha do lock file" (causa, sintoma `EUSAGE`, workflow obrigatório: instalar → `npm install --package-lock=true` → verificar com `git status`/grep/`git diff` → commit de `package.json`+`package-lock.json` juntos) + ponto 5 na Checklist pré-build EAS.
+
+**Pendente (utilizador):** re-run do build `eas build --platform android --profile preview`.
+
 ### Animação de abertura — Logo Lottie + fix splash (2026-08-19) ✅ (tsc + lint OK; aguarda rebuild do dev client)
 
 **Problema:** abertura "estranha" — splash nativa mal dimensionada (`splash.png` 1284×2778 full-screen, `resizeMode: contain`, fundo verde `#4CAF6B`), transição seca sem fade, e dupla carga (mapa branco + spinner "A obter localização...").
