@@ -2,6 +2,34 @@
 
 ## Estado Actual
 
+### Animação de abertura — Logo Lottie + fix splash (2026-08-19) ✅ (tsc + lint OK; aguarda rebuild do dev client)
+
+**Problema:** abertura "estranha" — splash nativa mal dimensionada (`splash.png` 1284×2778 full-screen, `resizeMode: contain`, fundo verde `#4CAF6B`), transição seca sem fade, e dupla carga (mapa branco + spinner "A obter localização...").
+
+**Solução (Lottie):** o utilizador converteu o MP4 do logo → `assets/animations/logo.json` (video→lottie, 60 frames @ 15fps = **4.0s**, 720×1280 retrato, ~2.1MB, frames raster WebP embutidos; formato JSON — sem necessidade de `assetExts` no metro). `lottie-react-native@7.3.8` instalado (SDK 54, `~7.3.1`).
+
+- **`src/components/ui/AnimatedSplash.tsx` (novo):** overlay ecrã inteiro com fundo `#FFFFFF`; `LottieView` `autoPlay` `loop={false}` `speed={1.33}` (~3s) `resizeMode="cover"`; fade-out `Animated` 300ms disparado quando o Lottie termina **E** o auth `ready`.
+- **`app/_layout.tsx`:** `SplashScreen.preventAutoHideAsync()` no topo; overlay renderizado até `useAuth().loading` terminar + Lottie terminar; depois `SplashScreen.hideAsync()` + fade para o destino real (login ou mapa) — elimina a dupla carga; `StatusBar hidden` durante o splash.
+- **`app.json`:** removido o bloco `splash` legado (imagem full-screen); adicionado o plugin `expo-splash-screen` → `backgroundColor #FFFFFF`, `image: ./assets/icon.png`, `imageWidth: 200`, `resizeMode: contain` (logo pequeno centrado, sem corte).
+- **Decisões do utilizador:** fundo **branco** (1.º frame do vídeo é claro), **~3s via speed**, **cover** (preenche o ecrã, corta ligeiramente 9:16 → 9:19.5).
+- **Verificação:** `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+- **Pendente (utilizador):** (1) rebuild do dev client (`eas build --platform android --profile development`) — `lottie-react-native` é módulo nativo novo; (2) testar no dev client; (3) confirmar se o `icon.png` centrado na splash branca fica bem (alternativa: gerar `splash-logo.png` transparente a partir do `LogoPin`); splash 100% fiel só em release build.
+
+### Fix push nativo — token em falta + diagnóstico do envio (2026-08-18) 🚧 (tsc + lint OK; migração por aplicar)
+
+**Problema (reportado no dev client):** ao aprovar um ATM no web admin, a notificação **in-app** chegava mas a **nativa (push) não** — mesmo com a conta logada no app nativo Android durante o dev build.
+
+**Diagnóstico (leitura directa do staging via `psql`):** o trigger `trg_atm_status` **disparou** (existe notificação `atm_approved` para o user `7b9e265a` às 13:40:04) mas `send_expo_push` **não encontrou token** → `return` silencioso (migração `20260811000003` linha 139) → **0 envios** (`push_log`=0, `net._http_response`=0). `push_tokens` só tem **1 row** (user `cddcca6d`, 13/08, `platform=NULL`) — a conta que submeteu (`7b9e265a` Test8) **nunca registou token**. O registo falhava em silêncio porque `useNotifications` engolia todos os erros (`catch {}`).
+
+- **`src/hooks/useNotifications.ts` reescrito:** erros de registo agora visíveis (`console.warn` em cada ponto: permissão, `isDevice`, projectId ausente, `getExpoPushTokenAsync`, upsert); listener de toque (deep-link) registado **fora** do gate de permissão; re-registo no `AppState.active` quando a permissão passa a `granted` e ainda não há token; log do `projectId` resolvido.
+- **`20260818000002_fix_push_log.sql`** (nova migração, raiz do repo, idempotente) — **aplicada via `psql` em 2026-08-18** ✅ (colunas `request_id`/`response_body` em `push_log` confirmadas; `refresh_push_log()` presente):
+  1. `send_expo_push` regista **"sem token"** em `push_log` (`response_status=-2`) — deixa de ser invisível.
+  2. Captura o `request_id` do `net.http_post` (pg_net devolve `bigint`) em `push_log.request_id` e novo `refresh_push_log()` cola a **resposta REAL do Expo** (`net._http_response.status_code`/`content` → ticket `ok`/`DeviceNotRegistered`).
+  3. `create_notification` isola o push em bloco `exception` — falha de push **nunca** reverte a notificação in-app.
+- **Duplicação (achado):** o web admin insere a sua própria notificação (`type='success'`) em paralelo com o trigger (`atm_approved`) → **fix é no repo web** (fora deste repo).
+- **Verificação:** `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+- **Pendente (utilizador):** (1) recarregar o app no dev client com a conta Test8 e confirmar **nova row** em `push_tokens` para `7b9e265a` (ver logs `[useNotifications]`); (2) aprovar outro ATM e confirmar `push_log` com ticket real + notificação nativa.
+
 ### Banners + Interstitial AdMob (2026-08-18) ✅ (tsc + lint OK; sem BD)
 
 Além do rewarded ad (desbloquear ATM), adicionados **banners adaptáveis** (receita passiva) e **interstitial** com frequência controlada. Spec: `docs/superpowers/specs/2026-08-18-admob-banner-interstitial-design.md`.
@@ -235,11 +263,13 @@ _Actualizado: 2026-08-18 (verificação só-leitura via `psql` directo — poole
 | `balance_transactions` | 19 `earning` + 10 `adjustment` + 3 `withdrawal` | constraint real: `reference_type IN ('withdrawal','earning','adjustment','rejection')` (confirmado) — **é por isso que o trigger com `'ad_view'` rebentava** |
 | `subscriptions` | 4 rows, **todas `pending`** | plan_type `monthly`, `price_kz=1500` (antigo), nunca aprovadas |
 | `withdrawals` | 2 rows | 1 pending, 1 completed |
+| **`push_tokens`** | **1 row** | user `cddcca6d` (Mingo Lopes), `platform=NULL`, `updated_at 2026-08-13 03:30:28` — **a conta que submeteu (`7b9e265a`/Test8) NÃO tem token** → é por isso que o push nativo nunca chegou |
+| **`push_log`** | **0 rows** | nenhum envio tentado até hoje; migração `20260818000002` passa a registar "sem token" (-2) e resposta real do Expo |
 | **`ad_unlocks`** | **0 rows** | RLS `relrowsecurity=true`; policies own mantidas apenas para **select/delete** (INSERT/UPDATE revogados — criação só via RPC `create_ad_unlock`); realtime na publication; trigger `trg_ad_commission` AFTER INSERT OR UPDATE com guarda anti-duplicação + mensagem dinâmica + **`reference_type='earning'`** (fix 18-08) — verificado via `pg_get_functiondef` e teste `BEGIN…ROLLBACK` sem erro |
 
 **`app_settings`:** `agent_commission_free_view_kz=0.15`, `daily_free_views_limit=3`, `min_withdrawal_amount=500`, `referral_commission_pct=20`, preços premium `290/700/1500` (quarterly aplicado 08-08), Monetag zones.
 
-**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`), **`20260811000001`** (fix `consume_atm_view` is_active — corpo §5.5 confirmado), **`20260811000002`** (subscriptions quarterly — CHECK com `quarterly` + policies insert own confirmadas), **`20260811000003`** (Fase 6 push/favoritos — `atm_favorites`=1, `push_tokens`=1, `push_log`=0, RPCs `create_notification`/`send_expo_push` presentes), **`20260813000001`** (AdMob `ad_unlocks` — aplicada e verificada), **`20260813000002_ad_unlocks_fix.sql`** (B4/B5/B6 — RPC `create_ad_unlock`, revogar INSERT, trigger dinâmico — **aplicada pelo utilizador em 2026-08-13** ✅), **`20260813000003_ad_unlocks_sec.sql`** (B11 — revogar policy `ad_unlocks_update_own` — **aplicada pelo utilizador em 2026-08-13** ✅), **`20260818000001_fix_ad_commission_reference_type.sql`** (trigger com `reference_type='earning'` — **aplicada via `psql` em 2026-08-18** ✅). **Sem pendências de BD.**
+**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`), **`20260811000001`** (fix `consume_atm_view` is_active — corpo §5.5 confirmado), **`20260811000002`** (subscriptions quarterly — CHECK com `quarterly` + policies insert own confirmadas), **`20260811000003`** (Fase 6 push/favoritos — `atm_favorites`=1, `push_tokens`=1, `push_log`=0, RPCs `create_notification`/`send_expo_push` presentes), **`20260813000001`** (AdMob `ad_unlocks` — aplicada e verificada), **`20260813000002_ad_unlocks_fix.sql`** (B4/B5/B6 — RPC `create_ad_unlock`, revogar INSERT, trigger dinâmico — **aplicada pelo utilizador em 2026-08-13** ✅), **`20260813000003_ad_unlocks_sec.sql`** (B11 — revogar policy `ad_unlocks_update_own` — **aplicada pelo utilizador em 2026-08-13** ✅), **`20260818000001_fix_ad_commission_reference_type.sql`** (trigger com `reference_type='earning'` — **aplicada via `psql` em 2026-08-18** ✅), **`20260818000002_fix_push_log.sql`** (diagnóstico/robustez do push — **aplicada via `psql` em 2026-08-18** ✅). **Sem pendências de BD.**
 
 > **Nota de segurança (registada sem token):** verificação de BD feita com a service role (REST) e um Personal Access Token da conta Supabase (Management API, queries de leitura apenas). Nenhuma credencial foi gravada no repo.
 
