@@ -2,6 +2,26 @@
 
 ## Estado Actual
 
+### Preparação para produção — splash determinística + gate de push (2026-08-20) ✅ (tsc OK, lint OK)
+
+**Objectivo:** preparar o app para a fase de produção. Notificações nativas **adiadas** para versão futura (Firebase/FCM Android + APNs iOS por configurar).
+
+**Splash/abertura — inconsistência dev vs release:**
+- **Sintoma:** na build preview (release) o app abria **directo, sem qualquer splash**; no dev client a animação Lottie aparecia.
+- **Causa raiz (provável):** `onAnimationFinish` dispara **imediatamente** em release quando o Lottie falha ao carregar (padrão conhecido em lottie-react-native; o `logo.json` é vídeo→Lottie com 60 frames raster WebP, 2.03 MB), combinado com a splash nativa bloqueada (`preventAutoHideAsync` sem `hideAsync` até ao fim) → experiência inconsistente.
+- **`src/components/ui/AnimatedSplash.tsx` (reescrito):**
+  1. Fim da splash garantido por **`setTimeout` (3500 ms)** — nunca depende do `onAnimationFinish`; este fica apenas para diagnóstico (`console.log`).
+  2. **Fallback estático:** logo `icon.png` centrado por baixo do Lottie — se o Lottie falhar em release, o logo continua visível (nunca ecrã branco vazio).
+- **`app/_layout.tsx`:** `SplashScreen.hideAsync()` dispara **assim que o overlay React monta** → o que o utilizador vê é o `AnimatedSplash` (branco + logo/Lottie), não a splash nativa (comportamento consistente dev/release).
+- **Pendente (utilizador):** rebuild preview (`eas build --platform android --profile preview`) e confirmar a animação. Se ainda não renderizar em release, próximo passo = substituir o `logo.json` por animação vectorial leve ou splash estática + `Animated` (decisão documentada).
+
+**Notificações — gate `EXPO_PUBLIC_ENABLE_PUSH`:**
+- Adiadas para versão futura. `src/hooks/useNotifications.ts`: registo de push **desactivado** por omissão (`process.env.EXPO_PUBLIC_ENABLE_PUSH === 'true'`) — sem tentativas de token nem spam de warnings em builds.
+- `.env.example`: flag documentada.
+- Arrumação: `useNotifications.ts` (diagnósticos de 2026-08-18) + `20260818000002_fix_push_log.sql` (aplicada em staging a 2026-08-18) agora commitados — working tree limpo.
+
+**Verificação:** `npx tsc --noEmit` OK (0 erros); `npx eslint . --ext .ts,.tsx` OK (0 erros, 1 warning em scratch gitignored). Nota: `npx expo lint` pende na máquina sem output — usar `npx eslint .` como alternativa.
+
 ### Fix EAS build — lock file des-sincronizado com `lottie-react-native` (2026-08-19) ✅ (lock sincronizado; aguarda rebuild)
 
 **Problema:** o build EAS (`npm ci --include=dev`) falhava com `EUSAGE` → `Missing: lottie-react-native@7.3.8 from lock file` (ver `errr.md`).

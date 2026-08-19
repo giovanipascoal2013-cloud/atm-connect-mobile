@@ -17,6 +17,13 @@ function RootLayoutNav() {
   const router = useRouter()
   const [animDone, setAnimDone] = useState(false)
 
+  // A splash nativa é escondida assim que o overlay React (AnimatedSplash)
+  // monta — o que se vê passa a ser o overlay (branco + logo/Lottie), nunca a
+  // splash nativa. Evita o comportamento inconsistente dev vs release.
+  useEffect(() => {
+    SplashScreen.hideAsync().catch(() => {})
+  }, [])
+
   useEffect(() => {
     if (loading) return
 
