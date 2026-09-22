@@ -609,6 +609,66 @@ export type Database = {
         }
         Relationships: []
       }
+      flyer_submissions: {
+        Row: {
+          agent_id: string
+          amount_kz: number
+          atm_id: string
+          created_at: string
+          distance_m: number
+          id: string
+          latitude: number
+          longitude: number
+          obs: string | null
+          photo_url: string
+          review_notes: string | null
+          status: string
+        }
+        Insert: {
+          agent_id: string
+          amount_kz?: number
+          atm_id: string
+          created_at?: string
+          distance_m: number
+          id?: string
+          latitude: number
+          longitude: number
+          obs?: string | null
+          photo_url: string
+          review_notes?: string | null
+          status?: string
+        }
+        Update: {
+          agent_id?: string
+          amount_kz?: number
+          atm_id?: string
+          created_at?: string
+          distance_m?: number
+          id?: string
+          latitude?: number
+          longitude?: number
+          obs?: string | null
+          photo_url?: string
+          review_notes?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flyer_submissions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "flyer_submissions_atm_id_fkey"
+            columns: ["atm_id"]
+            isOneToOne: false
+            referencedRelation: "atms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       password_reset_tokens: {
         Row: {
           id: string
@@ -1082,6 +1142,20 @@ export type Database = {
         Returns: string
       }
       create_ad_unlock: { Args: { p_atm_id: string }; Returns: boolean }
+      create_flyer_submission: {
+        Args: {
+          p_atm_id: string
+          p_lat: number
+          p_lng: number
+          p_photo_url: string
+          p_obs?: string
+        }
+        Returns: string
+      }
+      approve_flyer_submission: {
+        Args: { p_submission_id: string; p_approve: boolean; p_reason?: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "supervisor" | "agent" | "user" | "financeiro"

@@ -34,6 +34,13 @@ export default function AgentStackLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="flyer"
+        options={{
+          title: 'Bónus do Flyer',
+          headerLeft: () => <HeaderBackButton fallback="/(tabs)/agent" color={colors.text.primary} />,
+        }}
+      />
     </Stack>
   )
 }

@@ -7,6 +7,8 @@ import { useAuth } from '../../src/hooks/useAuth'
 import { AgentATMCard } from '../../src/components/agent/AgentATMCard'
 import { WithdrawalModal } from '../../src/components/agent/WithdrawalModal'
 import { ReferralCard } from '../../src/components/agent/ReferralCard'
+import { FlyerPreviewModal } from '../../src/components/agent/FlyerPreviewModal'
+import { useFlyerReward } from '../../src/hooks/useFlyerReward'
 import { AppButton } from '../../src/components/ui/AppButton'
 import { AppCard } from '../../src/components/ui/AppCard'
 import { EmptyState } from '../../src/components/ui/EmptyState'
@@ -14,6 +16,9 @@ import { Badge } from '../../src/components/ui/Badge'
 import { AppIcon, type AppIconName } from '../../src/components/ui/AppIcon'
 import { colors } from '../../src/theme/tokens'
 import { formatKz } from '../../src/lib/format'
+import type { Database } from '../../src/lib/supabase-types'
+
+type FlyerSubmissionRow = Database['public']['Tables']['flyer_submissions']['Row']
 
 function StatCard({
   label,
@@ -78,6 +83,8 @@ export default function AgentScreen() {
   } = useAgent()
   const [showWithdrawal, setShowWithdrawal] = useState(false)
   const { progress: onboarding, loading: onboardingLoading } = useAgentOnboarding()
+  const { submission: flyerSubmission, settings: flyerSettings } = useFlyerReward()
+  const [showFlyer, setShowFlyer] = useState(false)
 
   useEffect(() => {
     if (!onboardingLoading && !loading && onboarding && !onboarding.onboarding_seen && pendingCount === 0 && !hasApprovedAtm) {
@@ -219,6 +226,48 @@ export default function AgentScreen() {
         />
       </View>
 
+      <AppCard style={{ marginBottom: 12, backgroundColor: '#EAF3FF', borderColor: colors.brand[100] }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <View
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              backgroundColor: colors.brand[500],
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <AppIcon name="megaphone" size={18} color="#fff" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text.primary }}>
+              Ganha um bónus de {flyerSettings.bonusKz} Kz
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.text.secondary }} numberOfLines={1}>
+              Imprime e cola o nosso flyer junto ao teu ATM aprovado.
+            </Text>
+          </View>
+        </View>
+        {flyerSubmission ? (
+          <FlyerStatusLine
+            submission={flyerSubmission}
+            totalViews={stats.totalViews}
+            viewsUnlock={flyerSettings.viewsUnlock}
+            onOpen={() => setShowFlyer(true)}
+          />
+        ) : (
+          <AppButton
+            label="Ver como funciona"
+            variant="secondary"
+            icon="arrow-forward"
+            iconRight="arrow-forward"
+            size="sm"
+            onPress={() => setShowFlyer(true)}
+          />
+        )}
+      </AppCard>
+
       {stats.availableBalance <= 0 && stats.totalEarnings > 0 && (
         <AppCard style={{ marginBottom: 16, backgroundColor: colors.accent[50], borderColor: colors.accent[200] }}>
           <Text style={{ fontSize: 13, color: colors.accent[800], lineHeight: 19 }}>
@@ -305,6 +354,12 @@ export default function AgentScreen() {
         availableBalance={stats.availableBalance}
         onSuccess={refetch}
       />
+
+      <FlyerPreviewModal
+        visible={showFlyer}
+        onClose={() => setShowFlyer(false)}
+        settings={flyerSettings}
+      />
     </ScrollView>
   )
 }
@@ -321,5 +376,45 @@ function ReputationBadge({ likes, total }: { likes: number; total: number }) {
     <View style={{ backgroundColor: bg, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 }}>
       <Text style={{ fontSize: 12, fontWeight: '700', color: fg }}>{approvalPct}% · {label}</Text>
     </View>
+  )
+}
+
+function FlyerStatusLine({
+  submission,
+  totalViews,
+  viewsUnlock,
+  onOpen,
+}: {
+  submission: FlyerSubmissionRow
+  totalViews: number
+  viewsUnlock: number
+  onOpen: () => void
+}) {
+  const progress = Math.min(1, totalViews / viewsUnlock)
+  const config =
+    submission.status === 'rewarded'
+      ? { icon: 'checkmark-circle' as const, color: colors.money, label: `Bónus de ${formatKz(submission.amount_kz)} Kz creditado` }
+      : submission.status === 'approved'
+        ? { icon: 'checkmark-circle' as const, color: colors.money, label: `Flyer aprovado · ${totalViews}/${viewsUnlock} views` }
+        : { icon: 'hourglass-outline' as const, color: colors.warning, label: `Em análise · ${totalViews}/${viewsUnlock} views` }
+
+  return (
+    <>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+        <AppIcon name={config.icon} size={16} color={config.color} />
+        <Text style={{ flex: 1, fontSize: 13, fontWeight: '600', color: colors.text.primary }}>{config.label}</Text>
+        <AppButton label="Ver" variant="secondary" size="sm" onPress={onOpen} />
+      </View>
+      <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.brand[100], overflow: 'hidden' }}>
+        <View
+          style={{
+            width: `${Math.round(progress * 100)}%`,
+            height: '100%',
+            borderRadius: 3,
+            backgroundColor: submission.status === 'rewarded' ? colors.money : colors.brand[500],
+          }}
+        />
+      </View>
+    </>
   )
 }
