@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { View, Text, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator, Linking } from 'react-native'
-import { useRouter } from 'expo-router'
+import { useFocusEffect, useRouter } from 'expo-router'
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import { File } from 'expo-file-system'
 import { supabase } from '../../src/lib/supabase'
@@ -27,7 +27,7 @@ export default function FlyerScreen() {
   const router = useRouter()
   const { user } = useAuth()
   const { stats } = useAgent()
-  const { submission, settings, loading: settingsLoading } = useFlyerReward()
+  const { submission, settings, loading: settingsLoading, refetch: refetchSubmission } = useFlyerReward()
   const { atms, loading: atmsLoading } = useFlyerAtms(user?.id)
 
   const [downloaded, setDownloaded] = useState(false)
@@ -49,6 +49,13 @@ export default function FlyerScreen() {
     }
   }, [submission])
 
+  // A decisão do admin chega pelo painel web: refetch ao voltar ao ecrã.
+  useFocusEffect(
+    useCallback(() => {
+      refetchSubmission()
+    }, [refetchSubmission])
+  )
+
   const handleSaveFlyer = async () => {
     if (savingFlyer) return
     setSavingFlyer(true)
@@ -67,12 +74,23 @@ export default function FlyerScreen() {
 
   async function getLocationSafe() {
     try {
-      const { getCurrentPositionAsync } = await import('expo-location')
-      const loc = await getCurrentPositionAsync({ accuracy: 1 })
+      const { getCurrentPositionAsync, Accuracy } = await import('expo-location')
+      const loc = await getCurrentPositionAsync({ accuracy: Accuracy.High })
       return { latitude: loc.coords.latitude, longitude: loc.coords.longitude }
     } catch (err) {
       console.warn('flyer getLocationSafe error:', err)
       return null
+    }
+  }
+
+  async function ensureLocationPermission() {
+    try {
+      const { requestForegroundPermissionsAsync } = await import('expo-location')
+      const { status } = await requestForegroundPermissionsAsync()
+      return status === 'granted'
+    } catch (err) {
+      console.warn('flyer location permission error:', err)
+      return false
     }
   }
 
@@ -83,6 +101,15 @@ export default function FlyerScreen() {
         Alert.alert('Permissão da câmara', 'A câmara é necessária para fotografar o flyer junto ao ATM.')
         return
       }
+    }
+    // O bónus exige GPS no momento (gate de proximity no servidor): pedir antes
+    // de gastar a foto.
+    if (!(await ensureLocationPermission())) {
+      Alert.alert(
+        'Localização necessária',
+        'O bónus do flyer exige a tua localização no momento da foto. Permite o acesso nas definições do telemóvel e tenta novamente.'
+      )
+      return
     }
     if (!cameraRef.current) return
     try {
@@ -108,6 +135,7 @@ export default function FlyerScreen() {
   const submit = async () => {
     if (!user || !photoUri || !coords || !selectedAtm) return
     setSubmitting(true)
+    let uploadedPath: string | null = null
     try {
       const file = new File(photoUri)
       const arrayBuffer = await file.arrayBuffer()
@@ -116,6 +144,7 @@ export default function FlyerScreen() {
         .from(FLYER_PHOTO_BUCKET)
         .upload(path, arrayBuffer, { contentType: 'image/jpeg', upsert: false })
       if (upErr) throw upErr
+      uploadedPath = path
 
       const { error: rpcErr } = await supabase.rpc('create_flyer_submission', {
         p_atm_id: selectedAtm.id,
@@ -125,12 +154,26 @@ export default function FlyerScreen() {
       })
       if (rpcErr) throw rpcErr
 
+      setPhotoUri(null)
+      setCoords(null)
+      setSelectedAtm(null)
       Alert.alert(
         'Flyer submetido!',
         'A tua foto foi enviada para verificação. Assim que for aprovada, o bónus é creditado automaticamente.',
         [{ text: 'Entendido', onPress: () => router.back() }]
       )
     } catch (err) {
+      // A foto já foi para o bucket: se o RPC recusou (distância, dedupe, ATM não
+      // aprovado) fica órfã. Best-effort — requer a policy de DELETE no bucket.
+      if (uploadedPath) {
+        supabase.storage
+          .from(FLYER_PHOTO_BUCKET)
+          .remove([uploadedPath])
+          .then(
+            () => {},
+            () => {}
+          )
+      }
       const e = err as { message?: string }
       Alert.alert('Erro ao submeter', e?.message || 'Não foi possível submeter a foto. Tente novamente.')
     } finally {

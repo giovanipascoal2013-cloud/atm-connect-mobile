@@ -83,7 +83,7 @@ export default function AgentScreen() {
   } = useAgent()
   const [showWithdrawal, setShowWithdrawal] = useState(false)
   const { progress: onboarding, loading: onboardingLoading } = useAgentOnboarding()
-  const { submission: flyerSubmission, settings: flyerSettings } = useFlyerReward()
+  const { submission: flyerSubmission, settings: flyerSettings, refetch: refetchFlyer } = useFlyerReward()
   const [showFlyer, setShowFlyer] = useState(false)
 
   useEffect(() => {
@@ -95,15 +95,19 @@ export default function AgentScreen() {
   useFocusEffect(
     useCallback(() => {
       refetchSilent()
-    }, [refetchSilent])
+      refetchFlyer()
+    }, [refetchSilent, refetchFlyer])
   )
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') refetchSilent()
+      if (state === 'active') {
+        refetchSilent()
+        refetchFlyer()
+      }
     })
     return () => sub.remove()
-  }, [refetchSilent])
+  }, [refetchSilent, refetchFlyer])
 
   if (!isAgent) {
     return (

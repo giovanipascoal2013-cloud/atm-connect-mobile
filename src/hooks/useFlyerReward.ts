@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { subscribePostgresChanges } from '../lib/realtime-channel'
 import { useAuth } from './useAuth'
 import { haversineDistance } from '../lib/distance'
 import { FLYER_SETTINGS_DEFAULTS } from '../lib/flyer'
@@ -28,8 +29,8 @@ const SETTINGS_KEYS = ['flyer_bonus_kz', 'flyer_proximity_m', 'flyer_views_unloc
 
 async function getCurrentPositionSafe(): Promise<{ latitude: number; longitude: number } | null> {
   try {
-    const { getCurrentPositionAsync } = await import('expo-location')
-    const loc = await getCurrentPositionAsync({ accuracy: 1 })
+    const { getCurrentPositionAsync, Accuracy } = await import('expo-location')
+    const loc = await getCurrentPositionAsync({ accuracy: Accuracy.High })
     return { latitude: loc.coords.latitude, longitude: loc.coords.longitude }
   } catch (err) {
     console.warn('flyer gps error:', err)
@@ -61,6 +62,9 @@ export function useFlyerReward() {
       ])
 
       setSubmission((subRes.data as FlyerSubmissionRow | null) ?? null)
+      if (subRes.error) {
+        console.warn('useFlyerReward: flyer_submissions error:', subRes.error.message)
+      }
 
       const next: FlyerSettings = { ...FLYER_SETTINGS_DEFAULTS }
       for (const row of settingsRes.data ?? []) {
@@ -83,6 +87,21 @@ export function useFlyerReward() {
     setSubmission(null)
     fetchData()
   }, [fetchData])
+
+  // A aprovação/rejeição acontece no painel web: sem isto o agente via o estado
+  // antigo até reiniciar a app.
+  useEffect(() => {
+    if (!user) return
+    return subscribePostgresChanges({
+      key: 'flyer-submission',
+      table: 'flyer_submissions',
+      event: '*',
+      filter: `agent_id=eq.${user.id}`,
+      onChange: () => {
+        void fetchData()
+      },
+    })
+  }, [user, fetchData])
 
   return { submission, settings, loading, refetch: fetchData }
 }

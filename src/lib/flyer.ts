@@ -1,3 +1,4 @@
+import { Platform } from 'react-native'
 import { Asset } from 'expo-asset'
 import * as MediaLibrary from 'expo-media-library'
 
@@ -23,7 +24,9 @@ export async function getFlyerAssetUri(): Promise<string> {
 
 export async function saveFlyerToLibrary(): Promise<void> {
   const { status } = await MediaLibrary.requestPermissionsAsync()
-  if (status !== 'granted') {
+  // No Android 13+ escrever na galeria (MediaStore) não exige READ_MEDIA_IMAGES —
+  // bloquear aqui deixava o agente sem poder guardar o flyer. Só o iOS exige.
+  if (status !== 'granted' && Platform.OS === 'ios') {
     throw new Error('Permissão da galeria negada')
   }
   const uri = await getFlyerAssetUri()
