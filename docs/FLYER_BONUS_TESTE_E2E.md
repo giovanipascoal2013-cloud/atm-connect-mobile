@@ -12,14 +12,14 @@
 |---|---|---|
 | 1 | Migração do flyer aplicada no staging | ✅ **já aplicada** (2026-09-26). Não repetir. |
 | 2 | Policy de DELETE no bucket (opcional) | `20260926000001_flyer_photos_delete_policy.sql` no SQL editor — só para a foto órfã ser apagada quando o RPC recusa. O resto do fluxo funciona sem ela. |
-| 3 | `.env` do mobile | **Não existe no repo** (só `.env.example`). Ver §1. |
-| 4 | Dev client com as libs nativas | `expo-media-library` + `expo-asset` são código nativo → **obrigatório rebuild**: `eas build --platform android --profile development`. |
-| 5 | Painel web | `/dashboard/flyer-submissions` (admin ou supervisor). |
+| 3 | `.env` do mobile | **Já existe** (não versionado) com as 9 chaves `EXPO_PUBLIC_*` de staging. Ver §1. |
+| 4 | Deps instaladas | `npm install` — o merge de 2026-09-29 trouxe `lottie-react-native` (splash) que ainda **não** está em `node_modules`. O `.npmrc` do repo (`package-lock=true`) garante que o lock é actualizado. |
+| 5 | Dev client com as libs nativas | `expo-media-library` + `expo-asset` (flyer) **e** `lottie-react-native` (splash de abertura) são código nativo → **obrigatório rebuild**: `eas build --platform android --profile development`. |
+| 6 | Painel web | `/dashboard/flyer-submissions` (admin ou supervisor). |
 
-## 1. Criar o `.env` (uma vez)
+## 1. Verificar o `.env` (uma vez)
 
-O `.env` do web (`atm-connect-angola\.env`) **já aponta para staging**. Copiar para
-`atm-connect-mobile\.env`:
+O `.env` **já foi criado** (2026-09-29) com as 9 chaves `EXPO_PUBLIC_*` de staging. Para o recriar de raiz, o `.env` do web (`atm-connect-angola\.env`) **já aponta para staging** — copiar para `atm-connect-mobile\.env`:
 
 ```
 EXPO_PUBLIC_SUPABASE_URL=https://ndvjitfovhfngrzwtytd.supabase.co
@@ -31,10 +31,13 @@ EXPO_PUBLIC_ADMOB_BANNER_ANDROID=ca-app-pub-3940256099942544/6300978111
 EXPO_PUBLIC_ADMOB_BANNER_IOS=ca-app-pub-3940256099942544/2934735716
 EXPO_PUBLIC_ADMOB_INTERSTITIAL_ANDROID=ca-app-pub-3940256099942544/1033173712
 EXPO_PUBLIC_ADMOB_INTERSTITIAL_IOS=ca-app-pub-3940256099942544/4411468910
+# Push nativo adiado (Firebase/FCM + APNs por configurar) — ver LOG.md "Preparação para produção"
+EXPO_PUBLIC_ENABLE_PUSH=false
 ```
 
 > As chaves `sb_publishable_…` são suportadas pelo `@supabase/supabase-js@2.112.2` instalado.
 > `.env` está no `.gitignore` — **nunca** commitar. O `.easignore` mantém-no no build (os `EXPO_PUBLIC_*` são inlined no bundle).
+> `EXPO_PUBLIC_ENABLE_PUSH=false` **não afecta** o flyer: as notificações in-app de aprovação/rejeição (realtime) vêm do `useInAppNotifications`, não do `useNotifications`.
 > Depois de criar/alterar: `npx expo start --dev-client --clear` (as vars são inlined no bundle → limpar a cache).
 
 ## 2. Conta de teste
