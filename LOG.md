@@ -2,6 +2,27 @@
 
 ## Estado Actual
 
+### Reconciliação local ↔ GitHub — merge de `origin/main` (2026-09-29) ✅ (tsc OK; falta teste no device)
+
+`main` local e `origin/main` tinham **divergido** a partir de `25add13` — 3 commits de cada lado, **sem sobreposição de trabalho**. O objectivo foi traer para o local o que existia só no remoto (sobretudo a **splash Lottie nova**) e reconciliar tudo antes de actualizar o repositório remoto.
+
+**Lado remoto (19–20 Ago) — trazido para o local:**
+- `e825776` — splash de abertura **Lottie** (`lottie-react-native@~7.3.1`, `assets/animations/logo.json` 2.13 MB, novo `src/components/ui/AnimatedSplash.tsx`, `app/_layout.tsx` com `preventAutoHideAsync`/`hideAsync`, `app.json` perde o bloco `splash` legado e ganha o plugin `expo-splash-screen` branco).
+- `b3b4b48` — **`.npmrc`** novo (`package-lock=true`) + lock sincronizado + secção no `AGENTS.md`.
+- `9b4b634` — splash determinística em release (timeout 3500 ms + fallback `icon.png`) + **gate `EXPO_PUBLIC_ENABLE_PUSH`** + reescrita de `useNotifications.ts` + **`20260818000002_fix_push_log.sql`** (já aplicada no staging em 2026-08-18).
+
+**Auto-merge verificado (sem regressão semântica):** `app.json` (plugin `expo-splash-screen` branco + `expo-media-library` + `expo-asset`), `package.json` (`lottie-react-native` + `expo-media-library`/`expo-asset` + `pngjs`/`qrcode-generator`), `package-lock.json` (as 5 entradas novas presentes) e `src/hooks/useNotifications.ts` (gate `PUSH_ENABLED` + as 3 `TYPE_HREF` do flyer coexistem). **Único conflito de conteúdo: `LOG.md`** (2 regiões — topo "Estado Actual" e o bloco do Relatório da BD).
+
+**O que foi feito nesta reconciliação:**
+1. **`LOG.md` resolvido à mão.** Região 1: os dois blocos fundidos por ordem cronológica descendente (09-26 → 09-22 → 08-20 → 08-19 → 08-19 → 08-18), sem duplicados. Região 2: a linha **"Migrações aplicadas (staging)"** fundida com as **duas** migrações que cada lado omitira — `20260818000002_fix_push_log.sql` (remoto) e `20260922000001_flyer_bonus.sql` (local); o "**Sem pendências de BD.**" do remoto (hoje falso) foi substituído pela pendência real (`20260926000001_flyer_photos_delete_policy.sql` **NÃO aplicada**).
+2. **`flyer.png` órfão removido da raiz** (1.39 MB, **zero referências em código** — o app usa `assets/flyer-generic.png` via `src/lib/flyer.ts:5`). Estava a entrar no archive EAS (`app.json` tem `assetBundlePatterns: ["**/*"]`). `.gitignore` **e** `.easignore` actualizados em sincronia (regra do `AGENTS.md`), junto com `session-ses_*.md`.
+3. **Correcções documentais:** a nota que afirmava "`.env` **não existe**" estava **errada** — existe com as 9 chaves `EXPO_PUBLIC_*` de staging; `EXPO_PUBLIC_ENABLE_PUSH=false` foi acrescentado ao `.env`; `docs/FLYER_BONUS_TESTE_E2E.md` §0/§1 actualizados (§1 passou de "criar" a "verificar o `.env`", e ganhou o requisito de `lottie-react-native` no rebuild).
+4. **Gate de push documentado** (ver secção "Preparação para produção" abaixo) para que o no-op do `useNotifications` não seja rediscovered como bug.
+
+**Verificação:** `npx tsc --noEmit` OK — o único erro é `Cannot find module 'lottie-react-native'` em `src/components/ui/AnimatedSplash.tsx:3`, **esperado** porque a dep ainda não está em `node_modules` (depende do `npm install` do utilizador, Fase 8). `git diff --check` sem erros de whitespace.
+
+**Pendente (utilizador):** (1) `npm install` — o `.npmrc` (`package-lock=true`) **veio no merge**; sem ele, o `package-lock=false` global repetiria o bug `EUSAGE` de `b3b4b48`. (2) `eas build --platform android --profile development` — **obrigatório**, traz `lottie-react-native` + `expo-media-library`/`expo-asset`. (3) `npx expo start --dev-client --clear` e verificar a splash Lottie + o flyer end-to-end. (4) Push para a branch de revisão `reconcile/flyer-splash` **só depois** dos testes green.
+
 ### Bónus do Flyer — 700 Kz: BD aplicada + web completo + fixes mobile (2026-09-26) ✅ (tsc/lint a validar; falta teste no device)
 
 Sessão de fecho da funcionalidade: a BD **já foi aplicada e verificada** e o **painel web/admin está completo**. O que resta é validar no telemóvel (rebuild do dev client) — passo-a-passo em **`docs/FLYER_BONUS_TESTE_E2E.md`**.
@@ -14,7 +35,7 @@ Sessão de fecho da funcionalidade: a BD **já foi aplicada e verificada** e o *
   2. **Estado da submissão ficava stale** — `useFlyerReward` só fazia fetch no mount: depois de submeter, o tab Agente continuava a mostrar "Ver como funciona", e a aprovação/rejeição do admin (notificações in-app, `push=false`) só aparecia depois de reiniciar a app. Agora: **realtime** em `flyer_submissions` filtrado por `agent_id` (via `subscribePostgresChanges`, a tabela já está na publication) + `refetch` no `useFocusEffect` e no `AppState` do tab Agente e do ecrã `/agent/flyer`. Erros de fetch deixaram de ser silenciosos (`console.warn`).
   3. **Foto órfã no bucket** — se o RPC `create_flyer_submission` recusa (distância, dedupe, ATM não aprovado), o ficheiro já enviado ficava no bucket para sempre (não havia policy de DELETE). O app agora faz `storage.remove()` best-effort no erro + **nova migração `20260926000001_flyer_photos_delete_policy.sql`** (DELETE apenas na própria pasta do bucket `flyer-photos`; **aplicar no SQL editor do staging**).
   4. **Galeria no Android** — `src/lib/flyer.ts` bloqueava o "Guardar o flyer" sempre que a permissão não estivesse `granted`; no Android 13+ escrever no MediaStore não exige `READ_MEDIA_IMAGES` → agora só o **iOS** exige a permissão, no Android tenta o save e só falha se o save falhar.
-- **Pendente (utilizador):** (1) criar o **`.env`** (não existe no repo — só `.env.example`; o `.env` do web já tem os valores de staging, ver §1 do doc de teste); (2) `eas build --platform android --profile development` (libs nativas novas: `expo-media-library`/`expo-asset`); (3) `npx expo start --dev-client --clear`; (4) seguir `docs/FLYER_BONUS_TESTE_E2E.md`; (5) aplicar a migração da policy de DELETE (opcional).
+- **Pendente (utilizador):** (1) ~~criar o **`.env`~~ **feito** — já existe com as 9 chaves `EXPO_PUBLIC_*` de staging (ver nota do `.env` no Relatório da BD abaixo); (2) `npm install` (traz `lottie-react-native`, que entrou no merge de 2026-09-29) e depois `eas build --platform android --profile development` — libs nativas novas: `expo-media-library`/`expo-asset` **e** `lottie-react-native`; (3) `npx expo start --dev-client --clear`; (4) seguir `docs/FLYER_BONUS_TESTE_E2E.md`; (5) aplicar a migração da policy de DELETE (opcional).
 
 ### Bónus do Flyer — "Ganha um bónus de 700 Kz" (2026-09-22) ✅ (app implementado; BD + web tratados em 2026-09-26)
 
@@ -27,6 +48,68 @@ Design aprovado (spec `docs/superpowers/specs/2026-09-22-flyer-bonus-design.md`)
 - **Deps:** `npx expo install expo-media-library expo-asset` (SDK 54).
 - **Verificação:** `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas). **Sem rebuild do dev client?** — libs novas (`expo-media-library`/`expo-asset`) com código nativo → **requer rebuild do dev client (EAS)** na próxima build; em Expo Go o guardar-flyer degrada com erro visível.
 - **Pendente (utilizador):** ~~(1) aplicar a migração no staging~~ **feito 2026-09-26** ✅ · ~~(2) revisão web~~ **feito 2026-09-26** (commit `8409715` no repo web) ✅ · (3) testar fluxo no dev client — **ver `docs/FLYER_BONUS_TESTE_E2E.md`**.
+
+### Preparação para produção — splash determinística + gate de push (2026-08-20) ✅ (tsc OK, lint OK)
+
+**Objectivo:** preparar o app para a fase de produção. Notificações nativas **adiadas** para versão futura (Firebase/FCM Android + APNs iOS por configurar).
+
+**Splash/abertura — inconsistência dev vs release:**
+- **Sintoma:** na build preview (release) o app abria **directo, sem qualquer splash**; no dev client a animação Lottie aparecia.
+- **Causa raiz (provável):** `onAnimationFinish` dispara **imediatamente** em release quando o Lottie falha ao carregar (padrão conhecido em lottie-react-native; o `logo.json` é vídeo→Lottie com 60 frames raster WebP, 2.03 MB), combinado com a splash nativa bloqueada (`preventAutoHideAsync` sem `hideAsync` até ao fim) → experiência inconsistente.
+- **`src/components/ui/AnimatedSplash.tsx` (reescrito):**
+  1. Fim da splash garantido por **`setTimeout` (3500 ms)** — nunca depende do `onAnimationFinish`; este fica apenas para diagnóstico (`console.log`).
+  2. **Fallback estático:** logo `icon.png` centrado por baixo do Lottie — se o Lottie falhar em release, o logo continua visível (nunca ecrã branco vazio).
+- **`app/_layout.tsx`:** `SplashScreen.hideAsync()` dispara **assim que o overlay React monta** → o que o utilizador vê é o `AnimatedSplash` (branco + logo/Lottie), não a splash nativa (comportamento consistente dev/release).
+- **Pendente (utilizador):** rebuild preview (`eas build --platform android --profile preview`) e confirmar a animação. Se ainda não renderizar em release, próximo passo = substituir o `logo.json` por animação vectorial leve ou splash estática + `Animated` (decisão documentada).
+
+**Notificações — gate `EXPO_PUBLIC_ENABLE_PUSH`:**
+- Adiadas para versão futura. `src/hooks/useNotifications.ts`: registo de push **desactivado** por omissão (`process.env.EXPO_PUBLIC_ENABLE_PUSH === 'true'`) — sem tentativas de token nem spam de warnings em builds.
+- `.env.example`: flag documentada.
+- Arrumação: `useNotifications.ts` (diagnósticos de 2026-08-18) + `20260818000002_fix_push_log.sql` (aplicada em staging a 2026-08-18) agora commitados — working tree limpo.
+- ⚠️ **Efeito colateral do gate (documentado 2026-09-29 para não ser rediscovered como bug):** o `if (!PUSH_ENABLED) return` está no **início** do `useEffect`, **antes** de registar o `addNotificationResponseReceivedListener` e o tratamento de cold-start (`getLastNotificationResponse`). Enquanto `EXPO_PUBLIC_ENABLE_PUSH` for `false`, `useNotifications` é praticamente um **no-op** e os **deep-links a partir de notificações push não funcionam** (nem no toque nem no cold start). É coerente com "notificações adiadas" — o push nativo não chega, logo não há nada para navegar. **As notificações in-app não são afectadas**: usam `useInAppNotifications` (realtime na tabela `notifications`), que é independente deste gate. Se se quiser os deep-links activos mesmo sem push, mover o registo do listener + cold-start para **antes** do `if (!PUSH_ENABLED)` (decisão pendente, não aplicada).
+
+**Verificação:** `npx tsc --noEmit` OK (0 erros); `npx eslint . --ext .ts,.tsx` OK (0 erros, 1 warning em scratch gitignored). Nota: `npx expo lint` pende na máquina sem output — usar `npx eslint .` como alternativa.
+
+### Fix EAS build — lock file des-sincronizado com `lottie-react-native` (2026-08-19) ✅ (lock sincronizado; aguarda rebuild)
+
+**Problema:** o build EAS (`npm ci --include=dev`) falhava com `EUSAGE` → `Missing: lottie-react-native@7.3.8 from lock file` (ver `errr.md`).
+
+**Causa raiz:** `lottie-react-native` foi adicionado ao `package.json` (splash Lottie) mas **`package-lock.json` nunca foi actualizado** — o npm do utilizador tem `package-lock = false` no config GLOBAL (`C:\Users\Gio Pilav\.npmrc`), logo `npm install`/`npx expo install` nunca escrevem no lock.
+
+**Fix (estrutural + documentação):**
+- **`.npmrc`** (novo, raiz do repo) com `package-lock=true` — sobrepõe o config global **só neste projecto**, garantindo que futuras mudanças de deps actualizam o lock.
+- **`package-lock.json`**: sincronizado via `npm install --package-lock=true` (entrada `lottie-react-native@7.3.8` presente).
+- **`AGENTS.md`**: nova secção "Instalação de Dependências — Gotcha do lock file" (causa, sintoma `EUSAGE`, workflow obrigatório: instalar → `npm install --package-lock=true` → verificar com `git status`/grep/`git diff` → commit de `package.json`+`package-lock.json` juntos) + ponto 5 na Checklist pré-build EAS.
+
+**Pendente (utilizador):** re-run do build `eas build --platform android --profile preview`.
+
+### Animação de abertura — Logo Lottie + fix splash (2026-08-19) ✅ (tsc + lint OK; aguarda rebuild do dev client)
+
+**Problema:** abertura "estranha" — splash nativa mal dimensionada (`splash.png` 1284×2778 full-screen, `resizeMode: contain`, fundo verde `#4CAF6B`), transição seca sem fade, e dupla carga (mapa branco + spinner "A obter localização...").
+
+**Solução (Lottie):** o utilizador converteu o MP4 do logo → `assets/animations/logo.json` (video→lottie, 60 frames @ 15fps = **4.0s**, 720×1280 retrato, ~2.1MB, frames raster WebP embutidos; formato JSON — sem necessidade de `assetExts` no metro). `lottie-react-native@7.3.8` instalado (SDK 54, `~7.3.1`).
+
+- **`src/components/ui/AnimatedSplash.tsx` (novo):** overlay ecrã inteiro com fundo `#FFFFFF`; `LottieView` `autoPlay` `loop={false}` `speed={1.33}` (~3s) `resizeMode="cover"`; fade-out `Animated` 300ms disparado quando o Lottie termina **E** o auth `ready`.
+- **`app/_layout.tsx`:** `SplashScreen.preventAutoHideAsync()` no topo; overlay renderizado até `useAuth().loading` terminar + Lottie terminar; depois `SplashScreen.hideAsync()` + fade para o destino real (login ou mapa) — elimina a dupla carga; `StatusBar hidden` durante o splash.
+- **`app.json`:** removido o bloco `splash` legado (imagem full-screen); adicionado o plugin `expo-splash-screen` → `backgroundColor #FFFFFF`, `image: ./assets/icon.png`, `imageWidth: 200`, `resizeMode: contain` (logo pequeno centrado, sem corte).
+- **Decisões do utilizador:** fundo **branco** (1.º frame do vídeo é claro), **~3s via speed**, **cover** (preenche o ecrã, corta ligeiramente 9:16 → 9:19.5).
+- **Verificação:** `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+- **Pendente (utilizador):** (1) rebuild do dev client (`eas build --platform android --profile development`) — `lottie-react-native` é módulo nativo novo; (2) testar no dev client; (3) confirmar se o `icon.png` centrado na splash branca fica bem (alternativa: gerar `splash-logo.png` transparente a partir do `LogoPin`); splash 100% fiel só em release build.
+
+### Fix push nativo — token em falta + diagnóstico do envio (2026-08-18) 🚧 (tsc + lint OK; migração por aplicar)
+
+**Problema (reportado no dev client):** ao aprovar um ATM no web admin, a notificação **in-app** chegava mas a **nativa (push) não** — mesmo com a conta logada no app nativo Android durante o dev build.
+
+**Diagnóstico (leitura directa do staging via `psql`):** o trigger `trg_atm_status` **disparou** (existe notificação `atm_approved` para o user `7b9e265a` às 13:40:04) mas `send_expo_push` **não encontrou token** → `return` silencioso (migração `20260811000003` linha 139) → **0 envios** (`push_log`=0, `net._http_response`=0). `push_tokens` só tem **1 row** (user `cddcca6d`, 13/08, `platform=NULL`) — a conta que submeteu (`7b9e265a` Test8) **nunca registou token**. O registo falhava em silêncio porque `useNotifications` engolia todos os erros (`catch {}`).
+
+- **`src/hooks/useNotifications.ts` reescrito:** erros de registo agora visíveis (`console.warn` em cada ponto: permissão, `isDevice`, projectId ausente, `getExpoPushTokenAsync`, upsert); listener de toque (deep-link) registado **fora** do gate de permissão; re-registo no `AppState.active` quando a permissão passa a `granted` e ainda não há token; log do `projectId` resolvido.
+- **`20260818000002_fix_push_log.sql`** (nova migração, raiz do repo, idempotente) — **aplicada via `psql` em 2026-08-18** ✅ (colunas `request_id`/`response_body` em `push_log` confirmadas; `refresh_push_log()` presente):
+  1. `send_expo_push` regista **"sem token"** em `push_log` (`response_status=-2`) — deixa de ser invisível.
+  2. Captura o `request_id` do `net.http_post` (pg_net devolve `bigint`) em `push_log.request_id` e novo `refresh_push_log()` cola a **resposta REAL do Expo** (`net._http_response.status_code`/`content` → ticket `ok`/`DeviceNotRegistered`).
+  3. `create_notification` isola o push em bloco `exception` — falha de push **nunca** reverte a notificação in-app.
+- **Duplicação (achado):** o web admin insere a sua própria notificação (`type='success'`) em paralelo com o trigger (`atm_approved`) → **fix é no repo web** (fora deste repo).
+- **Verificação:** `npx tsc --noEmit` OK (0 erros) + `npx expo lint` OK (0 problemas).
+- **Pendente (utilizador):** (1) recarregar o app no dev client com a conta Test8 e confirmar **nova row** em `push_tokens` para `7b9e265a` (ver logs `[useNotifications]`); (2) aprovar outro ATM e confirmar `push_log` com ticket real + notificação nativa.
 
 ### Banners + Interstitial AdMob (2026-08-18) ✅ (tsc + lint OK; sem BD)
 
@@ -250,7 +333,7 @@ Verificação do sistema de consumo de views → atribuição de Kzs aos agentes
 
 > **Regra (AGENTS.md)**: após qualquer tarefa que opere a BD, actualizar este relatório no `LOG.md`.
 
-_Actualizado: 2026-08-18 (verificação só-leitura via `psql` directo — pooler `aws-0-eu-west-1`); secção do flyer actualizada em 2026-09-26 com a verificação do repo web (Management API, queries de leitura + um teste funcional com `ROLLBACK`)_
+_Actualizado: 2026-08-18 (verificação só-leitura via `psql` directo — pooler `aws-0-eu-west-1`); secção do flyer actualizada em 2026-09-26 com a verificação do repo web (Management API, queries de leitura + um teste funcional com `ROLLBACK`); reconciliado em 2026-09-29 com o merge de `origin/main` (entradas de `push_tokens`/`push_log` e a migração `20260818000002_fix_push_log.sql` que faltavam) — **os números das tabelas abaixo são de 2026-09-26; nenhuma leitura à BD foi feita em 2026-09-29**_
 
 | Tabela | Estado | Detalhes |
 |---|---|---|
@@ -261,19 +344,21 @@ _Actualizado: 2026-08-18 (verificação só-leitura via `psql` directo — poole
 | `balance_transactions` | 19 `earning` + 10 `adjustment` + 3 `withdrawal` | constraint real: `reference_type IN ('withdrawal','earning','adjustment','rejection')` (confirmado) — **é por isso que o trigger com `'ad_view'` rebentava** |
 | `subscriptions` | 4 rows, **todas `pending`** | plan_type `monthly`, `price_kz=1500` (antigo), nunca aprovadas |
 | `withdrawals` | 2 rows | 1 pending, 1 completed |
+| **`push_tokens`** | **1 row** | user `cddcca6d` (Mingo Lopes), `platform=NULL`, `updated_at 2026-08-13 03:30:28` — **a conta que submeteu (`7b9e265a`/Test8) NÃO tem token** → é por isso que o push nativo nunca chegou |
+| **`push_log`** | **0 rows** | nenhum envio tentado até hoje; migração `20260818000002` passa a registar "sem token" (-2) e resposta real do Expo |
 | **`ad_unlocks`** | **0 rows** | RLS `relrowsecurity=true`; policies own mantidas apenas para **select/delete** (INSERT/UPDATE revogados — criação só via RPC `create_ad_unlock`); realtime na publication; trigger `trg_ad_commission` AFTER INSERT OR UPDATE com guarda anti-duplicação + mensagem dinâmica + **`reference_type='earning'`** (fix 18-08) — verificado via `pg_get_functiondef` e teste `BEGIN…ROLLBACK` sem erro |
 | **`flyer_submissions`** | **0 rows** (2026-09-26) | tabela nova do bónus do flyer; colunas `id, agent_id, atm_id, photo_url, latitude, longitude, distance_m, status, amount_kz, obs, review_notes, created_at` (**sem `updated_at`/`reviewed_at`**); `CHECK status IN ('submitted','approved','rejected','rewarded')`; RLS com 2 policies (own + admin/supervisor), **sem** policies de INSERT/UPDATE/DELETE (criação e decisão só via RPC); índice único parcial por agente em `submitted/approved/rewarded`; realtime na publication |
 | **bucket `flyer-photos`** | privado, 0 objectos | policies espelhadas de `atm-photos`: INSERT own + SELECT own + SELECT admin/supervisor. **Sem policy de DELETE** (como o `atm-photos`) → a limpeza da foto órfã no app só funciona depois de aplicada a `20260926000001_flyer_photos_delete_policy.sql` |
 
 **`app_settings`:** `agent_commission_free_view_kz=0.15`, `daily_free_views_limit=3`, `min_withdrawal_amount=500`, `referral_commission_pct=20`, preços premium `290/700/1500` (quarterly aplicado 08-08), Monetag zones, **flyer: `flyer_bonus_kz=700`, `flyer_proximity_m=200`, `flyer_views_unlock=30`** (2026-09-26 — editáveis no painel web, secção Settings).
 
-**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`), **`20260811000001`** (fix `consume_atm_view` is_active — corpo §5.5 confirmado), **`20260811000002`** (subscriptions quarterly — CHECK com `quarterly` + policies insert own confirmadas), **`20260811000003`** (Fase 6 push/favoritos — `atm_favorites`=1, `push_tokens`=1, `push_log`=0, RPCs `create_notification`/`send_expo_push` presentes), **`20260813000001`** (AdMob `ad_unlocks` — aplicada e verificada), **`20260813000002_ad_unlocks_fix.sql`** (B4/B5/B6 — RPC `create_ad_unlock`, revogar INSERT, trigger dinâmico — **aplicada pelo utilizador em 2026-08-13** ✅), **`20260813000003_ad_unlocks_sec.sql`** (B11 — revogar policy `ad_unlocks_update_own` — **aplicada pelo utilizador em 2026-08-13** ✅), **`20260818000001_fix_ad_commission_reference_type.sql`** (trigger com `reference_type='earning'` — **aplicada via `psql` em 2026-08-18** ✅), **`20260922000001_flyer_bonus.sql`** (bónus do flyer — **aplicada e verificada em 2026-09-26** ✅).
+**Migrações aplicadas (staging):** freemium (`20260718*`), quarterly+onboarding (`20260808000001`), **`20260811000001`** (fix `consume_atm_view` is_active — corpo §5.5 confirmado), **`20260811000002`** (subscriptions quarterly — CHECK com `quarterly` + policies insert own confirmadas), **`20260811000003`** (Fase 6 push/favoritos — `atm_favorites`=1, `push_tokens`=1, `push_log`=0, RPCs `create_notification`/`send_expo_push` presentes), **`20260813000001`** (AdMob `ad_unlocks` — aplicada e verificada), **`20260813000002_ad_unlocks_fix.sql`** (B4/B5/B6 — RPC `create_ad_unlock`, revogar INSERT, trigger dinâmico — **aplicada pelo utilizador em 2026-08-13** ✅), **`20260813000003_ad_unlocks_sec.sql`** (B11 — revogar policy `ad_unlocks_update_own` — **aplicada pelo utilizador em 2026-08-13** ✅), **`20260818000001_fix_ad_commission_reference_type.sql`** (trigger com `reference_type='earning'` — **aplicada via `psql` em 2026-08-18** ✅), **`20260818000002_fix_push_log.sql`** (diagnóstico/robustez do push — **aplicada via `psql` em 2026-08-18** ✅), **`20260922000001_flyer_bonus.sql`** (bónus do flyer — **aplicada e verificada em 2026-09-26** ✅).
 
 **Bónus do flyer — verificado no staging (2026-09-26, pelo repo web):** checklist 10/10 — tabela `flyer_submissions` + 2 policies RLS, bucket `flyer-photos` privado, RPCs `create_flyer_submission`/`approve_flyer_submission` (`SECURITY DEFINER`, `EXECUTE` para `authenticated`), função `flyer_bonus_check`, trigger `trg_flyer_bonus_unlock` em `agent_earnings`, realtime, e as 3 chaves em `app_settings`. **Teste funcional com `ROLLBACK`:** aprovar com 30 views → `rewarded` + `700.00` + 2 notificações (`flyer_submission_approved` + `flyer_bonus`) + `balance_transactions` (`adjustment`) + saldo `0 → 700`; rejeitar com motivo → `rejected`, sem alteração de saldo. **Sem resíduos** (0 submissões / notificações / transações de teste). Detalhes e queries: `atm-connect-angola\docs\VERIFICAR_FLYER_BONUS_STAGING.md`.
 
 > **Cópia canónica da migração do flyer:** `atm-connect-angola\sql\pending\20260922000001_flyer_bonus.sql` (fora de `supabase/migrations/` de propósito — o `db:link` do repo web aponta para **produção**). A cópia na raiz deste repo é byte-a-byte idêntica (só difere encoding UTF-8). Ao promover para produção: aplicar **manualmente** e com backup.
 
-> **`.env` do repo mobile (relevante para qualquer teste):** **não existe** (só `.env.example`) — o `supabase.ts` faz `createClient(process.env.EXPO_PUBLIC_SUPABASE_URL!, …)`, portanto sem `.env` a app não liga ao Supabase. O `.env` do repo web já tem os valores de **staging** (`ndvjitfovhfngrzwtytd`); ver §1 de `docs/FLYER_BONUS_TESTE_E2E.md`.
+> **`.env` do repo mobile (relevante para qualquer teste):** **existe** (não versionado — está no `.gitignore`) com as 9 chaves `EXPO_PUBLIC_*` de **staging** (`ndvjitfovhfngrzwtytd`): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `MAPBOX_TOKEN` e os 6 `ADMOB_*` (rewarded/banner/interstitial × Android/iOS). **Falta `EXPO_PUBLIC_ENABLE_PUSH`** — adicionada a 2026-09-29 com `=false` (push adiado, ver secção "Preparação para produção" acima).
 
 **Pendência 2026-09-26 (nova):** **`20260926000001_flyer_photos_delete_policy.sql`** (policy de DELETE do agente na própria pasta do bucket `flyer-photos`) — **NÃO aplicada**; o app já faz a limpeza best-effort, mas sem a policy o RLS bloqueia o `storage.remove()`. Opcional (só afecta a limpeza de fotos órfãs).
 
