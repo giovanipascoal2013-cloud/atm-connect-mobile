@@ -11,10 +11,9 @@ interface ATMMapViewProps {
   onATMPress: (atm: ATMWithDistance) => void
   lockedIds?: Set<string>
   isPremium?: boolean
-  isLoggedIn?: boolean
 }
 
-export function ATMMapView({ atms, userLocation, selectedATMId, onATMPress, lockedIds, isPremium, isLoggedIn }: ATMMapViewProps) {
+export function ATMMapView({ atms, userLocation, selectedATMId, onATMPress, lockedIds, isPremium }: ATMMapViewProps) {
   return (
     <View style={StyleSheet.absoluteFill}>
       <MapboxWebView
@@ -24,7 +23,6 @@ export function ATMMapView({ atms, userLocation, selectedATMId, onATMPress, lock
         onATMPress={onATMPress}
         lockedIds={lockedIds}
         isPremium={isPremium}
-        isLoggedIn={isLoggedIn}
       />
     </View>
   )

@@ -19,7 +19,6 @@ interface ATMListProps {
   refreshing?: boolean
   lockedIds?: Set<string>
   isPremium?: boolean
-  isLoggedIn?: boolean
   favoriteIds?: Set<string>
   onToggleFavorite?: (atmId: string) => void
 }
@@ -144,16 +143,18 @@ export function ATMList({
   refreshing,
   lockedIds,
   isPremium,
-  isLoggedIn,
   favoriteIds,
   onToggleFavorite,
 }: ATMListProps) {
   const isLocked = useCallback(
     (atm: ATMWithDistance) => {
       if (isPremium) return false
-      return !(isLoggedIn && lockedIds?.has(atm.id))
+      // O lock depende apenas do unlock válido. Já não exige login: o
+      // visitante anónimo desbloqueia vendo um anúncio e guarda o unlock
+      // no dispositivo (ver useAdUnlocks).
+      return !lockedIds?.has(atm.id)
     },
-    [isPremium, isLoggedIn, lockedIds]
+    [isPremium, lockedIds]
   )
 
   const renderItem = useCallback(

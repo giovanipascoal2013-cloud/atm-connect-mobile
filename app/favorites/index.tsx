@@ -49,7 +49,6 @@ export default function FavoritesScreen() {
         refreshing={loading}
         lockedIds={unlockedIds}
         isPremium={isPremium}
-        isLoggedIn={!!user}
         favoriteIds={new Set(favoriteAtms.map((a) => a.id))}
         onToggleFavorite={(atmId) => { void toggleFavorite(atmId) }}
       />

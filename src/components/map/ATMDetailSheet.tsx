@@ -15,6 +15,7 @@ interface ATMDetailSheetProps {
   unlocked: boolean
   unlocking: boolean
   isLoggedIn: boolean
+  showNudge?: boolean
   userVote?: 'like' | 'dislike' | null
   agentRating?: { likes: number; dislikes: number } | null
   isFavorite?: boolean
@@ -23,7 +24,7 @@ interface ATMDetailSheetProps {
   onClose: () => void
   onWatchAd: () => void
   adLoading?: boolean
-  onLogin: () => void
+  onCreateAccount: () => void
 }
 
 export function ATMDetailSheet({
@@ -32,6 +33,7 @@ export function ATMDetailSheet({
   unlocked,
   unlocking,
   isLoggedIn,
+  showNudge = false,
   userVote,
   agentRating,
   isFavorite,
@@ -40,7 +42,7 @@ export function ATMDetailSheet({
   onClose,
   onWatchAd,
   adLoading = false,
-  onLogin,
+  onCreateAccount,
 }: ATMDetailSheetProps) {
   if (!visible || !atm) return null
 
@@ -104,7 +106,8 @@ export function ATMDetailSheet({
               </View>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              {isLoggedIn && onToggleFavorite && (
+              {/* Visível para todos: o toque é que faz soft gate (ver map.tsx) */}
+              {onToggleFavorite && (
                 <TouchableOpacity
                   onPress={onToggleFavorite}
                   hitSlop={10}
@@ -215,6 +218,37 @@ export function ATMDetailSheet({
               </View>
             )}
           </View>
+
+          {!isLoggedIn && showNudge && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10,
+                backgroundColor: colors.brand[50],
+                borderRadius: 12,
+                padding: 12,
+                marginTop: 12,
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text.primary }}>
+                  Criar conta grátis
+                </Text>
+                <Text style={{ fontSize: 12, color: colors.text.secondary, marginTop: 2 }}>
+                  Guarda favoritos e avalia ATMs em qualquer dispositivo.
+                </Text>
+              </View>
+              <AppButton
+                label="Criar conta"
+                onPress={onCreateAccount}
+                size="sm"
+                variant="primary"
+                icon="person-add-outline"
+                haptic
+              />
+            </View>
+          )}
         </ScrollView>
       ) : (
         <ScrollView style={{ paddingHorizontal: 20, paddingBottom: 24 }} contentContainerStyle={{ paddingTop: 4 }}>
@@ -229,7 +263,7 @@ export function ATMDetailSheet({
                 </Text>
               )}
             </View>
-            {isLoggedIn && onToggleFavorite && (
+            {onToggleFavorite && (
               <TouchableOpacity
                 onPress={onToggleFavorite}
                 hitSlop={10}
@@ -240,29 +274,21 @@ export function ATMDetailSheet({
             )}
           </View>
 
-          {!isLoggedIn ? (
-            <AppButton
-              label="Entrar para ver detalhes"
-              onPress={onLogin}
-              fullWidth
-              size="lg"
-              style={{ backgroundColor: colors.brand[600] }}
-              icon="log-in-outline"
-              haptic
-            />
-          ) : (
-            <AppButton
-              label={adLoading ? 'A carregar anúncio...' : 'Ver anúncio para desbloquear'}
-              onPress={onWatchAd}
-              fullWidth
-              size="lg"
-              style={{ backgroundColor: colors.brand[600] }}
-              loading={unlocking || adLoading}
-              disabled={adLoading}
-              icon="play-circle-outline"
-              haptic
-            />
-          )}
+          <AppButton
+            label={adLoading ? 'A carregar anúncio...' : 'Ver anúncio para desbloquear'}
+            onPress={onWatchAd}
+            fullWidth
+            size="lg"
+            style={{ backgroundColor: colors.brand[600] }}
+            loading={unlocking || adLoading}
+            disabled={adLoading}
+            icon="play-circle-outline"
+            haptic
+          />
+
+          <Text style={{ fontSize: 12, color: colors.text.tertiary, marginTop: 10, textAlign: 'center' }}>
+            Ao ver o anúncio desbloqueias este ATM. O dono do ATM ganha por cada visita.
+          </Text>
         </ScrollView>
       )}
 

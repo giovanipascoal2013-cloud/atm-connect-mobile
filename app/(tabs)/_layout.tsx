@@ -55,43 +55,50 @@ export default function TabLayout() {
             color: '#FFFFFF',
           },
           tabBarIcon: ({ focused }) => tabIcon(focused, 'map-outline', 'map'),
-          headerRight: () =>
-            user ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 }}>
-                <TouchableOpacity onPress={() => router.push('/favorites')} style={{ padding: 4 }} hitSlop={8}>
-                  <AppIcon name="star-outline" size={22} color="#FFFFFF" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => router.push('/notifications')} style={{ padding: 4 }} hitSlop={8}>
-                  <View>
-                    <AppIcon name="notifications-outline" size={22} color="#FFFFFF" />
-                    {unreadCount > 0 && (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          top: -4,
-                          right: -6,
-                          minWidth: 16,
-                          height: 16,
-                          borderRadius: 8,
-                          backgroundColor: colors.danger,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          paddingHorizontal: 4,
-                        }}
-                      >
-                        <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>
-                          {unreadCount > 9 ? '9+' : unreadCount}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <TouchableOpacity onPress={() => router.push('/(auth)/login')} style={{ paddingHorizontal: 16 }}>
-                <Text style={{ color: '#FFFFFF', fontWeight: '700' }}>Entrar</Text>
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 }}>
+              {/* O ranking é público: fica visível mesmo sem login */}
+              <TouchableOpacity onPress={() => router.push('/ranking')} style={{ padding: 4 }} hitSlop={8}>
+                <AppIcon name="trophy-outline" size={22} color="#FFFFFF" />
               </TouchableOpacity>
-            ),
+              {user ? (
+                <>
+                  <TouchableOpacity onPress={() => router.push('/favorites')} style={{ padding: 4 }} hitSlop={8}>
+                    <AppIcon name="star-outline" size={22} color="#FFFFFF" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => router.push('/notifications')} style={{ padding: 4 }} hitSlop={8}>
+                    <View>
+                      <AppIcon name="notifications-outline" size={22} color="#FFFFFF" />
+                      {unreadCount > 0 && (
+                        <View
+                          style={{
+                            position: 'absolute',
+                            top: -4,
+                            right: -6,
+                            minWidth: 16,
+                            height: 16,
+                            borderRadius: 8,
+                            backgroundColor: colors.danger,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            paddingHorizontal: 4,
+                          }}
+                        >
+                          <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
+                  <Text style={{ color: '#FFFFFF', fontWeight: '700' }}>Entrar</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ),
         }}
       />
       <Tabs.Screen

@@ -11,21 +11,17 @@ interface MapboxWebViewProps {
   onATMPress: (atm: ATMWithDistance) => void
   lockedIds?: Set<string>
   isPremium?: boolean
-  isLoggedIn?: boolean
 }
 
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN || ''
 
 const LOCKED_COLOR = '#9CA3AF'
 
-function buildGeoJSON(
-  atms: ATMWithDistance[],
-  lockedIds?: Set<string>,
-  isPremium?: boolean,
-  isLoggedIn?: boolean
-) {
+function buildGeoJSON(atms: ATMWithDistance[], lockedIds?: Set<string>, isPremium?: boolean) {
   const features = atms.map((atm) => {
-    const locked = !isPremium && !(isLoggedIn && lockedIds?.has(atm.id))
+    // O lock depende apenas do unlock válido — funciona igual para
+    // visitantes anónimos e registados.
+    const locked = !isPremium && !lockedIds?.has(atm.id)
     const status = locked ? 'locked' : getATMStatus(atm)
     const color = locked ? LOCKED_COLOR : getATMColor(status)
     return {
@@ -54,10 +50,9 @@ function buildHTML(
   atms: ATMWithDistance[],
   userLocation: LocationState,
   lockedIds?: Set<string>,
-  isPremium?: boolean,
-  isLoggedIn?: boolean
+  isPremium?: boolean
 ): string {
-  const geojson = buildGeoJSON(atms, lockedIds, isPremium, isLoggedIn)
+  const geojson = buildGeoJSON(atms, lockedIds, isPremium)
 
   const centerLng = userLocation?.longitude ?? 13.2894
   const centerLat = userLocation?.latitude ?? -8.8399
@@ -223,11 +218,11 @@ window.addEventListener('message', function(e) {
 </html>`
 }
 
-export function MapboxWebView({ atms, userLocation, selectedATMId, onATMPress, lockedIds, isPremium, isLoggedIn }: MapboxWebViewProps) {
+export function MapboxWebView({ atms, userLocation, selectedATMId, onATMPress, lockedIds, isPremium }: MapboxWebViewProps) {
   const webRef = useRef<WebView>(null)
 
-  const html = useMemo(() => buildHTML(atms, userLocation, lockedIds, isPremium, isLoggedIn), [atms, userLocation, lockedIds, isPremium, isLoggedIn])
-  const geojson = useMemo(() => buildGeoJSON(atms, lockedIds, isPremium, isLoggedIn), [atms, lockedIds, isPremium, isLoggedIn])
+  const html = useMemo(() => buildHTML(atms, userLocation, lockedIds, isPremium), [atms, userLocation, lockedIds, isPremium])
+  const geojson = useMemo(() => buildGeoJSON(atms, lockedIds, isPremium), [atms, lockedIds, isPremium])
 
   const handleMessage = useCallback(
     (event: any) => {

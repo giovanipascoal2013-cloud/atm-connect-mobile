@@ -17,7 +17,9 @@ export default function RankingLayout() {
         name="index"
         options={{
           title: 'Ranking',
-          headerLeft: () => <HeaderBackButton fallback="/(tabs)/profile" color={colors.text.primary} />,
+          // O ranking passou a ser alcançável a partir do mapa (público), por isso o
+// fallback do botão de voltar é o mapa e não o perfil (que é login-gated).
+headerLeft: () => <HeaderBackButton fallback="/(tabs)/map" color={colors.text.primary} />,
         }}
       />
     </Stack>

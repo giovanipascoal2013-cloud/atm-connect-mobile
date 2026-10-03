@@ -42,6 +42,7 @@ export default function MapScreen() {
   const [sheetVisible, setSheetVisible] = useState(false)
   const [unlocked, setUnlocked] = useState(false)
   const [unlocking, setUnlocking] = useState(false)
+  const [showNudge, setShowNudge] = useState(false)
   const [agentRating, setAgentRating] = useState<{ likes: number; dislikes: number } | null>(null)
   const [userVote, setUserVote] = useState<'like' | 'dislike' | null>(null)
   const detailOpensRef = useRef(0)
@@ -103,10 +104,6 @@ export default function MapScreen() {
 
   const handleWatchAd = useCallback(async () => {
     if (!selectedATM) return
-    if (!user) {
-      router.push('/(auth)/login')
-      return
-    }
     if (unlocking) return
     if (adLoading) return
     if (!isLoaded) {
@@ -121,6 +118,8 @@ export default function MapScreen() {
         const success = await createUnlock(selectedATM.id)
         if (success) {
           setUnlocked(true)
+          // Nudge de registo: uma vez por sessão, só para visitantes anónimos
+          if (!user) setShowNudge(true)
         } else {
           Alert.alert(
             'Não foi possível desbloquear',
@@ -133,12 +132,28 @@ export default function MapScreen() {
     } finally {
       setUnlocking(false)
     }
-  }, [selectedATM, user, unlocking, adLoading, isLoaded, showRewarded, createUnlock, loadRewarded, router])
+  }, [selectedATM, user, unlocking, adLoading, isLoaded, showRewarded, createUnlock, loadRewarded])
+
+  // Açções que exigem identidade mantêm o acesso público ao ATM e avançam com
+  // um soft gate: o visitante não perde o contexto e percebe o que ganha com a conta.
+  const requireAuth = useCallback((action: string) => {
+    if (user) return true
+    Alert.alert(
+      'Cria a tua conta',
+      `Precisas de uma conta para ${action.toLowerCase()}. É grátis — e só leva um minuto.`,
+      [
+        { text: 'Agora não', style: 'cancel' },
+        { text: 'Criar conta', onPress: () => router.push('/(auth)/register') },
+        { text: 'Entrar', onPress: () => router.push('/(auth)/login') },
+      ]
+    )
+    return false
+  }, [user, router])
 
   const handleVote = useCallback(async (value: 'like' | 'dislike') => {
     if (!selectedATM) return
     if (!user) {
-      router.push('/(auth)/login')
+      requireAuth('avaliar ATMs')
       return
     }
     if (userVote === value) return
@@ -154,7 +169,22 @@ export default function MapScreen() {
       return
     }
     if (selectedATM.agent_id) fetchRating(selectedATM)
-  }, [selectedATM, user, userVote, fetchRating, router])
+  }, [selectedATM, user, userVote, fetchRating, requireAuth])
+
+  const handleToggleFavorite = useCallback(async (atmId?: string) => {
+    const targetId = atmId ?? selectedATM?.id
+    if (!targetId) return
+    if (!user) {
+      requireAuth('guardar favoritos')
+      return
+    }
+    await toggleFavorite(targetId)
+  }, [selectedATM, user, requireAuth, toggleFavorite])
+
+  const handleCreateAccount = useCallback(() => {
+    setShowNudge(false)
+    router.push('/(auth)/register')
+  }, [router])
 
   const handleCloseSheet = () => {
     setSheetVisible(false)
@@ -231,7 +261,6 @@ export default function MapScreen() {
             onATMPress={handleATMPress}
             lockedIds={unlockedIds}
             isPremium={isPremium}
-            isLoggedIn={!!user}
           />
         ) : (
           <ATMList
@@ -244,9 +273,8 @@ export default function MapScreen() {
             onRefresh={refetch}
             lockedIds={unlockedIds}
             isPremium={isPremium}
-            isLoggedIn={!!user}
             favoriteIds={new Set(favoriteAtms.map((a) => a.id))}
-            onToggleFavorite={(atmId) => { void toggleFavorite(atmId) }}
+            onToggleFavorite={(atmId) => { void handleToggleFavorite(atmId) }}
           />
         )}
 
@@ -283,15 +311,16 @@ export default function MapScreen() {
         unlocked={unlocked || isPremium || (selectedATM ? hasValidUnlock(selectedATM.id) : false)}
         unlocking={unlocking}
         isLoggedIn={!!user}
+        showNudge={showNudge}
         userVote={userVote}
         agentRating={agentRating}
         isFavorite={selectedATM ? isFavorite(selectedATM.id) : false}
-        onToggleFavorite={() => { if (selectedATM) void toggleFavorite(selectedATM.id) }}
+        onToggleFavorite={() => { void handleToggleFavorite() }}
         onVote={handleVote}
         onClose={handleCloseSheet}
         onWatchAd={handleWatchAd}
         adLoading={adLoading}
-        onLogin={() => router.push('/(auth)/login')}
+        onCreateAccount={handleCreateAccount}
       />
 
       <View style={{ alignItems: 'center', backgroundColor: '#fff' }}>
