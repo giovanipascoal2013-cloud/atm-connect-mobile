@@ -283,6 +283,35 @@ export type Database = {
           },
         ]
       }
+      anon_ad_unlocks: {
+        Row: {
+          atm_id: string
+          created_at: string
+          device_id: string
+          expires_at: string
+        }
+        Insert: {
+          atm_id: string
+          created_at?: string
+          device_id: string
+          expires_at: string
+        }
+        Update: {
+          atm_id?: string
+          created_at?: string
+          device_id?: string
+          expires_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anon_ad_unlocks_atm_id_fkey"
+            columns: ["atm_id"]
+            isOneToOne: false
+            referencedRelation: "atms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referral_earnings: {
         Row: {
           agent_id: string
@@ -1142,6 +1171,10 @@ export type Database = {
         Returns: string
       }
       create_ad_unlock: { Args: { p_atm_id: string }; Returns: boolean }
+      create_ad_unlock_anon: {
+        Args: { p_device_id: string; p_atm_id: string }
+        Returns: string
+      }
       create_flyer_submission: {
         Args: {
           p_atm_id: string
