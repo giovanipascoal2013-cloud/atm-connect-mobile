@@ -39,9 +39,16 @@ O mapa **já abria sem login**, mas o desbloqueio não: `ATMList`/`MapboxWebView
 
 **Risco aceite (B15):** `device_id` vem do cliente e **não é validado** — um atacante pode forjar um id novo por pedido e gerar comissões ilimitadas para um ATM com agente. Gravidade real = **0** enquanto os AdMob IDs forem **de teste**. Mitigação: valor unitário baixo (0,15 Kz) + **AdMob SSV obrigatório antes dos IDs reais** (validar o payload `rewarded` numa Edge Function antes de `credit_ad_commission`). Ver "Riscos" na spec.
 
-**Bónus do flyer — sem alteração necessária:** as views anónimas contam para as 30 porque `flyer_bonus_check` conta `agent_earnings` sem filtrar `user_id` nem `source`, e o novo trigger insere lá uma linha por view. O pagamento continua preso à aprovação admin do flyer (`v_sub_id is null` enquanto `status='submitted'`), e as views acumuladas antes da aprovação também contam. **Follow-up (repo web `atm-connect-angola`):** dashboard de admin para o fluxo do flyer.
+**Bónus do flyer — sem alteração necessária:** as views anónimas contam para as 30 porque `flyer_bonus_check` conta `agent_earnings` sem filtrar `user_id` nem `source`, e o novo trigger insere lá uma linha por view. O pagamento continua preso à aprovação admin do flyer (`v_sub_id is null` enquanto `status='submitted'`), e as views acumuladas antes da aprovação também contam.
 
-**Commit:** bloqueado — esta máquina não tem identidade Git (`user.name`/`user.email` por definir, e não existe `~/.gitconfig`).
+**Follow-ups no repo web (`atm-connect-angola`) — nota completa em `docs/ANON_UNLOCKS_WEB_CHANGES.md`:**
+- **O dashboard de admin do flyer NÃO está pendente** — implementado desde `8409715` (`/dashboard/flyer-submissions`). A referência a "dashboard de admin do flyer" na §10 da spec era obsoleta; a nota detalhada original é `docs/FLYER_BONUS_WEB_CHANGES.md` (2026-09-22), já cumprida.
+- **Nada quebra no web** (verificado no código): as comissões/views anónimas já entram nos KPIs do `FinanceDashboard`, no saldo do `AgentDashboard` e na barra de progresso do `FlyerSubmissions`, porque tudo conta por `agent_id` e **não há nenhum `inner join` a `agent_earnings`** no repo web.
+- **Follow-up 1 — tipos desactualizados:** `src/integrations/supabase/types.ts` não tem `anon_ad_unlocks` nem `create_ad_unlock_anon`, e o `agent_earnings.Row` está sem `user_id`/`source` (o TS diz `string` numa coluna que agora pode ser `null`). Regenerar contra o **staging** — o `db:link` do repo web aponta para **produção**, onde a tabela ainda não existe.
+- **Follow-up 2 — funil web:** `useUnlockState.ts` só lê `ad_unlocks`, logo mede só unlocks de registados. Recomendação: aceitar e documentar (o funil web→app depende do login para medir conversão); desbloquear também no web foi descartado (`localStorage` é mais forjável que o `device_id` em SecureStore).
+- **Follow-up 3 — SSV do AdMob (bloqueante para monetizar):** Edge Function em `atm-connect-angola\supabase\functions\` + RPC `service_role` + fechar o caminho do cliente. Obrigatório antes dos IDs AdMob reais.
+
+**Commit:** ver §Commits acima (bloco `feat/anon-ad-unlocks`). A linha que aqui dizia "bloqueado — sem identidade Git" foi removida: a identidade está configurada **repo-local** desde 2026-10-03.
 
 ### Reconciliação local ↔ GitHub — merge de `origin/main` (2026-09-29) ✅ (tsc OK; falta teste no device)
 

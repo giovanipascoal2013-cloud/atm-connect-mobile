@@ -4,6 +4,8 @@
 
 > A skill `writing-plans` não está disponível nesta instalação; este documento cumpre o papel dela — tarefas ordenadas, com código exacto e um gate de verificação por tarefa.
 
+> **Actualização de 2026-10-03 (pós-implementação):** T0–T11 executados, migração `20261003000001` **aplicada no staging** ✅. As "notas de follow-up" de T11 item 4 (linha 926) e o "fora de âmbito" (linha 961) falavam do *dashboard de admin do flyer no repo web* — **já implementado** no `atm-connect-angola` (`8409715`); a nota original é `docs/FLYER_BONUS_WEB_CHANGES.md`. Os follow-ups **verdadeiros** (tipos do web desactualizados, funil web cego a unlocks anónimos, SSV obrigatório antes dos IDs reais, promoção para produção) estão em **`docs/ANON_UNLOCKS_WEB_CHANGES.md`**.
+
 ## Convenção de commits
 
 Commits convencionais separados, um por grupo de tarefas. `package.json` + `package-lock.json` **sempre juntos** (regra do `AGENTS.md`). O `m.md` não versionado na raiz **nunca** entra.

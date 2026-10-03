@@ -1,5 +1,7 @@
 # Alterações no Repo Web — Bónus do Flyer (700 Kz)
 
+> ✅ **CUMPRIDA (2026-09-26).** Implementada no repo web no commit **`8409715 feat(web): painel de revisão/admin do bónus do flyer (700 Kz)`** — hoje HEAD do `atm-connect-angola` (`/dashboard/flyer-submissions`, `FlyerSubmissions.tsx`, `FlyerSubmissionDetailModal.tsx`, rota em `App.tsx`, nav em `DashboardLayout.tsx`). Verificação funcional: `atm-connect-angola\docs\VERIFICAR_FLYER_BONUS_STAGING.md` + `LOG.md:71-72` deste repo. Este ficheiro mantém-se como **referência histórica** do que foi pedido e como se fez — não há nada por fazer aqui.
+
 > **Repo:** `C:\Users\juary\Downloads\atm-connect-angola` (Vite + React + Tailwind + TS).
 > **Data:** 2026-09-22 — guia para implementar a revisão/administração do bónus do flyer.
 > **Mobile:** já implementado no app (repo `atm-connect-mobile`) — esta checklist é a parte **web**.

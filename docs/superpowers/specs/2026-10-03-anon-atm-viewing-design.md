@@ -129,12 +129,14 @@ Raiz do repo (convenção do projecto), **idempotente**, para aplicar no SQL edi
 
 ## 9. Fora de âmbito
 
-SSV do AdMob · substituir os IDs de teste por IDs reais · dashboard de admin do flyer no repo web · qualquer refactor do UI do premium.
+SSV do AdMob · substituir os IDs de teste por IDs reais · refactor do UI do premium. *(O "dashboard de admin do flyer no repo web" que aqui estava foi feito — ver §10 item 2.)*
 
 ## 10. Notas de follow-up
 
-1. **SSV do AdMob** — ver §7.
-2. **Dashboard de admin do flyer** (`atm-connect-angola`, painel web): lista de agentes que aderiram à colocação do flyer, submissões por estado (`submitted`/`approved`/`rejected`/`rewarded`), progresso de `count(agent_earnings)` vs `flyer_views_unlock`, e acção de aprovar/rejeitar. Hoje só é possível linha a linha no SQL editor. Nota detalhada com as queries a escrever em `docs/` para o repo web.
+1. **SSV do AdMob** — ver §7. **Bloqueante para monetizar** (obrigatório antes dos IDs reais).
+2. ~~**Dashboard de admin do flyer** (`atm-connect-angola`)~~ — **RESOLVIDO, a nota era obsoleta.** A nota detalhada pedida aqui é `docs/FLYER_BONUS_WEB_CHANGES.md` (2026-09-22) e foi implementada no repo web no commit `8409715 feat(web): painel de revisão/admin do bónus do flyer (700 Kz)`, hoje HEAD do `atm-connect-angola`. Evidência: `atm-connect-angola\docs\VERIFICAR_FLYER_BONUS_STAGING.md` e `LOG.md:71-72` deste repo. Nada pendente.
+3. **Repo web — alterações reais trazidas pela view anónima** (verificadas no código, nenhuma quebra): `types.ts` precisa de `anon_ad_unlocks` + `create_ad_unlock_anon` e de `agent_earnings.user_id`/`source` como nullable; `useUnlockState.ts` mede só unlocks de registados (aceitar e documentar); nunca fazer `inner join` de `agent_earnings` a `profiles` (as linhas `user_id IS NULL` desapareceriam). **Nota completa: `docs/ANON_UNLOCKS_WEB_CHANGES.md`.**
+4. **Promoção para produção** — `20261003000001_anon_ad_unlocks.sql` só existe no **staging**; aplicar em `dinmao` com backup (a migração refactoriza `trigger_ad_commission`, que está em produção desde 2026-08-13) e deixar cópia canónica em `atm-connect-angola\sql\pending\`.
 
 ## 11. Ordem de execução
 
