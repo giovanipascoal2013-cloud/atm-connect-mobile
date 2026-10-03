@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { subscribePostgresChanges } from '../lib/realtime-channel'
+import { getDeviceId } from '../lib/device'
+import { readAnonUnlocks, writeAnonUnlock } from '../lib/ad-unlocks-store'
 import { useAuth } from './useAuth'
 
 export interface UseAdUnlocksResult {
@@ -16,9 +18,12 @@ export function useAdUnlocks(): UseAdUnlocksResult {
   const [unlocks, setUnlocks] = useState<Map<string, string>>(new Map())
   const [loading, setLoading] = useState(true)
 
+  // Sem sessão os unlocks vivem no dispositivo (expo-secure-store) — não há
+  // user_id para os consultar na BD. Com sessão a BD é autoritativa
+  // (ad_unlocks) e sincroniza entre dispositivos via realtime.
   const fetchUnlocks = useCallback(async () => {
     if (!user) {
-      setUnlocks(new Map())
+      setUnlocks(await readAnonUnlocks())
       setLoading(false)
       return
     }
@@ -77,19 +82,46 @@ export function useAdUnlocks(): UseAdUnlocksResult {
 
   const createUnlock = useCallback(
     async (atmId: string): Promise<boolean> => {
-      if (!user) return false
+      if (user) {
+        try {
+          const { data, error } = await supabase.rpc('create_ad_unlock', {
+            p_atm_id: atmId,
+          })
 
+          if (error || data !== true) {
+            console.error('Error creating ad_unlock:', error?.message ?? 'RPC returned false')
+            return false
+          }
+
+          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          setUnlocks((prev) => {
+            const next = new Map(prev)
+            next.set(atmId, expiresAt)
+            return next
+          })
+          return true
+        } catch (e) {
+          console.error('Failed to create ad_unlock:', e)
+          return false
+        }
+      }
+
+      // Anónimo: o servidor devolve o expires_at efectivo, por isso o
+      // cliente não estima as 24 h (o TTL pode mudar no servidor).
       try {
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-        const { data, error } = await supabase.rpc('create_ad_unlock', {
+        const deviceId = await getDeviceId()
+        const { data, error } = await supabase.rpc('create_ad_unlock_anon', {
+          p_device_id: deviceId,
           p_atm_id: atmId,
         })
 
-        if (error || data !== true) {
-          console.error('Error creating ad_unlock:', error?.message ?? 'RPC returned false')
+        if (error || !data) {
+          console.error('Error creating anon ad_unlock:', error?.message ?? 'RPC sem retorno')
           return false
         }
 
+        const expiresAt = String(data)
+        await writeAnonUnlock(atmId, expiresAt)
         setUnlocks((prev) => {
           const next = new Map(prev)
           next.set(atmId, expiresAt)
@@ -97,7 +129,7 @@ export function useAdUnlocks(): UseAdUnlocksResult {
         })
         return true
       } catch (e) {
-        console.error('Failed to create ad_unlock:', e)
+        console.error('Failed to create anon ad_unlock:', e)
         return false
       }
     },
